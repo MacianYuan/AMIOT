@@ -1,0 +1,44 @@
+<RCC>
+    <qresource prefix="/">
+        <file>images/1.bmp</file>
+        <file>images/caidan_01.bmp</file>
+        <file>images/caidan_02.bmp</file>
+        <file>images/kaiji_01.bmp</file>
+        <file>images/xitongjiance_01.bmp</file>
+        <file>images/xitongshezhi_01.bmp</file>
+        <file>images/xiala_01_02.png</file>
+        <file>images/xiala_01.png</file>
+        <file>images/xiala_02_02.png</file>
+        <file>images/xiala_02.png</file>
+        <file>images/xiala_03_02.png</file>
+        <file>images/xiala_03.png</file>
+        <file>images/xiala_04_02.png</file>
+        <file>images/xiala_04.png</file>
+        <file>images/xiala_05_02.png</file>
+        <file>images/xiala_05.png</file>
+        <file>images/xiala_06_02.png</file>
+        <file>images/xiala_06.png</file>
+        <file>images/shang_01.bmp</file>
+        <file>images/xia_01.bmp</file>
+        <file>images/biaoti_01.bmp</file>
+        <file>images/biaoti_02.bmp</file>
+        <file>images/biaoti_03.bmp</file>
+        <file>images/biaoti_04.bmp</file>
+        <file>images/biaoti_05.bmp</file>
+        <file>images/biaoti_06.bmp</file>
+        <file>images/zhong_01.bmp</file>
+        <file>images/wifi_3.png</file>
+        <file>images/wifi_2.png</file>
+        <file>images/wifi_1.png</file>
+        <file>images/gps_4.png</file>
+        <file>images/gps_3.png</file>
+        <file>images/gps_2.png</file>
+        <file>images/gps_1.png</file>
+        <file>images/gongzuojianshi_01.png</file>
+    </qresource>
+    <qresource prefix="/Tmap">
+        <file>map.html</file>
+        <file>images/Point.png</file>
+        <file>map_weixing.html</file>
+    </qresource>
+</RCC>

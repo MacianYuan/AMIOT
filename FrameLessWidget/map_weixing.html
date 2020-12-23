@@ -1,0 +1,83 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta http-equiv="content-type" content="text/html; charset=utf-8"/>
+<meta name="keywords" content="天地图"/>
+<title>天地图－地图API－范例－切换地图类型</title>
+<script type="text/javascript" src="http://api.tianditu.gov.cn/api?v=3.0&tk=840e4d0466179898b2a9345f5b52c36c"></script>
+<script>
+
+function removeMarkerClick1()
+{
+        //移除标注的点击事件
+        TEvent.removeListener(markerclick1);
+}
+function removeMarkerClick2()
+{
+        //移除标注的点击事件
+        TEvent.removeListener(markerclick2);
+}
+function addMarkerClick1()
+{
+        //移除标注的点击事件，防止多次注册
+        removeMarkerClick1();
+        //注册标注的点击事件
+        markerclick1 = TEvent.addListener(marker1,"click",function(p){
+            hybrid();
+        });
+}
+
+function addMarkerClick2()
+{
+        //移除标注的点击事件，防止多次注册
+        removeMarkerClick2();
+        //注册标注的点击事件
+        markerclick2 = TEvent.addListener(marker2,"click",function(p){
+            vector();
+        });
+}
+
+var map,zoom=12,marker1,marker2,markerclick1,markerclick2;
+function onLoad()
+{
+        map = new TMap("mapDiv");
+        map.centerAndZoom(new TLngLat(116.36976,39.92974),12);
+        map.enableDoubleClickZoom()
+        map.enableHandleMouseScroll();
+
+        //创建图片对象
+        var icon1 = new TIcon("images/Point.png",new TSize(20,25),{anchor:new TPixel(9,25)});
+        //创建标注对象
+        marker1 = new TMarker(new TLngLat(116.411794,39.9068),{icon:icon1});
+        //向地图上添加标注
+        map.addOverLay(marker1);
+        //创建图片对象
+        var icon2 = new TIcon("images/Point.png",new TSize(20,25),{anchor:new TPixel(9,25)});
+        //创建标注对象
+        marker2 = new TMarker(new TLngLat(116.421794,39.9068));
+        //向地图上添加标注
+        map.addOverLay(marker2);
+
+        addMarkerClick1();
+        addMarkerClick2();
+
+}
+
+
+function vector()
+{
+        map.setMapType(TMAP_NORMAL_MAP);
+}
+function hybrid()
+{
+        map.setMapType(TMAP_HYBRID_MAP);
+}
+
+
+</script>
+</head>
+<body onLoad="onLoad()">
+        <div id="mapDiv" style="position:absolute;width:800px; height:520px"></div>
+        </div>
+</body>
+</html>

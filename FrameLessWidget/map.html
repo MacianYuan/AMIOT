@@ -1,0 +1,57 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta http-equiv="content-type" content="text/html; charset=utf-8"/>
+<meta name="keywords" content="天地图"/>
+<title>天地图</title>
+<script type="text/javascript" src="http://api.tianditu.gov.cn/api?v=3.0&tk=840e4d0466179898b2a9345f5b52c36c"></script>
+<script>
+        var map;
+        var zoom = 12;
+        var point = new TLngLat(117.146163,31.839315);
+
+        function onLoad()
+        {
+                //初始化地图对象
+                map=new TMap("mapDiv");
+                //设置显示地图的中心点和级别
+                map.centerAndZoom(point,zoom);
+
+
+                map.panTo(point);
+
+        }
+        function vector()
+        {
+                map.setMapType(TMAP_NORMAL_MAP);//TMAP_SATELLITE_MAP
+        }
+        function hybrid()
+        {
+                map.setMapType(TMAP_HYBRID_MAP);
+        }
+        var dragFlag=false;
+        function showAddress(longjitude,latitude)
+        {
+                var gpsPoint = new TLngLat(longjitude,latitude);
+                map.clearOverLays();
+
+                //创建图片对象
+                var icon = new TIcon("/Tmap/images/Point.png",new TSize(19,27),{anchor:new TPixel(9,27)});
+                //向地图上添加自定义标注
+                var marker = new TMarker(gpsPoint,{icon:icon});
+                map.addOverLay(marker);
+
+                if(!dragFlag)
+                {
+                      map.panTo(gpsPoint);
+                }
+        }
+
+
+</script>
+</head>
+<body onLoad="onLoad()">
+        <div id="mapDiv" style="position:absolute;width:800px; height:520px"></div>
+</body>
+
+</html>

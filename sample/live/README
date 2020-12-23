@@ -1,0 +1,53 @@
+cd live
+./genMakefiles cross_config
+make
+
+live555 server located at live/mediaServer/live555MediaServer
+
+Changes for sample_venc:
+File: sample_common_venc.c,function:SAMPLE_COMM_VENC_GetVencStreamProc
+
+Step 1:Add following codes at the beginning of SAMPLE_COMM_VENC_GetVencStreamProc
+#define VIDEO_CHANNEL_COUNT 8
+char pipeName[20];
+HI_S32 pipeFDread[VIDEO_CHANNEL_COUNT];
+HI_S32 pipeFD[VIDEO_CHANNEL_COUNT];
+for(int i = 0;i<VIDEO_CHANNEL_COUNT;i++){
+	sprintf(pipeName,"vfifoChn%d.264",i);
+	if((mkfifo(pipeName,O_CREAT|O_EXCL)<0) && (errno!=EEXIST))
+	{
+	    printf("Create fifo pipe failed!\n");
+	}
+	pipeFDread[i] = open(pipeName,O_RDONLY|O_NONBLOCK);
+	if(pipeFDread[i] < 0)
+	{
+	    printf("open FOR READ%s failed:%s\n",pipeName,strerror(errno)); 
+	}
+	pipeFD[i] = open(pipeName,O_WRONLY|O_NONBLOCK);
+	if(pipeFD[i] < 0)
+	{
+	    printf("open FOR WRITE %s failed:%s\n",pipeName,strerror(errno)); 
+	}
+}
+
+Step 2:Add following code After SAMPLE_COMM_VENC_SaveStream,and before HI_MPI_VENC_ReleaseStream
+ /*Add by ssy write data to pipe for live555*/
+
+/*s32Ret = SAMPLE_COMM_VENC_SaveStream(enPayLoadType[i], pFile[i], &stStream);*/
+for (int k = 0; k< stStream.u32PackCount ; k++)
+{
+    
+	ret = write(pipeFD[i],stStream.pstPack[k].pu8Addr[0], stStream.pstPack[k].u32Len[0]);
+	if(stStream.pstPack[k].u32Len[1]>0){	
+	    ret = write(pipeFD[i],stStream.pstPack[k].pu8Addr[1], stStream.pstPack[k].u32Len[1]);
+	}
+}
+/*s32Ret = HI_MPI_VENC_ReleaseStream(i, &stStream);*/
+
+Last step:
+  Put live555MediaServer into the same directory as sample_venc.then run sample_venc and live555MediaServer
+Then you should get the video via RTSP://IP:PORT/vfifoChn%D.264(%D is the channel of you video)
+
+
+
+
