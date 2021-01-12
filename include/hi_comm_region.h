@@ -37,9 +37,6 @@ extern "C"{
 #endif /* End of #ifdef __cplusplus */
 
 
-
-
-
 typedef HI_U32 RGN_HANDLE;
 
 /* type of video regions */
@@ -49,6 +46,8 @@ typedef enum hiRGN_TYPE_E
     COVER_RGN,
     COVEREX_RGN,
     OVERLAYEX_RGN,
+    LINE_RGN,
+    MOSAIC_RGN,
     RGN_BUTT
 } RGN_TYPE_E;
 
@@ -61,108 +60,150 @@ typedef enum hiINVERT_COLOR_MODE_E
 
 typedef struct hiOVERLAY_QP_INFO_S
 {
-    HI_BOOL bAbsQp;
-    HI_S32 s32Qp;
+	HI_BOOL	 bQpDisable;
+    HI_BOOL  bAbsQp;
+    HI_S32   s32Qp;
 }OVERLAY_QP_INFO_S;
 
 typedef struct hiOVERLAY_INVERT_COLOR_S
 {
-    SIZE_S stInvColArea;                //It must be multipe of 16 but not more than 64.
-    HI_U32 u32LumThresh;                //The threshold to decide whether invert the OSD's color or not.
+    SIZE_S              stInvColArea;                //it must be multipe of 16 but not more than 64.
+    HI_U32              u32LumThresh;                //the threshold to decide whether invert the OSD's color or not.
     INVERT_COLOR_MODE_E enChgMod;      
-    HI_BOOL bInvColEn;                  //The switch of inverting color.
+    HI_BOOL             bInvColEn;                   //the switch of inverting color.
 }OVERLAY_INVERT_COLOR_S;
-
-/* Define which feild to be attached */
-typedef enum hiRGN_ATTACH_FIELD_E
-{
-    RGN_ATTACH_FIELD_FRAME = 0,             /* whole frame */
-    RGN_ATTACH_FIELD_TOP,                   /* top field */
-    RGN_ATTACH_FIELD_BOTTOM,                /* bottom field */
-    
-    RGN_ATTACH_FIELD_BUTT
-} RGN_ATTACH_FIELD_E;
 
 typedef struct hiOVERLAY_ATTR_S
 {
-    /* bitmap pixel format,now only support ARGB1555 or ARGB4444 */
+    /* bitmap pixel format*/
     PIXEL_FORMAT_E enPixelFmt;
 
     /* background color, pixel format depends on "enPixelFmt" */
     HI_U32 u32BgColor;
 
-    /* region size,W:[4,4096],align:2,H:[4,4096],align:2 */
+    /* region size */
     SIZE_S stSize;
 }OVERLAY_ATTR_S;
 
 typedef struct hiOVERLAY_CHN_ATTR_S
 {
-    /* X:[0,4096],align:4,Y:[0,4096],align:4 */
+    /* start point */
     POINT_S stPoint;
     
-    /* background an foreground transparence when pixel format is ARGB1555 
-      * the pixel format is ARGB1555,when the alpha bit is 1 this alpha is value!
-      * range:[0,128]
-      */
+    /* foreground transparence */
+
     HI_U32 u32FgAlpha;
 
-	/* background an foreground transparence when pixel format is ARGB1555 
-      * the pixel format is ARGB1555,when the alpha bit is 0 this alpha is value!
-      * range:[0,128]
-      */
+	/* background transparence */
     HI_U32 u32BgAlpha;
 
-    HI_U32 u32Layer;   /* OVERLAY region layer range:[0,7]*/
+	/* OVERLAY region layer*/
+    HI_U32 u32Layer;   
 
+	/* QP infomation when venc*/
     OVERLAY_QP_INFO_S stQpInfo;
 
+	/* invertColor infomation*/
     OVERLAY_INVERT_COLOR_S stInvertColor;
 }OVERLAY_CHN_ATTR_S;
 
+typedef enum hiRGN_AREA_TYPE_E
+{
+    AREA_RECT = 0,
+    AREA_QUAD_RANGLE,
+    AREA_BUTT
+} RGN_AREA_TYPE_E;
+
+#if 0
+typedef enum hiRGN_COORDINATE_E   
+{
+    RGN_ABS_COOR = 0,   /*Absolute coordinate*/
+    RGN_RATIO_COOR      /*Ratio coordinate*/
+}RGN_COORDINATE_E;
+#endif
+
+typedef struct hiRGN_QUADRANGLE_S
+{
+    HI_BOOL bSolid;            /* whether solid or dashed framework */
+    HI_U32 u32LineWidth;       /* Line Width of framework, valid when dashed framework */
+    POINT_S stPoint[4];        /* points of quadrilateral*/
+} RGN_QUADRANGLE_S;
+
 typedef struct hiCOVER_CHN_ATTR_S
 {
-    RECT_S stRect;
+	RGN_AREA_TYPE_E     enCoverType;        /* rect or arbitary quadrilateral COVER */
+    union
+    {
+        RECT_S              stRect;        	/* config of rect*/
+        RGN_QUADRANGLE_S    stQuadRangle;  	/* config of arbitary quadrilateral COVER */
+    };
     HI_U32 u32Color;
-    HI_U32 u32Layer;   /* COVER region layer range:[0,3] */
+    HI_U32 u32Layer;   						/* COVER region layer range:[0,3] */
+	//RGN_COORDINATE_E enCoordinate;           /*ratio coordiante or abs coordinate*/
 }COVER_CHN_ATTR_S;
 
 typedef struct hiCOVEREX_CHN_ATTR_S
 {
-    RECT_S stRect;
+	RGN_AREA_TYPE_E     enCoverType;       /* rect or arbitary quadrilateral COVER */
+    union
+    {
+        RECT_S              stRect;        /* config of rect */
+        RGN_QUADRANGLE_S    stQuadRangle;  /* config of arbitary quadrilateral COVER */
+    };
     HI_U32 u32Color;
     HI_U32 u32Layer;   /* COVEREX region layer range:[0,7] */
 }COVEREX_CHN_ATTR_S;
 
-typedef struct hiOVERLAYEX_COMM_ATTR_S
+typedef enum hiMOSAIC_BLK_SIZE_E
+{
+    MOSAIC_BLK_SIZE_8 = 0,    /*block size 8*8 of MOSAIC*/
+    MOSAIC_BLK_SIZE_16,       /*block size 16*16 of MOSAIC*/
+    MOSAIC_BLK_SIZE_32,       /*block size 32*32 of MOSAIC*/
+    MOSAIC_BLK_SIZE_64,       /*block size 64*64 of MOSAIC*/
+    MOSAIC_BLK_SIZE_BUTT
+} MOSAIC_BLK_SIZE_E;
+
+typedef struct hiMOSAIC_CHN_ATTR_S
+{
+    RECT_S stRect;                 /*location of MOSAIC*/
+    MOSAIC_BLK_SIZE_E enBlkSize;   /*block size of MOSAIC*/
+    HI_U32 u32Layer;               /*MOSAIC region layer range:[0,3] */
+}MOSAIC_CHN_ATTR_S;
+
+typedef struct hiOVERLAYEX_ATTR_S
 {
     PIXEL_FORMAT_E enPixelFmt;
 
     /* background color, pixel format depends on "enPixelFmt" */
     HI_U32 u32BgColor;
 
-    /* region size,W:[4,1920],align:2,H:[4,1080],align:2 */
+    /* region size */
     SIZE_S stSize;
 }OVERLAYEX_ATTR_S;
 
 typedef struct hiOVERLAYEX_CHN_ATTR_S
 {
-    /* X:[0,4096],align:4,Y:[0,4636],align:4 */
+    /* start point */
     POINT_S stPoint;
     
-    /* background an foreground transparence when pixel format is ARGB1555 
-      * the pixel format is ARGB1555,when the alpha bit is 1 this alpha is value!
-      * range:[0,128]
-      */
+    /* foreground transparence */
     HI_U32 u32FgAlpha;
 
-	/* background an foreground transparence when pixel format is ARGB1555 
-      * the pixel format is ARGB1555,when the alpha bit is 0 this alpha is value!
-      * range:[0,128]
-      */
+	/* background transparence */
     HI_U32 u32BgAlpha;
 
-    HI_U32 u32Layer;   /* OVERLAYEX region layer range:[0,15]*/
+	/* OVERLAYEX region layer */
+    HI_U32 u32Layer;   
+    
 }OVERLAYEX_CHN_ATTR_S;
+
+
+typedef struct hiLINE_CHN_ATTR_S
+{
+	HI_U32  				u32LineWidth;       /* width of line */
+	HI_U32  				u32LineColor;       /* color of line */
+	POINT_S                 stLinePoints[2];    /* startpoint and endpoint of line */
+}LINE_CHN_ATTR_S;
 
 typedef union hiRGN_ATTR_U
 {
@@ -176,6 +217,8 @@ typedef union hiRGN_CHN_ATTR_U
     COVER_CHN_ATTR_S        stCoverChn;        /* attribute of cover region */
     COVEREX_CHN_ATTR_S      stCoverExChn;      /* attribute of coverex region */
     OVERLAYEX_CHN_ATTR_S    stOverlayExChn;    /* attribute of overlayex region */
+	LINE_CHN_ATTR_S    	    stLineChn;         /* attribute of drawline region */
+    MOSAIC_CHN_ATTR_S       stMosaicChn;       /* attribute of mosic region */
 } RGN_CHN_ATTR_U;
 
 /* attribute of a region */
@@ -194,22 +237,32 @@ typedef struct hiRGN_CHN_ATTR_S
 } RGN_CHN_ATTR_S;
 
 
+#define RGN_MAX_BMP_UPDATE_NUM 16
 
-#define RGN_MAX_BMP_UPD_NUM 16
-
-typedef struct hiRGN_BMP_UPD_S
+typedef struct hiRGN_BMP_UPDATE_S
 {
     POINT_S             stPoint;
     BITMAP_S            stBmp;
     HI_U32              u32Stride;
-} RGN_BMP_UPD_S;
+} RGN_BMP_UPDATE_S;
 
-typedef struct hiRGN_BMP_UPD_CFG_S
+typedef struct hiRGN_BMP_UPDATE_CFG_S
 {
     HI_U32              u32BmpCnt;
-    RGN_BMP_UPD_S       astBmpUpd[RGN_MAX_BMP_UPD_NUM];
-} RGN_BMP_UPD_CFG_S;
+    RGN_BMP_UPDATE_S    astBmpUpdate[RGN_MAX_BMP_UPDATE_NUM];
+} RGN_BMP_UPDATE_CFG_S;
 
+typedef struct hiRGN_CANVAS_INFO_S
+{
+    HI_U32         u32PhyAddr;
+    HI_U32         u32VirtAddr;
+    SIZE_S         stSize;              
+    HI_U32         u32Stride;
+    PIXEL_FORMAT_E enPixelFmt;  
+} RGN_CANVAS_INFO_S;
+
+/* PingPong buffer change when set attr, it needs to remap memory in mpi interface */
+#define HI_NOTICE_RGN_BUFFER_CHANGE  HI_DEF_ERR(HI_ID_RGN, EN_ERR_LEVEL_NOTICE, HI_SUCCESS)
 
 /* invlalid device ID */
 #define HI_ERR_RGN_INVALID_DEVID     HI_DEF_ERR(HI_ID_RGN, EN_ERR_LEVEL_ERROR, EN_ERR_INVALID_DEVID)
@@ -226,7 +279,7 @@ typedef struct hiRGN_BMP_UPD_CFG_S
 /* try to enable or initialize system,device or channel, before configing attribute */
 #define HI_ERR_RGN_NOT_CONFIG        HI_DEF_ERR(HI_ID_RGN, EN_ERR_LEVEL_ERROR, EN_ERR_NOT_CONFIG)
 /* operation is not supported by NOW */
-#define HI_ERR_RGN_NOT_SUPPORT      HI_DEF_ERR(HI_ID_RGN, EN_ERR_LEVEL_ERROR, EN_ERR_NOT_SUPPORT)
+#define HI_ERR_RGN_NOT_SUPPORT       HI_DEF_ERR(HI_ID_RGN, EN_ERR_LEVEL_ERROR, EN_ERR_NOT_SUPPORT)
 /* operation is not permitted ,eg, try to change stati attribute */
 #define HI_ERR_RGN_NOT_PERM          HI_DEF_ERR(HI_ID_RGN, EN_ERR_LEVEL_ERROR, EN_ERR_NOT_PERM)
 /* failure caused by malloc memory */

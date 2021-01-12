@@ -19,30 +19,22 @@ extern "C"{
 #endif
 #endif /* __cplusplus */
 
-#define HI3511_V100 0x35110100
-#define HI3511_V110 0x35110110
-#define HI3520_V100 0x35200100
-#define HI3515_V100 0x35150100
-#define HI3516_V100 0x35160100
-#define HI3531_V100 0x35310100
-#define HI3532_V100 0x35320100
-#define HI3521_V100 0x35210100
-#define HI3520A_V100 0x3520A100
-#define HI3520D_V100 0x3520D100
-#define HI3518_V100  0x35180100
-#define HI3518A_V100 0x3518A100
-#define HI3518C_V100 0x3518C100
-#define HI3516C_V100 0x3516C100
-#define HI3518E_V100 0x3518E100
+
+#define HI3536_V100 0x35360100
+#define HI3521A_V100 0x3521a100
+#define HI3520D_V300 0x3520d300 
+#define HI3531A_V100 0x3531a100
 #define HI35xx_Vxxx 0x35000000
 
 #ifndef HICHIP
-    #define HICHIP HI3520D_V100
+    #define HICHIP HI3521A_V100
 #endif
 
-
-#if HICHIP==HI3520D_V100
-    #define CHIP_NAME    "Hi3520D"
+#if HICHIP==HI3536_V100
+    #define CHIP_NAME    "Hi3536"
+    #define MPP_VER_PRIX "_MPP_V"
+#elif HICHIP==HI3521A_V100
+    #define CHIP_NAME    "Hi3521A"
     #define MPP_VER_PRIX "_MPP_V"
 #elif HICHIP==HI35xx_Vxxx
     #error HuHu, I am an dummy chip
@@ -50,14 +42,13 @@ extern "C"{
     #error HICHIP define may be error
 #endif
 
-
 #define LINE_LEN_BIT            5
 #define LINE_LEN                (1<<LINE_LEN_BIT)
 #define LINE_BASE_MASK          (~(LINE_LEN-1))
 static inline void InvalidateDcache(unsigned long addr, unsigned long len)
 {
     unsigned long end;
-    //TODO: cache刷新需要重写
+    //TODO: cache need rewrite when flush
     return ;
     
     addr &= LINE_BASE_MASK;
@@ -76,7 +67,7 @@ static inline  void FlushDcache(unsigned long addr, unsigned long len)
 {
     unsigned long end;
 
-    //TODO: cache刷新需要重写
+    //TODO: cache need rewrite when flush
     return ;
 
     addr &= LINE_BASE_MASK;
@@ -99,67 +90,145 @@ static inline  void FlushDcache(unsigned long addr, unsigned long len)
 /* For VDA */
 #define VDA_MAX_NODE_NUM        32
 #define VDA_MAX_INTERNAL        256
-#define VDA_CHN_NUM_MAX         32
+#define VDA_CHN_NUM_MAX         128
 #define VDA_MAX_WIDTH           960
-#define VDA_MAX_HEIGHT          576
+#define VDA_MAX_HEIGHT          960
+#define VDA_MIN_WIDTH           32
+#define VDA_MIN_HEIGHT          32
 
 
 /* For VENC */
 #define VENC_MAX_NAME_LEN  16
-#define VENC_PIC_ALIGN     16
-#define VENC_MAX_CHN_NUM  64
-#define VENC_MAX_GRP_NUM  64
-#define H264E_MAX_WIDTH   1920
-#define H264E_MAX_HEIGHT  2048
-#define H264E_MIN_WIDTH   160
-#define H264E_MIN_HEIGHT  64
+#define VENC_MAX_CHN_NUM  128
+#define VENC_MAX_GRP_NUM  128
+#define H264E_MAX_WIDTH   2592
+#define H264E_MAX_HEIGHT  2592
+#define H264E_MIN_WIDTH         160
+#define H264E_MIN_HEIGHT        64
+#define H265E_MAX_WIDTH         2592
+#define H265E_MAX_HEIGHT        2592
+#define H265E_MIN_WIDTH         128
+#define H265E_MIN_HEIGHT        128
 #define JPEGE_MAX_WIDTH   8192
 #define JPEGE_MAX_HEIGHT  8192
-#define JPEGE_MIN_WIDTH   64
-#define JPEGE_MIN_HEIGHT  64
-#define VENC_MAX_ROI_NUM  8               /* 最大支持8个ROI区域 */
+#define JPEGE_MIN_WIDTH   32
+#define JPEGE_MIN_HEIGHT  32
+#define VENC_MAX_ROI_NUM  8               
 #define H264E_MIN_HW_INDEX 0
-#define H264E_MAX_HW_INDEX 5
+#define H264E_MAX_HW_INDEX 11
 #define H264E_MIN_VW_INDEX 0
-#define H264E_MAX_VW_INDEX 2
+#define H264E_MAX_VW_INDEX 5
 #define MPEG4E_MAX_HW_INDEX 1
 #define MPEG4E_MAX_VW_INDEX 0
 
 
+/*For RC*/
+#define RC_TEXTURE_THR_SIZE         12
+#define RC_RQRATIO_SIZE             8
+
+
+
 /* For VDEC */
-/*hi3521 vdec通道范围[0,63],其中[0,31]通道为vdh解码，[32,63]通道为vedu解码，*/
-#define VDH_VEDU_CHN            0				/*VDH 与VEDU临界通道*/
+#define VDEC_MAX_COMPRESS_WIDTH 1920
 #define VDEC_MAX_CHN_NUM        64
-#define VEDU_MAX_CHN_NUM    	(VDEC_MAX_CHN_NUM-VDH_VEDU_CHN)
+#define VDH_VEDU_CHN		    0				 
+#define VEDU_MAX_CHN_NUM	    65              
 #define MAX_VDEC_CHN            VDEC_MAX_CHN_NUM
 #define BUF_RESERVE_LENTH       64          /*reserve 64byte for hardware*/
-#define MAX_JPEG_TOTAL         (2048*1536)
-#define H264D_MAX_SLICENUM	   137
-#define VEDU_H264D_ERRRATE	   10
-#define VEDU_H264D_FULLERR     100
+#define H264D_MAX_SLICENUM	    137
+#define VEDU_H264D_ERRRATE	    10
+#define VEDU_H264D_FULLERR      100
+#define H265_WIDTH_ALIGN        64
+#define H265_HEIGHT_ALIGN       64
+#define JPEG_WIDTH_ALIGN        64
+#define H264_WIDTH_ALIGN        16
+#define H264_HEIGHT_ALIGN       32
+
+
+/* for VDH-H264  */
+#define VDH_H264D_MAX_WIDTH       4096
+#define VDH_H264D_MAX_HEIGHT      4096
+#define VDH_H264D_MIN_WIDTH       80
+#define VDH_H264D_MIN_HEIGHT      64
+#define VDH_H264D_MAX_SPS         32
+#define VDH_H264D_MIN_SPS         1
+#define VDH_H264D_MAX_PPS         256
+#define VDH_H264D_MIN_PPS         1
+#define VDH_H264D_MAX_SLICE       136
+#define VDH_H264D_MIN_SLICE       1
+
+/* for VDH-HEVC  */
+#define VDH_H265D_MAX_WIDTH       4096
+#define VDH_H265D_MAX_HEIGHT      4096
+#define VDH_H265D_MIN_WIDTH       128
+#define VDH_H265D_MIN_HEIGHT      128
+#define VDH_H265D_MAX_VPS         16
+#define VDH_H265D_MIN_VPS         1
+#define VDH_H265D_MAX_SPS         16
+#define VDH_H265D_MIN_SPS         1
+#define VDH_H265D_MAX_PPS         64
+#define VDH_H265D_MIN_PPS         1
+#define VDH_H265D_MAX_SLICE       200
+#define VDH_H265D_MIN_SLICE       1
+
+
+/* for VDH-MPEG4 */
+#define VDH_MPEG4D_MAX_WIDTH       4096 
+#define VDH_MPEG4D_MAX_HEIGHT      4096 
+#define VDH_MPEG4D_MIN_WIDTH       64
+#define VDH_MPEG4D_MIN_HEIGHT      64
+
 
 /* for VEDU-H264  */
-#define VEDU_H264D_MAX_WIDTH    1920
-#define VEDU_H264D_MAX_HEIGHT   2048
-#define VEDU_H264D_MIN_WIDTH    80
-#define VEDU_H264D_MIN_HEIGHT   64
+#define VEDU_H264D_MAX_WIDTH       4096
+#define VEDU_H264D_MAX_HEIGHT      4096
+#define VEDU_H264D_MIN_WIDTH       80
+#define VEDU_H264D_MIN_HEIGHT      64
+
+
 
 /* for JPEG  */
-#define JPEGD_MAX_WIDTH         4096
-#define JPEGD_MAX_HEIGHT        4080
-#define JPEGD_MIN_WIDTH         64
-#define JPEGD_MIN_HEIGHT        64
+#define JPEGD_MAX_WIDTH           8192
+#define JPEGD_MAX_HEIGHT          8192
+#define JPEGD_MIN_WIDTH           8
+#define JPEGD_MIN_HEIGHT          8
 
+/* for VPSS */
+#define VPSS_MIN_WIDTH          64
+#define VPSS_MIN_HEIGHT         64
+#define VPSS_MAX_WIDTH          4096
+#define VPSS_MAX_HEIGHT         4096
+#define VPSS_MAX_DEI_WIDTH      1280
+#define VPSS_MAX_PRESCALE_WIDTH     2560
+#define VPSS_MAX_GRP_NUM            256
+#define VPSS_VGS_GRP_NO         240
+#define VPSS_MAX_PHY_CHN_NUM    4
+#define VPSS_MAX_EXT_CHN_NUM    0
+#define VPSS_MAX_CHN_NUM            (VPSS_MAX_PHY_CHN_NUM + VPSS_MAX_EXT_CHN_NUM)
+#define VPSS_CHN0                   0
+#define VPSS_CHN1                   1
+#define VPSS_CHN2                   2
+#define VPSS_CHN3                   3
+#define VPSS_INVALID_CHN        -1 
+#define VPSS_LUMA_STAT_NUM      64
+#define VPSS_MAX_SPLIT_NODE_NUM     4
 
+/* For PCIV */
+#define PCIV_MAX_CHN_NUM          128       /* max pciv channel number in each pciv device */
 
-
-
-/* For VPP */
-#define RGN_HANDLE_MAX         1024
-#define OVERLAY_MAX_NUM        8
-#define COVEREX_MAX_NUM      16
-#define COVER_MAX_NUM        4
-#define OVERLAYEX_MAX_NUM      16 
+/* for REGION */
+#define RGN_HANDLE_MAX            1024
+#define OVERLAY_MAX_NUM_VENC      8
+#define OVERLAY_MAX_NUM_VPSS      8
+#define OVERLAYEX_MAX_NUM_PCIV    1
+#define COVER_MAX_NUM_VPSS        4
+#define LINE_MAX_NUM_VPSS       4
+#define MASAIC_MAX_NUM_VPSS  4
+#define OVERLAYEX_MAX_NUM_VPSS           8
+#define COVEREX_MAX_NUM_VPSS             4
+#define COVEREX_MAX_NUM_VO         4
+#define OVERLAYEX_MAX_NUM_VO       1
+#define LINE_MAX_NUM_VO            4
 
 
 #if 0
@@ -178,27 +247,39 @@ static inline  void FlushDcache(unsigned long addr, unsigned long len)
  * multiplied by VIU_MAX_CHN_NUM, because all VI devices
  * can't work at mode of 4 channles at the same time.
  */
-#define VIU_MAX_DEV_NUM         2
-#define VIU_MAX_WAY_NUM_PER_DEV 4
-#define VIU_MAX_CHN_NUM_PER_DEV 4
-#define VIU_MAX_PHYCHN_NUM      8
-#define VIU_EXT_CHN_START            (VIU_MAX_PHYCHN_NUM + VIU_MAX_CAS_CHN_NUM)
-#define VIU_MAX_EXT_CHN_NUM          0
-#define VIU_MAX_EXTCHN_BIND_PER_CHN  0
+#define VIU_MAX_DEV_NUM               4
+#define VIU_MAX_WAY_NUM_PER_DEV       4
+#define VIU_MAX_CHN_NUM_PER_DEV       4
+#define VIU_MAX_PHYCHN_NUM            16
 
-#define VIU_MAX_CHN_NUM         (VIU_MAX_PHYCHN_NUM + VIU_MAX_EXT_CHN_NUM)
-#define VIU_CHNID_DEV_FACTOR    2
+#define VIU_EXT_CHN_START             (VIU_MAX_PHYCHN_NUM + VIU_MAX_CAS_CHN_NUM)
+#define VIU_MAX_EXT_CHN_NUM           0
+#define VIU_MAX_EXTCHN_BIND_PER_CHN   0
 
-/* 3521本不支持级联，这里宏定义这些信息，只是为了编译通过 */
-#define VIU_MAX_CAS_CHN_NUM    0
-#define VIU_SUB_CHN_START    16    /* 定义次通道起始宏*/
-#define VIU_CAS_CHN_START    32    /* 定义级联通道起始宏*/
+#define VIU_MAX_CAS_CHN_NUM           0
+#define VIU_SUB_CHN_START             16    /* useless in 3521A */
+#define VIU_CAS_CHN_START             16    
 
+#define VIU_MAX_CHN_NUM               (VIU_MAX_PHYCHN_NUM + VIU_MAX_CAS_CHN_NUM + VIU_MAX_EXT_CHN_NUM)
+#define VIU_CHNID_DEV_FACTOR          2 /* useless in 3521A */
+
+
+#define COVER_MAX_NUM_VI          4
+#define COVEREX_MAX_NUM_VI        0
+#define OVERLAY_MAX_NUM_VI        0
+#define OVERLAYEX_MAX_NUM_VI      0
 
 /* max number of VBI region*/
 #define VIU_MAX_VBI_NUM         2
 /* max length of one VBI region (by word)*/
-#define VIU_MAX_VBI_LEN         8
+#define VIU_MAX_VBI_LEN         0x20
+
+/*get the subchn index by main chn */
+#define  SUBCHN(ViChn)   (ViChn + 16)
+
+/* define cascade chn */
+#define VI_CAS_CHN_1   1
+#define VI_CAS_CHN_2   2
 
 #define VO_MIN_CHN_WIDTH    32      /* channel minimal width */
 #define VO_MIN_CHN_HEIGHT   32      /* channel minimal height */
@@ -207,18 +288,18 @@ static inline  void FlushDcache(unsigned long addr, unsigned long len)
 
 #if 0
 /* For VOU */
-#define VO_MAX_DEV_NUM      6       /* we have three VO physical device(HD,AD,SD) and three virtual device(VD1,VD2,VD3) */
-#define VO_MAX_PHY_DEV      3        /* max physical device number(HD,AD,SD) */
-#define VO_MAX_CHN_NUM      64      /* max channel number of each device */
-#define VO_SYNC_MAX_GRP     16      /* we limit total sync group as 16 on three device */
-#define VO_SYNC_MAX_CHN     64      /* each sync group can accommodate 64 channels */
-#define VO_MIN_TOLERATE     1       /* min play toleration 1ms */
-#define VO_MAX_TOLERATE     100000  /* max play toleration 100s */
+#define VO_MAX_DEV_NUM      6          /* we have three VO physical device(HD,AD,SD) and three virtual device(VD1,VD2,VD3) */
+#define VO_MAX_PHY_DEV      3          /* max physical device number(HD,AD,SD) */
+#define VO_MAX_CHN_NUM      64         /* max channel number of each device */
+#define VO_SYNC_MAX_GRP     16         /* we limit total sync group as 16 on three device */
+#define VO_SYNC_MAX_CHN     64         /* each sync group can accommodate 64 channels */
+#define VO_MIN_TOLERATE     1          /* min play toleration 1ms */
+#define VO_MAX_TOLERATE     100000     /* max play toleration 100s */
 #define VO_MAX_SOLIDDRAW    128        /* max draw region number */
-#define VO_MIN_DISP_BUF     5        /* min display buffer number */
-#define VO_MAX_DISP_BUF     15        /* max display buffer number */
-#define VO_MIN_VIRT_BUF     3        /* min virtual device buffer number */
-#define VO_MAX_VIRT_BUF     15        /* max virtual device buffer number */
+#define VO_MIN_DISP_BUF     5          /* min display buffer number */
+#define VO_MAX_DISP_BUF     15         /* max display buffer number */
+#define VO_MIN_VIRT_BUF     3          /* min virtual device buffer number */
+#define VO_MAX_VIRT_BUF     15         /* max virtual device buffer number */
 
 #define VIVO_CSCD_VBI_ID         0
 #define VIVO_CSCD_VBI_X          0
@@ -228,60 +309,134 @@ static inline  void FlushDcache(unsigned long addr, unsigned long len)
 #define VIVO_CSCD_VBI_DATA_WORD  0
 #define VIVO_CSCD_VBI_DATA_BIT   (0x01 << 31)
 #endif
-#define VO_MAX_DEV_NUM          7      /* max dev num */
-#define VO_MAX_LAYER_NUM        7      /* max layer num */
-#define VO_MAX_CHN_NUM          32      /* max chn num */
-#define PIP_MAX_CHN_NUM         1
-#define VHD_MAX_CHN_NUM         16       /* max VHD chn num */
+
+#define VO_MAX_DEV_NUM          6       /* max dev num */
+#define VO_MAX_LAYER_NUM        7       /* max layer num */
+#define VHD_MAX_CHN_NUM         32      /* max VHD chn num */
+#define VO_MAX_CHN_NUM          VHD_MAX_CHN_NUM      /* max chn num */
 #define VO_MAX_LAYER_IN_DEV     2       /* max layer num of each dev */
 
-//#define VO_MAX_CAS_DEV_NUM      2       /* max cascade dev num*/
-//#define VO_CAS_DEV_1            4       /* cascade display device 1 */
-//#define VO_CAS_DEV_2            5       /* cascade display device 2 */
+#define VO_MAX_CAS_DEV_NUM      2       /* max cascade dev num*/
+#define VO_CAS_DEV_1            7       /* cascade display device 1 */
+#define VO_CAS_DEV_2            8       /* cascade display device 2 */
 #define VO_CAS_MAX_PAT          128     /* cascade pattern max number */
 #define VO_CAS_MAX_POS_32RGN    32      /* cascade position max number */
 #define VO_CAS_MAX_POS_64RGN    64      /* cascade position max number */
 
 #define VO_MAX_VIRT_DEV_NUM     4       /* max virtual dev num*/
-#define VO_VIRT_DEV_0           3       /* virtual display device 1 */
-#define VO_VIRT_DEV_1           4       /* virtual display device 2 */
-#define VO_VIRT_DEV_2           5       /* virtual display device 3 */
-#define VO_VIRT_DEV_3           6       /* virtual display device 4 */
+#define VO_VIRT_DEV_0           2       /* virtual display device 1 */
+#define VO_VIRT_DEV_1           3       /* virtual display device 2 */
+#define VO_VIRT_DEV_2           4       /* virtual display device 3 */
+#define VO_VIRT_DEV_3           5       /* virtual display device 4 */
 
-#define VO_MAX_GFX_LAYER_PER_DEV 3
-#define VOU_GRAPHICS_LAYER_NUM   4     
+#define VO_MAX_GFX_LAYER_PER_DEV 2
+#define VO_MAX_GRAPHICS_LAYER_NUM   3   
+#define MDDRC_ZONE_MAX_NUM   32
+
+#define VO_MAX_WBC_NUM 1
+#define VO_MAX_PRIORITY 2
+/* the startup condition of video compress */
+#define VIDEO_COMPRESS_WIDTH_THRESHOLD     352
 
 #define VO_MIN_TOLERATE         1       /* min play toleration 1ms */
 #define VO_MAX_TOLERATE         100000  /* max play toleration 100s */
 
-#define AI_DEV_MAX_NUM       1
+#define AI_DEV_MAX_NUM       2
 #define AO_DEV_MIN_NUM       0
 #define AO_DEV_MAX_NUM       2
-#define SIO_MAX_NUM          2
-
-
+#define AIO_MAX_NUM          2
 #define AIO_MAX_CHN_NUM      16
+
 #define AENC_MAX_CHN_NUM     32
 #define ADEC_MAX_CHN_NUM     32
 
-#define VPSS_MAX_GRP_NUM   		128
+#define RGN_MIN_WIDTH 2
+#define RGN_MIN_HEIGHT 2
+#define RGN_MAX_WIDTH   4096
+#define RGN_MAX_HEIGHT  4096
+#define RGN_ALIGN 2
 
-#define VPSS_MAX_PHY_CHN_NUM	4
-#define VPSS_MAX_EXT_CHN_NUM  	0
-#define VPSS_MAX_CHN_NUM   		(VPSS_MAX_PHY_CHN_NUM + VPSS_MAX_EXT_CHN_NUM + 1)
+/* VB size calculate for compressed frame.
+	[param input]
+		w: 	width
+		h: 	height
+		fmt:	pixel format, 0: SP420, 1: SP422
+		z:	compress mode, 0: no compress, 1: default compress
+	[param output]
+		size: vb blk size
+		
+ */
+#define VB_W_ALIGN		16
+#define VB_H_ALIGN		32
+#define VB_ALIGN(x, a)	((a) * (((x) + (a) - 1) / (a)))
 
-#define VPSS_BSTR_CHN     		0
-#define VPSS_LSTR_CHN     		1
-#define VPSS_PRE0_CHN			2
-#define VPSS_PRE1_CHN			3
-#define VPSS_BYPASS_CHN   		4
 
-#define RC_MAD_HIST_SIZE  64
-#define RC_MSE_HIST_SIZE  8
-#define RC_MAX_BLINK_QP   32
 
-/* hi3520D not support pciv */
-#define PCIV_MAX_CHN_NUM        0       /* max pciv channel number in each pciv device */
+/* VB size calculate for compressed frame.
+	[param input]
+		w: 	width
+		h: 	height
+		fmt:	pixel format, 0: SP420, 1: SP422
+		z:	compress mode, 0: no compress, 1: default compress
+	[param output]
+		size: vb blk size		
+ */
+#define VB_HEADER_STRIDE    16
+
+#define VB_PIC_Y_HEADER_SIZE(Width, Height, size)\
+	do{\
+            size = VB_HEADER_STRIDE * (Height);\
+	}while(0)
+
+#define VB_PIC_HEADER_SIZE(Width, Height, Type, size)\
+	do{\
+            if (PIXEL_FORMAT_YUV_SEMIPLANAR_422 == Type)\
+            {\
+		        size = VB_HEADER_STRIDE * (Height) * 2;\
+            }\
+            else\
+            {\
+                size = (VB_HEADER_STRIDE * (Height) * 3) >> 1;\
+            }\
+	}while(0)
+
+
+#define VB_PIC_BLK_SIZE(Width, Height, Type, size)\
+	do{\
+			unsigned int u32AlignWidth;\
+			unsigned int u32AlignHeight;\
+			if (Type==PT_H264 || Type==PT_MP4VIDEO || Type==PT_MPEG2VIDEO)\
+			{\
+			    u32AlignWidth = VB_ALIGN(Width,16);\
+			    u32AlignHeight= VB_ALIGN(Height,32);\
+			    size = ( (u32AlignWidth * u32AlignHeight) * 3) >> 1;\
+			}\
+			else if (Type==PT_H265)\
+			{\
+			    u32AlignWidth = VB_ALIGN(Width,64);\
+			    u32AlignHeight= VB_ALIGN(Height,64);\
+			    size = ( (u32AlignWidth * u32AlignHeight) * 3) >> 1;\
+			}\
+			else\
+			{\
+			    u32AlignWidth = VB_ALIGN(Width,64);\
+			    u32AlignHeight= VB_ALIGN(Height,16);\
+	            size = (u32AlignWidth * u32AlignHeight * 3) >> 1;\
+			}\
+	}while(0)
+
+
+
+#define VB_PMV_BLK_SIZE(Width, Height, enType, size)\
+    do{\
+            unsigned int WidthInMb, HeightInMb;\
+            unsigned int ColMbSize;\
+            WidthInMb  = (enType == PT_H265) ? ((Width   + 63) >> 4) : ((Width   + 15) >> 4);\
+            HeightInMb = (enType == PT_H265) ? ((Height  + 63) >> 4) : ((Height  + 15) >> 4);\
+            ColMbSize  = (enType == PT_H265) ? (4*4) : (16*4);\
+            size       = VB_ALIGN((ColMbSize * WidthInMb * HeightInMb), 128);\
+    }while(0)
+
 
 #ifdef __cplusplus
 #if __cplusplus

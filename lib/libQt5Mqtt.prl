@@ -1,0 +1,6 @@
+QMAKE_PRL_BUILD_DIR = /home/macian/Project/mqtt/build-qtmqtt-Qt_5_12_7_hisiv300-Debug/src/mqtt
+QMAKE_PRO_INPUT = mqtt.pro
+QMAKE_PRL_TARGET = libQt5Mqtt.so.5.12.7
+QMAKE_PRL_CONFIG = lex yacc debug depend_includepath testcase_targets import_plugins import_qpa_plugin qt_build_extra file_copies qmake_use qt warn_on link_prl incremental cross_compile shared linux unix posix gcc cross_compile compile_examples enable_new_dtags largefile prefix_build force_independent force_bootstrap utf8_source create_prl link_prl prepare_docs qt_docs_targets no_private_qt_headers_warning QTDIR_build qt_example_installs exceptions_off testcase_exceptions explicitlib warning_clean debug qml_debug c++11 relative_qt_rpath qmake_cache target_qt c++11 strict_c++ c99 c11 hide_symbols split_incpath qt_install_headers need_fwd_pri qt_install_module create_cmake compiler_supports_fpmath create_pc create_libtool have_target dll debug_info thread moc resources
+QMAKE_PRL_VERSION = 5.12.7
+QMAKE_PRL_LIBS = /home/macian/Tools/qt/qt-everywhere-src-5.12.7/_install/lib/libQt5Network.so /home/macian/Tools/qt/qt-everywhere-src-5.12.7/_install/lib/libQt5Core.so -lpthread

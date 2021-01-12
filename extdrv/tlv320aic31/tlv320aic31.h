@@ -114,5 +114,6 @@ typedef struct
     unsigned int trans_mode:2;
     unsigned int reserved :6;
     unsigned int data_offset:8;
+    unsigned int sampleRate;
 }Audio_Ctrl;
 #endif

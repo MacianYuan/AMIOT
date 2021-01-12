@@ -38,7 +38,7 @@ typedef enum {
 
 
 #ifdef HI_ADVCA_FUNCTION_RELEASE
-/** 高安版本不能有调试字符串 **/
+
 JMESSAGE(JMSG_NOMESSAGE,           "")
 JMESSAGE(JERR_ARITH_NOTIMPL,       "")
 JMESSAGE(JERR_BAD_ALIGN_TYPE,      "")

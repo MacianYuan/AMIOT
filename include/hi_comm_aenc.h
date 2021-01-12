@@ -68,15 +68,18 @@ typedef struct hiAENC_ENCODER_S
 typedef struct hiAENC_CHN_ATTR_S 
 { 
     PAYLOAD_TYPE_E      enType;         /*payload type ()*/ 
+	HI_U32 				u32PtNumPerFrm;
     HI_U32              u32BufSize;      /*buf size [2~MAX_AUDIO_FRAME_NUM]*/
     HI_VOID             *pValue;  /*point to attribute of definite audio encoder*/       
 }AENC_CHN_ATTR_S;
 
 typedef enum hiEN_AENC_ERR_CODE_E
 {
-    ADEC_ERR_ENCODER_ERR     = 64 ,
+    AENC_ERR_ENCODER_ERR     = 64 ,
+    AENC_ERR_VQE_ERR        = 65 ,
 
 } EN_AENC_ERR_CODE_E;
+
 
 /* invlalid device ID */
 #define HI_ERR_AENC_INVALID_DEVID     HI_DEF_ERR(HI_ID_AENC, EN_ERR_LEVEL_ERROR, EN_ERR_INVALID_DEVID)
@@ -107,7 +110,10 @@ typedef enum hiEN_AENC_ERR_CODE_E
 /* system is not ready,had not initialed or loaded*/
 #define HI_ERR_AENC_SYS_NOTREADY      HI_DEF_ERR(HI_ID_AENC, EN_ERR_LEVEL_ERROR, EN_ERR_SYS_NOTREADY)
 /* encoder internal err */ 
-#define HI_ERR_AENC_ENCODER_ERR       HI_DEF_ERR(HI_ID_AENC, EN_ERR_LEVEL_ERROR, ADEC_ERR_ENCODER_ERR)
+#define HI_ERR_AENC_ENCODER_ERR       HI_DEF_ERR(HI_ID_AENC, EN_ERR_LEVEL_ERROR, AENC_ERR_ENCODER_ERR)
+/* vqe internal err */ 
+#define HI_ERR_AENC_VQE_ERR       HI_DEF_ERR(HI_ID_AENC, EN_ERR_LEVEL_ERROR, AENC_ERR_VQE_ERR)
+
 
 
 #ifdef __cplusplus

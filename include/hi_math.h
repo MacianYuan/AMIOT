@@ -254,7 +254,8 @@ __inline static HI_BOOL FpsControl(FPS_CTRL_S *pFrmCtrl)
 ** GetSysTimeByUsec 
 *******************************************************************************/
 #ifdef __KERNEL__
-    #include <linux/time.h>
+    //#include <linux/time.h>
+    #include <linux/ktime.h>
 #else
     #include <sys/time.h>
 #endif

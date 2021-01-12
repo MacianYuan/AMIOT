@@ -13,10 +13,8 @@
     Author      : p00123320
     Modification: Created file    
 ******************************************************************************/
-
-
-#ifndef _MPI_ADEC_H__
-#define _MPI_ADEC_H__
+#ifndef __MPI_ADEC_H__
+#define __MPI_ADEC_H__
 
 #include "hi_common.h"
 #include "hi_comm_aio.h"
@@ -41,6 +39,7 @@ HI_S32 HI_MPI_ADEC_UnRegisterDecoder(HI_S32 s32Handle);
 
 HI_S32 HI_MPI_ADEC_GetFrame(ADEC_CHN AdChn, AUDIO_FRAME_INFO_S *pstFrmInfo, HI_BOOL bBlock);
 HI_S32 HI_MPI_ADEC_ReleaseFrame(ADEC_CHN AdChn, AUDIO_FRAME_INFO_S *pstFrmInfo);
+HI_S32 HI_MPI_ADEC_SendEndOfStream(ADEC_CHN AdChn, HI_BOOL bInstant);
 
 
 
@@ -50,5 +49,5 @@ HI_S32 HI_MPI_ADEC_ReleaseFrame(ADEC_CHN AdChn, AUDIO_FRAME_INFO_S *pstFrmInfo);
 #endif
 #endif /* __cplusplus */
 
-#endif
+#endif /* __MPI_ADEC_H__ */
 

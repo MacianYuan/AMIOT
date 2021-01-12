@@ -66,6 +66,8 @@ extern "C"{
 /**To obtain the compression function status of an overlay layer*/
 #define FBIOGET_COMPRESSION_HIFB	_IOR(IOC_TYPE_HIFB, 134, HI_BOOL)
 
+/**To release the layer*/
+#define FBIO_RELEASE_HIFB         _IO(IOC_TYPE_HIFB, 140)
 
 typedef struct
 {
@@ -103,8 +105,10 @@ typedef struct
 
 typedef struct
 {
-    HI_S32 x, y;    
-    HI_S32 w, h;    
+    HI_S32 x;
+    HI_S32 y;    
+    HI_S32 w;
+    HI_S32 h;    
 } HIFB_RECT;
 
 typedef struct
@@ -237,6 +241,13 @@ typedef struct
     HIFB_POINT_S stHotPos;
 } HIFB_CURSOR_S;
 
+/* DDR detect zone info */
+typedef struct
+{
+    HI_U32 u32StartSection;
+    HI_U32 u32ZoneNums;
+} HIFB_DDRZONE_S;
+
 /* crusor handle */
 /* Attention:surface in cursor will be released by user*/
 #define FBIOPUT_CURSOR_INFO		      _IOW(IOC_TYPE_HIFB, 104, HIFB_CURSOR_S *)
@@ -311,6 +322,12 @@ typedef struct
 
 /**sync refresh*/
 #define FBIO_WAITFOR_FREFRESH_DONE        _IO(IOC_TYPE_HIFB, 125)
+
+/**To set the DDR detect zone of an overlay layer*/
+#define FBIOPUT_MDDRDETECT_HIFB    _IOW(IOC_TYPE_HIFB, 135, HIFB_DDRZONE_S*)
+/**To get the DDR detect zone of an overlay layer*/
+#define FBIOGET_MDDRDETECT_HIFB    _IOW(IOC_TYPE_HIFB, 136, HIFB_DDRZONE_S*)
+
 
 
 

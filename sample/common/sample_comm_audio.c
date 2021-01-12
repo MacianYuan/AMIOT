@@ -18,7 +18,7 @@
 #include <signal.h>
 
 #include "sample_comm.h"
-
+//#include "acodec.h"
 
 #ifdef __cplusplus
 #if __cplusplus
@@ -62,13 +62,22 @@ typedef struct tagSAMPLE_ADEC_S
     pthread_t stAdPid;
 } SAMPLE_ADEC_S;
 
+typedef struct tagSAMPLE_AO_S
+{
+	AUDIO_DEV AoDev;
+	HI_BOOL bStart;
+	pthread_t stAoPid;
+}SAMPLE_AO_S;
+
 static SAMPLE_AI_S gs_stSampleAi[AI_DEV_MAX_NUM*AIO_MAX_CHN_NUM];
 static SAMPLE_AENC_S gs_stSampleAenc[AENC_MAX_CHN_NUM];
 static SAMPLE_ADEC_S gs_stSampleAdec[ADEC_MAX_CHN_NUM];
+static SAMPLE_AO_S   gs_stSampleAo[AO_DEV_MAX_NUM];
 
-
+#if 0
 HI_S32 SAMPLE_TW2865_SetFormat(AIO_MODE_E enWorkMode)
 {
+#if 1
     int fd;
     tw2865_audio_format audio_farmat;
     
@@ -85,12 +94,26 @@ HI_S32 SAMPLE_TW2865_SetFormat(AIO_MODE_E enWorkMode)
         || AIO_MODE_PCM_MASTER_NSTD == enWorkMode)
     {
         audio_farmat.format = 1;
+        audio_farmat.clkdir= 1;
     }
     else
     {
         audio_farmat.format = 0;    
+        audio_farmat.clkdir= 0;
     }
-    
+
+    if (AIO_MODE_PCM_SLAVE_STD == enWorkMode
+        || AIO_MODE_PCM_SLAVE_NSTD == enWorkMode
+        || AIO_MODE_I2S_SLAVE== enWorkMode)
+    {
+        audio_farmat.mode= 1;
+    }
+    else
+    {
+        audio_farmat.mode = 0;    
+    }
+
+   
     if (ioctl(fd, TW2865_SET_AUDIO_FORMAT, &audio_farmat))
     {
         printf("ioctl TW2865_SET_AUDIO_FORMAT err !!! \n");
@@ -99,11 +122,13 @@ HI_S32 SAMPLE_TW2865_SetFormat(AIO_MODE_E enWorkMode)
     }
     
     close(fd);
+#endif
     return 0;
 }
 
 HI_S32 SAMPLE_TW2865_CfgAudio(AUDIO_SAMPLE_RATE_E enSample)
 {
+#if 1
     int fd;
     tw2865_audio_samplerate samplerate;
         
@@ -152,11 +177,13 @@ HI_S32 SAMPLE_TW2865_CfgAudio(AUDIO_SAMPLE_RATE_E enSample)
             __FUNCTION__, __LINE__, enSample);
 
     close(fd);
+#endif
     return 0;
 }
 
 HI_S32 SAMPLE_TW2865_SetBitwidth(AUDIO_BIT_WIDTH_E enBitwidth)
 {
+#if 1
     int fd;
     tw2865_audio_bitwidth enTw2865Bitwidth;
     
@@ -191,202 +218,10 @@ HI_S32 SAMPLE_TW2865_SetBitwidth(AUDIO_BIT_WIDTH_E enBitwidth)
         return HI_FAILURE;
     }
     close(fd);
+#endif
     return HI_SUCCESS;
 }
-
-
-HI_S32 SAMPLE_CX26828_SetFormat(AIO_MODE_E enWorkMode)
-{
-    int fd;
-    cx26828_audio_format audio_format;
-    
-    fd = open(CX26828_FILE, O_RDWR);
-    if (fd < 0)
-    {
-        printf("open %s fail\n", CX26828_FILE);
-        return HI_FAILURE;
-    }
-
-    if (AIO_MODE_I2S_SLAVE == enWorkMode || AIO_MODE_I2S_MASTER == enWorkMode)
-    {
-        audio_format.format = 0;
-    }
-    else if (AIO_MODE_PCM_SLAVE_STD == enWorkMode || AIO_MODE_PCM_MASTER_STD == enWorkMode)
-    {
-        audio_format.format = 1;    
-    }
-    else if (AIO_MODE_PCM_SLAVE_NSTD == enWorkMode || AIO_MODE_PCM_MASTER_NSTD == enWorkMode)
-    {
-        audio_format.format = 2;
-    }
-    else
-    {
-        printf("func(%s) line(%d): cx26828 not support workmode:%d\n",
-                __FUNCTION__, __LINE__, enWorkMode);
-        return HI_FAILURE;
-    }
-
-    /* set cx26828 master mode */
-    if (AIO_MODE_I2S_SLAVE == enWorkMode 
-        || AIO_MODE_PCM_SLAVE_STD == enWorkMode 
-        || AIO_MODE_PCM_SLAVE_NSTD == enWorkMode)
-    {
-        audio_format.master = 1;
-    }
-    else if (AIO_MODE_I2S_MASTER == enWorkMode 
-        || AIO_MODE_PCM_MASTER_STD == enWorkMode 
-        || AIO_MODE_PCM_MASTER_NSTD == enWorkMode)
-    {
-        audio_format.master = 0;   
-    }
-    else
-    {
-        printf("func(%s) line(%d): cx26828 not support workmode:%d\n",
-                __FUNCTION__, __LINE__, enWorkMode);
-        return HI_FAILURE;
-    }
-
-    audio_format.chip = 0;
-    if (ioctl(fd, CX26828_SET_AUDIO_FORMAT, &audio_format))
-    {
-        printf("ioctl CX26828_SET_AUDIO_FORMAT err !!! \n");
-        close(fd);
-        return HI_FAILURE;
-    }
-    
-    printf("func(%s) line(%d): set CX26828 audio format(%d) ok!\n", __FUNCTION__, __LINE__, enWorkMode);
-    close(fd);
-    
-    return HI_SUCCESS;
-}
-
-
-HI_S32 SAMPLE_CX26828_SetSmprate(AUDIO_SAMPLE_RATE_E enSample)
-{
-    int fd;
-    cx26828_audio_sample_rate stCx26828SmpRate;
-        
-    fd = open(CX26828_FILE, O_RDWR);
-    if (fd < 0)
-    {
-        printf("open %s fail\n", CX26828_FILE);
-        return HI_FAILURE;
-    }
-    
-    if (AUDIO_SAMPLE_RATE_8000 == enSample)
-    {
-        stCx26828SmpRate.sample_rate = CX26828_SAMPLE_RATE_8000;
-    }
-    else if (AUDIO_SAMPLE_RATE_16000 == enSample)
-    {
-        stCx26828SmpRate.sample_rate = CX26828_SAMPLE_RATE_16000;
-    }
-    else if (AUDIO_SAMPLE_RATE_32000 == enSample)
-    {
-        stCx26828SmpRate.sample_rate = CX26828_SAMPLE_RATE_32000;
-    }
-    else if (AUDIO_SAMPLE_RATE_44100 == enSample)
-    {
-        stCx26828SmpRate.sample_rate = CX26828_SAMPLE_RATE_44100;
-    }
-    else if (AUDIO_SAMPLE_RATE_48000 == enSample)
-    {
-        stCx26828SmpRate.sample_rate = CX26828_SAMPLE_RATE_48000;
-    }
-    else 
-    {
-        printf("func(%s) line(%d): cx26828 not support enSample:%d\n",
-                __FUNCTION__, __LINE__, enSample);
-        return HI_FAILURE;
-    }
-    
-    stCx26828SmpRate.chip = 0; 
-    if (ioctl(fd, CX26828_SET_SAMPLE_RATE, &stCx26828SmpRate))
-    {
-        printf("ioctl CX26828_SET_SAMPLE_RATE err !!! \n");
-        close(fd);
-        return HI_FAILURE;
-    }
-    
-    printf("\nfunc(%s) line(%d): set cx26828 sample rate(%d) ok\n", __FUNCTION__, __LINE__, enSample);
-    close(fd);
-    
-    return HI_SUCCESS;
-}
-
-
-HI_S32 SAMPLE_CX26828_SetBitwidth(AUDIO_BIT_WIDTH_E enBitwidth)
-{
-    int fd;
-    cx26828_audio_bit_width stCx26828Bitwidth;
-    
-    switch (enBitwidth)
-    {
-        case AUDIO_BIT_WIDTH_8:
-            stCx26828Bitwidth.bit_width = CX26828_AUDIO_BITWIDTH_8;
-            break;
-
-        case AUDIO_BIT_WIDTH_16:
-            stCx26828Bitwidth.bit_width = CX26828_AUDIO_BITWIDTH_16;
-            break;
-
-        default:
-            printf("func(%s) line(%d): cx26828 not support bitwidth %d!\n",
-                    __FUNCTION__, __LINE__, enBitwidth);
-            return HI_FAILURE;
-    }
-        
-    fd = open(CX26828_FILE, O_RDWR);
-    if (fd < 0)
-    {
-        printf("open %s fail\n", CX26828_FILE);
-        return HI_FAILURE;
-    }
-
-    stCx26828Bitwidth.chip = 0;
-    if (ioctl(fd, CX26828_SET_BIT_WIDTH, &stCx26828Bitwidth))
-    {
-        printf("func(%s) line(%d): ioctl CX26828_SET_AUDIO_BITWIDTH err!\n",
-                    __FUNCTION__, __LINE__);
-        close(fd);
-        return HI_FAILURE;
-    }
-
-    printf("func(%s) line(%d): set cx26828 bit width(%d) ok\n", __FUNCTION__, __LINE__, enBitwidth);
-    close(fd);
-    
-    return HI_SUCCESS;
-}
-
-
-HI_S32 SAMPLE_CX26828_SetChnNum(HI_U32 u32ChnNum)
-{
-    int fd;
-    cx26828_audio_chn_num stcx26828ChnNum;
-        
-    fd = open(CX26828_FILE, O_RDWR);
-    if (fd < 0)
-    {
-        printf("open %s fail\n", CX26828_FILE);
-        return HI_FAILURE;
-    }
-
-    stcx26828ChnNum.chip    = 0;
-    stcx26828ChnNum.chn_num = u32ChnNum;
-    if (ioctl(fd, CX26828_SET_CHN_NUM, &stcx26828ChnNum))
-    {
-        printf("func(%s) line(%d): ioctl CX26828_SET_CHN_NUM err!\n",
-                    __FUNCTION__, __LINE__);
-        close(fd);
-        return HI_FAILURE;
-    }
-
-    printf("func(%s) line(%d): set cx26828 chn num(%d) ok\n", __FUNCTION__, __LINE__, u32ChnNum);
-    close(fd);
-    
-    return HI_SUCCESS;
-}
-
+#endif
 
 HI_S32 SAMPLE_Tlv320_CfgAudio(AIO_MODE_E enWorkmode,AUDIO_SAMPLE_RATE_E enSample)
 {
@@ -395,11 +230,10 @@ HI_S32 SAMPLE_Tlv320_CfgAudio(AIO_MODE_E enWorkmode,AUDIO_SAMPLE_RATE_E enSample
      Audio_Ctrl audio_ctrl;
      int s_fdTlv = -1;
      HI_BOOL bPCMmode = HI_FALSE;
-     HI_BOOL bMaster = HI_TRUE;      /* \D5\E2\C0\EF\B5\C4\D6\F7ģʽ\CAǶ\D4\D3\DATlv320aic31\C0\B4˵\B5\C4 */
+     HI_BOOL bMaster = HI_TRUE;      /* master mode for Tlv320aic31 */
      HI_BOOL bPCMStd = HI_FALSE;
  
-     /* aic31\CD\E2\BD\D3\D7\C5һ\B8\F612.288M\B5ľ\A7\D5񣬶\D4\D3\DA44.1kϵ\C1еĲ\C9\D1\F9\C2\CA\D3\EB48kϵ\C1еĲ\C9\D1\F9\C2ʣ\AC
-         \D0\E8Ҫ\B8\F8aic31\C5\E4\D6ò\BBͬ\B5\C4P\A1\A2R\A1\A2J\A1\A2Dֵ\A3\AC\CB\F9\D2\D4\D5\E2\C0\EF\C9\E8\D6\C3һ\B1\EA־\C0\B4\BC\C7¼ */
+     /*  */
      HI_BOOL b44100HzSeries = HI_FALSE;         
      
      if (AUDIO_SAMPLE_RATE_8000 == enSample)
@@ -485,10 +319,11 @@ HI_S32 SAMPLE_Tlv320_CfgAudio(AIO_MODE_E enWorkmode,AUDIO_SAMPLE_RATE_E enSample
          printf("[Func]:%s [Line]:%d [Info]:%s\n", __FUNCTION__, __LINE__, "tlv320aic31 reset failed");
      }
 
-     /* \C9\E8\D6\C3\D6\F7\B4\D3ģʽ 1Ϊ\D6\F7ģʽ*/ 
+     /* set master/slave mode, 1: master*/ 
      audio_ctrl.ctrl_mode = bMaster;
      audio_ctrl.if_44100hz_series = b44100HzSeries;
      audio_ctrl.sample = s32Samplerate;
+     audio_ctrl.sampleRate = enSample;
      ioctl(s_fdTlv,SET_CTRL_MODE,&audio_ctrl); 
      
      /* set transfer mode 0:I2S 1:PCM */
@@ -524,9 +359,13 @@ HI_S32 SAMPLE_Tlv320_CfgAudio(AIO_MODE_E enWorkmode,AUDIO_SAMPLE_RATE_E enSample
      /*Right/Left DAC Datapath Control */
      audio_ctrl.if_powerup = 1;/*Left/Right DAC datapath plays left/right channel input data*/
      ioctl(s_fdTlv,LEFT_DAC_POWER_SETUP,&audio_ctrl);
+     if ((AIO_MODE_I2S_MASTER != enWorkmode) && (AIO_MODE_I2S_SLAVE != enWorkmode))
+     {
+        audio_ctrl.if_powerup = 0;
+     }
      ioctl(s_fdTlv,RIGHT_DAC_POWER_SETUP,&audio_ctrl);
  
-     /* \C9\E8\D6\C3PCM\B1\EA׼ģʽ\BAͷǱ\EA׼ģʽ */
+     /* set PCM mode */
      if ((AIO_MODE_PCM_MASTER_STD == enWorkmode)||(AIO_MODE_PCM_SLAVE_STD == enWorkmode))
      {
          bPCMStd = HI_TRUE;
@@ -542,7 +381,7 @@ HI_S32 SAMPLE_Tlv320_CfgAudio(AIO_MODE_E enWorkmode,AUDIO_SAMPLE_RATE_E enSample
      else
      {;}
      
-     /* \CA\FD\BE\DDλ\BF\ED (0:16bit 1:20bit 2:24bit 3:32bit) */
+     /* data bit width (0:16bit 1:20bit 2:24bit 3:32bit) */
      audio_ctrl.data_length = 0;
      ioctl(s_fdTlv,SET_DATA_LENGTH,&audio_ctrl);
    
@@ -559,7 +398,7 @@ HI_S32 SAMPLE_Tlv320_CfgAudio(AIO_MODE_E enWorkmode,AUDIO_SAMPLE_RATE_E enSample
      ioctl(s_fdTlv,LEFT_LOP_OUTPUT_LEVEL_CTRL,&audio_ctrl);
      ioctl(s_fdTlv,RIGHT_LOP_OUTPUT_LEVEL_CTRL,&audio_ctrl);
  
-     /*\C5\E4\D6\C3AD*/
+     /*config AD*/
      /* LEFT/RIGHT ADC PGA GAIN CONTROL 15 16*/    
      audio_ctrl.if_mute_route =0;    
      audio_ctrl.input_level = 0;    
@@ -582,12 +421,19 @@ HI_S32 SAMPLE_Tlv320_CfgAudio(AIO_MODE_E enWorkmode,AUDIO_SAMPLE_RATE_E enSample
      ioctl(s_fdTlv,IN1R_2_RIGHT_ADC_CTRL,&audio_ctrl); 
      getchar();
      printf("set 19 22\n");*/
- 
-     close(s_fdTlv);
-     printf("Set aic31 ok: bMaster = %d, enWorkmode = %d, enSamplerate = %d\n",
+
+	audio_ctrl.if_mute_route = 1;
+	audio_ctrl.input_level = 9;
+	audio_ctrl.if_powerup = 1;
+	ioctl(s_fdTlv,HPLOUT_OUTPUT_LEVEL_CTRL,&audio_ctrl);
+	ioctl(s_fdTlv,HPROUT_OUTPUT_LEVEL_CTRL,&audio_ctrl);
+	 
+    close(s_fdTlv);
+    printf("Set aic31 ok: bMaster = %d, enWorkmode = %d, enSamplerate = %d\n",
              bMaster, enWorkmode, enSample);
-     return 0;
+    return 0;
  }
+
 
 
 HI_S32 SAMPLE_Tlv320_Disable()
@@ -605,7 +451,7 @@ HI_S32 SAMPLE_Tlv320_Disable()
     
     /* reset transfer mode 0:I2S 1:PCM */
     audio_ctrl.chip_num = 0;
-    s32Ret = ioctl(s_fdTlv,SOFT_RESET,&audio_ctrl);
+    s32Ret = ioctl(s_fdTlv, SOFT_RESET, &audio_ctrl);
     if (HI_SUCCESS != s32Ret)
     {
         printf("[Func]:%s [Line]:%d [Info]:%s\n", __FUNCTION__, __LINE__, "tlv320aic31 reset failed");
@@ -615,31 +461,222 @@ HI_S32 SAMPLE_Tlv320_Disable()
     return s32Ret;
 }
 
-/* config codec */ 
-HI_S32 SAMPLE_COMM_AUDIO_CfgAcodec(AIO_ATTR_S *pstAioAttr, HI_BOOL bMacIn)
+HI_S32 SAMPLE_NVP6124_CfgAudio(const AIO_ATTR_S *pstAioAttr)
 {
-#ifndef NVP1918
-    HI_S32 s32Ret = HI_FAILURE;
+	int fd;
+    nvp6124_audio_format format;
 
-#ifdef DEMO
-    /*** ACODEC_TYPE_CX26828 ***/
-    s32Ret  = SAMPLE_CX26828_SetSmprate(pstAioAttr->enSamplerate);
-    s32Ret |= SAMPLE_CX26828_SetFormat(pstAioAttr->enWorkmode);
-    s32Ret |= SAMPLE_CX26828_SetBitwidth(pstAioAttr->enBitwidth);
-    s32Ret |= SAMPLE_CX26828_SetChnNum(pstAioAttr->u32ChnCnt);
-#else
-    /*** ACODEC_TYPE_TW2865 ***/
-    s32Ret = SAMPLE_TW2865_CfgAudio(pstAioAttr->enSamplerate);
-    s32Ret |= SAMPLE_TW2865_SetFormat(pstAioAttr->enWorkmode);
-    s32Ret |= SAMPLE_TW2865_SetBitwidth(pstAioAttr->enBitwidth);
+    switch (pstAioAttr->enBitwidth)
+    {
+        case AUDIO_BIT_WIDTH_8:
+            format.precision = 1;
+            break;
+
+        case AUDIO_BIT_WIDTH_16:
+            format.precision = 0;
+            break;
+
+        default:
+            printf("func(%s) line(%d): nvp6124 not support bitwidth %d!\n",
+                    __FUNCTION__, __LINE__, pstAioAttr->enBitwidth);
+            return HI_FAILURE;
+    }
+
+	switch (pstAioAttr->enWorkmode)
+    {
+        case AIO_MODE_I2S_MASTER:
+		case AIO_MODE_PCM_MASTER_NSTD:
+		case AIO_MODE_PCM_MASTER_STD:
+            format.mode = 0;
+			format.clkdir = 1;
+            break;
+
+        case AIO_MODE_I2S_SLAVE:
+		case AIO_MODE_PCM_SLAVE_NSTD:
+		case AIO_MODE_PCM_SLAVE_STD:
+            format.mode = 1;
+			format.clkdir = 0;
+            break;
+
+        default:
+            printf("func(%s) line(%d): nvp6124 not support mode %d!\n",
+                    __FUNCTION__, __LINE__, pstAioAttr->enWorkmode);
+            return HI_FAILURE;
+    }
+
+	switch (pstAioAttr->enWorkmode)
+    {
+        case AIO_MODE_I2S_MASTER:
+		case AIO_MODE_I2S_SLAVE:
+            format.format = 0;
+			format.dspformat = 0;
+            break;
+
+		case AIO_MODE_PCM_MASTER_STD:
+		case AIO_MODE_PCM_SLAVE_STD:
+            format.format = 1;
+			format.dspformat = 0;
+            break;
+
+		case AIO_MODE_PCM_MASTER_NSTD:
+		case AIO_MODE_PCM_SLAVE_NSTD:
+            format.format = 1;
+			format.dspformat = 1;
+            break;
+
+        default:
+            printf("func(%s) line(%d): nvp6124 not support mode %d!\n",
+                    __FUNCTION__, __LINE__, pstAioAttr->enWorkmode);
+            return HI_FAILURE;
+    }
+
+	switch (pstAioAttr->enSamplerate)
+    {
+        case AUDIO_SAMPLE_RATE_8000:
+            format.samplerate = 0;
+            break;
+
+        case AUDIO_SAMPLE_RATE_16000:
+            format.samplerate = 1;
+            break;
+
+		case AUDIO_SAMPLE_RATE_32000:
+            format.samplerate = 2;
+            break;
+
+        default:
+            printf("func(%s) line(%d): nvp6124 not support samplerate %d!\n",
+                    __FUNCTION__, __LINE__, pstAioAttr->enSamplerate);
+            return HI_FAILURE;
+    }
+
+	switch (pstAioAttr->u32ChnCnt)
+	{
+		case 1:
+		case 2:
+		case 4:
+		case 8:
+		case 16:
+			if (1 == pstAioAttr->u32ChnCnt)
+			{
+				format.chn_num = 2;
+			}
+			else
+			{
+				format.chn_num = pstAioAttr->u32ChnCnt;
+			}
+			
+			format.bitrate = 0;
+			break;
+		
+		case 20:
+			format.chn_num = 16;
+			format.bitrate = 2;
+			break;
+
+		default:
+            printf("func(%s) line(%d): nvp6124 not support chn_num %d!\n",
+                    __FUNCTION__, __LINE__, pstAioAttr->u32ChnCnt);
+            return HI_FAILURE;
+	}
+
+    fd = open(NVP6124_FILE, O_RDWR);
+    if (fd < 0)
+    {
+        printf("open %s fail\n", NVP6124_FILE);
+        return HI_FAILURE;
+    }
     
+    if (ioctl(fd, NVP6124_SET_AUDIO_R_FORMAT, &format))
+    {
+        printf("func(%s) line(%d): ioctl NVP6124_SET_AUDIO_R_FORMAT err!\n",
+                    __FUNCTION__, __LINE__);
+        close(fd);
+        return HI_FAILURE;
+    }
+
+	if (ioctl(fd, NVP6124_SET_AUDIO_PB_FORMAT, &format))
+    {
+        printf("func(%s) line(%d): ioctl NVP6124_SET_AUDIO_PB_FORMAT err!\n",
+                    __FUNCTION__, __LINE__);
+        close(fd);
+        return HI_FAILURE;
+    }
+    close(fd);
+
+    return HI_SUCCESS;
+}
+
+/*config Tlv320*/
+HI_S32 SAMPLE_COMM_AUDIO_CfgTlv320(AIO_ATTR_S *pstAioAttr)
+{
+    HI_S32 s32Ret = HI_SUCCESS;
+
     /*** ACODEC_TYPE_TLV320 ***/ 
     s32Ret = SAMPLE_Tlv320_CfgAudio(pstAioAttr->enWorkmode, pstAioAttr->enSamplerate);
-#endif
-    
+    if (HI_SUCCESS != s32Ret)
+    {
+        printf("%s: SAMPLE_Tlv320_CfgAudio failed\n", __FUNCTION__);
+        return s32Ret;
+    }
+
     return s32Ret;
+}
+
+/* config codec  AcodecType: 0-inner 1-AIC31 2-HDMI 3-TW2865 */ 
+HI_S32 SAMPLE_COMM_AUDIO_CfgAcodec(AIO_ATTR_S *pstAioAttr)
+{
+    HI_S32 s32Ret = HI_SUCCESS;
+    HI_BOOL bCodecCfg = HI_FALSE;
+#ifdef HI_ACODEC_TYPE_INNER    
+
+    /*** INNER AUDIO CODEC ***/
+    s32Ret = SAMPLE_INNER_CODEC_CfgAudio(pstAioAttr->enSamplerate); 
+    if (HI_SUCCESS != s32Ret)
+    {
+        printf("%s:SAMPLE_INNER_CODEC_CfgAudio failed\n", __FUNCTION__);
+        return s32Ret;
+    }
+    bCodecCfg = HI_TRUE;
+#endif   
+
+#ifdef HI_ACODEC_TYPE_TLV320AIC31 
+       /*** ACODEC_TYPE_TLV320 ***/ 
+       s32Ret = SAMPLE_Tlv320_CfgAudio(pstAioAttr->enWorkmode, pstAioAttr->enSamplerate);
+       if (HI_SUCCESS != s32Ret)
+       {
+           printf("%s: SAMPLE_Tlv320_CfgAudio failed\n", __FUNCTION__);
+           return s32Ret;
+       }
+       bCodecCfg = HI_TRUE;
+#endif   
+
+#ifdef HI_ACODEC_TYPE_TW2865
+
+        /*** ACODEC_TYPE_TW2865 ***/
+        s32Ret = SAMPLE_TW2865_CfgAudio(pstAioAttr->enSamplerate);
+        s32Ret |= SAMPLE_TW2865_SetFormat(pstAioAttr->enWorkmode);
+        s32Ret |= SAMPLE_TW2865_SetBitwidth(pstAioAttr->enBitwidth);
+        bCodecCfg = HI_TRUE;
+#endif 
+
+#ifdef HI_ACODEC_TYPE_NVP6124 
+       /*** ACODEC_TYPE_NVP6124 ***/ 
+       s32Ret = SAMPLE_NVP6124_CfgAudio(pstAioAttr);
+       if (HI_SUCCESS != s32Ret)
+       {
+           printf("%s: SAMPLE_NVP6124_CfgAudio failed\n", __FUNCTION__);
+           return s32Ret;
+       }
+       bCodecCfg = HI_TRUE;
 #endif
-    return 0;
+ 
+   if (!bCodecCfg)
+   {
+        printf("Input wrong codec type!\n");
+        return HI_FALSE;
+   }
+    return HI_SUCCESS;
 }
 
 /******************************************************************************
@@ -697,8 +734,7 @@ void *SAMPLE_COMM_AUDIO_AiProc(void *parg)
         if (FD_ISSET(AiFd, &read_fds))
         {
             /* get frame from ai chn */
-            s32Ret = HI_MPI_AI_GetFrame(pstAiCtl->AiDev, pstAiCtl->AiChn,
-                &stFrame, NULL, HI_FALSE);
+            s32Ret = HI_MPI_AI_GetFrame(pstAiCtl->AiDev, pstAiCtl->AiChn, &stFrame, NULL, HI_FALSE);
             if (HI_SUCCESS != s32Ret )
             {
                 printf("%s: HI_MPI_AI_GetFrame(%d, %d), failed with %#x!\n",\
@@ -710,19 +746,40 @@ void *SAMPLE_COMM_AUDIO_AiProc(void *parg)
             /* send frame to encoder */
             if (HI_TRUE == pstAiCtl->bSendAenc)
             {
-                HI_MPI_AENC_SendFrame(pstAiCtl->AencChn, &stFrame, NULL);
+                s32Ret = HI_MPI_AENC_SendFrame(pstAiCtl->AencChn, &stFrame, NULL);
+                if (HI_SUCCESS != s32Ret )
+                {
+                    printf("%s: HI_MPI_AENC_SendFrame(%d), failed with %#x!\n",\
+                           __FUNCTION__, pstAiCtl->AencChn, s32Ret);
+                    pstAiCtl->bStart = HI_FALSE;
+                    return NULL;
+                }
             }
             
             /* send frame to ao */
             if (HI_TRUE == pstAiCtl->bSendAo)
             {
-                HI_MPI_AO_SendFrame(pstAiCtl->AoDev, pstAiCtl->AoChn,
-                    &stFrame, HI_TRUE);
+                s32Ret = HI_MPI_AO_SendFrame(pstAiCtl->AoDev, pstAiCtl->AoChn, &stFrame, 1000);
+                if (HI_SUCCESS != s32Ret )
+                {
+                    printf("%s: HI_MPI_AO_SendFrame(%d, %d), failed with %#x!\n",\
+                           __FUNCTION__, pstAiCtl->AoDev, pstAiCtl->AoChn, s32Ret);
+                    pstAiCtl->bStart = HI_FALSE;
+                    return NULL;
+                }
+                
             }
 
             /* finally you must release the stream */
-            HI_MPI_AI_ReleaseFrame(pstAiCtl->AiDev, pstAiCtl->AiChn,
-                &stFrame, NULL);
+            s32Ret = HI_MPI_AI_ReleaseFrame(pstAiCtl->AiDev, pstAiCtl->AiChn, &stFrame, NULL);
+            if (HI_SUCCESS != s32Ret )
+            {
+                printf("%s: HI_MPI_AI_ReleaseFrame(%d, %d), failed with %#x!\n",\
+                       __FUNCTION__, pstAiCtl->AiDev, pstAiCtl->AiChn, s32Ret);
+                pstAiCtl->bStart = HI_FALSE;
+                return NULL;
+            }
+            
         }
     }
     
@@ -780,14 +837,28 @@ void *SAMPLE_COMM_AUDIO_AencProc(void *parg)
             /* send stream to decoder and play for testing */
             if (HI_TRUE == pstAencCtl->bSendAdChn)
             {
-                HI_MPI_ADEC_SendStream(pstAencCtl->AdChn, &stStream, HI_TRUE);
+                s32Ret = HI_MPI_ADEC_SendStream(pstAencCtl->AdChn, &stStream, HI_TRUE);
+                if (HI_SUCCESS != s32Ret )
+                {
+                    printf("%s: HI_MPI_ADEC_SendStream(%d), failed with %#x!\n",\
+                           __FUNCTION__, pstAencCtl->AdChn, s32Ret);
+                    pstAencCtl->bStart = HI_FALSE;
+                    return NULL;
+                }
             }
             
             /* save audio stream to file */
             fwrite(stStream.pStream,1,stStream.u32Len, pstAencCtl->pfd);
 
             /* finally you must release the stream */
-            HI_MPI_AENC_ReleaseStream(pstAencCtl->AeChn, &stStream);
+            s32Ret = HI_MPI_AENC_ReleaseStream(pstAencCtl->AeChn, &stStream);
+            if (HI_SUCCESS != s32Ret )
+            {
+                printf("%s: HI_MPI_AENC_ReleaseStream(%d), failed with %#x!\n",\
+                       __FUNCTION__, pstAencCtl->AeChn, s32Ret);
+                pstAencCtl->bStart = HI_FALSE;
+                return NULL;
+            }
         }    
     }
     
@@ -832,7 +903,7 @@ void *SAMPLE_COMM_AUDIO_AdecProc(void *parg)
         /* here only demo adec streaming sending mode, but pack sending mode is commended */
         stAudioStream.u32Len = u32ReadLen;
         s32Ret = HI_MPI_ADEC_SendStream(s32AdecChn, &stAudioStream, HI_TRUE);
-        if (s32Ret)
+        if(HI_SUCCESS != s32Ret)
         {
             printf("%s: HI_MPI_ADEC_SendStream(%d) failed with %#x!\n",\
                    __FUNCTION__, s32AdecChn, s32Ret);
@@ -844,6 +915,86 @@ void *SAMPLE_COMM_AUDIO_AdecProc(void *parg)
     pu8AudioStream = NULL;
     fclose(pfd);
     pstAdecCtl->bStart = HI_FALSE;
+    return NULL;
+}
+
+/******************************************************************************
+* function : set ao volume 
+******************************************************************************/
+void *SAMPLE_COMM_AUDIO_AoVolProc(void *parg)
+{
+    HI_S32 s32Ret;
+    HI_S32 s32Volume;
+    AUDIO_DEV AoDev;
+    AUDIO_FADE_S stFade;
+    SAMPLE_AO_S *pstAoCtl = (SAMPLE_AO_S *)parg;
+    AoDev = pstAoCtl->AoDev;
+	
+    while(pstAoCtl->bStart)
+    {	
+        for(s32Volume = 0; s32Volume <=6; s32Volume++)
+        {
+            s32Ret = HI_MPI_AO_SetVolume( AoDev, s32Volume);
+            if(HI_SUCCESS != s32Ret)
+            {
+                printf("%s: HI_MPI_AO_SetVolume(%d), failed with %#x!\n",\
+                    __FUNCTION__, AoDev, s32Ret);
+            }
+            printf("\rset volume %d          ", s32Volume);
+            fflush(stdout);
+            sleep(2);		
+        }
+
+        for(s32Volume = 5; s32Volume >=-15; s32Volume--)
+        {
+            s32Ret = HI_MPI_AO_SetVolume( AoDev, s32Volume);
+            if(HI_SUCCESS != s32Ret)
+            {
+                printf("%s: HI_MPI_AO_SetVolume(%d), failed with %#x!\n",\
+                    __FUNCTION__, AoDev, s32Ret);
+            }
+            printf("\rset volume %d          ", s32Volume);
+            fflush(stdout);
+            sleep(2);		
+        }
+
+        for(s32Volume = -14; s32Volume >=0; s32Volume++)
+        {
+            s32Ret = HI_MPI_AO_SetVolume( AoDev, s32Volume);
+            if(HI_SUCCESS != s32Ret)
+            {
+                printf("%s: HI_MPI_AO_SetVolume(%d), failed with %#x!\n",\
+                   __FUNCTION__, AoDev, s32Ret);
+            }
+            printf("\rset volume %d          ", s32Volume);
+            fflush(stdout);
+            sleep(2);		
+        }
+
+        stFade.bFade         = HI_TRUE;
+        stFade.enFadeInRate  = AUDIO_FADE_RATE_128;
+        stFade.enFadeOutRate = AUDIO_FADE_RATE_128;
+
+        s32Ret = HI_MPI_AO_SetMute(AoDev, HI_TRUE, &stFade);
+        if(HI_SUCCESS != s32Ret)
+        {
+            printf("%s: HI_MPI_AO_SetVolume(%d), failed with %#x!\n",\
+            __FUNCTION__, AoDev, s32Ret);
+        }
+        printf("\rset Ao mute            ");
+        fflush(stdout);
+        sleep(2);
+
+        s32Ret = HI_MPI_AO_SetMute(AoDev, HI_FALSE, NULL);
+        if(HI_SUCCESS != s32Ret)
+        {
+            printf("%s: HI_MPI_AO_SetVolume(%d), failed with %#x!\n",\
+            __FUNCTION__, AoDev, s32Ret);
+        }
+        printf("\rset Ao unmute          ");
+        fflush(stdout);
+        sleep(2);
+    }
     return NULL;
 }
 
@@ -931,6 +1082,23 @@ HI_S32 SAMPLE_COMM_AUDIO_CreatTrdFileAdec(ADEC_CHN AdChn, FILE *pAdcFd)
     return HI_SUCCESS;
 }
 
+
+/******************************************************************************
+* function : Create the thread to set Ao volume 
+******************************************************************************/
+HI_S32 SAMPLE_COMM_AUDIO_CreatTrdAoVolCtrl(AUDIO_DEV AoDev)
+{
+	SAMPLE_AO_S *pstAoCtl = NULL;
+	
+	pstAoCtl =  &gs_stSampleAo[AoDev];
+	pstAoCtl->AoDev =  AoDev;
+	pstAoCtl->bStart = HI_TRUE;
+	pthread_create(&pstAoCtl->stAoPid, 0, SAMPLE_COMM_AUDIO_AoVolProc, pstAoCtl);
+	
+	return HI_SUCCESS;
+}
+
+
 /******************************************************************************
 * function : Destory the thread to get frame from ai and send to ao or aenc
 ******************************************************************************/
@@ -939,8 +1107,14 @@ HI_S32 SAMPLE_COMM_AUDIO_DestoryTrdAi(AUDIO_DEV AiDev, AI_CHN AiChn)
     SAMPLE_AI_S *pstAi = NULL;
     
     pstAi = &gs_stSampleAi[AiDev*AIO_MAX_CHN_NUM + AiChn];
-    pstAi->bStart= HI_FALSE;
-    pthread_join(pstAi->stAiPid, 0);
+
+	if (pstAi->bStart)
+	{
+		pstAi->bStart= HI_FALSE;
+	    //pthread_cancel(pstAi->stAiPid);
+	    pthread_join(pstAi->stAiPid, 0);
+
+	}
     
     return HI_SUCCESS;
 }
@@ -953,8 +1127,13 @@ HI_S32 SAMPLE_COMM_AUDIO_DestoryTrdAencAdec(AENC_CHN AeChn)
     SAMPLE_AENC_S *pstAenc = NULL;
 
     pstAenc = &gs_stSampleAenc[AeChn];
-    pstAenc->bStart = HI_FALSE;
-    pthread_join(pstAenc->stAencPid, 0);
+
+	if (pstAenc->bStart)
+	{
+		pstAenc->bStart = HI_FALSE;
+    	//pthread_cancel(pstAenc->stAencPid);
+    	pthread_join(pstAenc->stAencPid, 0);
+	}
     
     return HI_SUCCESS;
 }
@@ -967,11 +1146,70 @@ HI_S32 SAMPLE_COMM_AUDIO_DestoryTrdFileAdec(ADEC_CHN AdChn)
     SAMPLE_ADEC_S *pstAdec = NULL;
 
     pstAdec = &gs_stSampleAdec[AdChn];
-    pstAdec->bStart = HI_FALSE;
-    pthread_join(pstAdec->stAdPid, 0);
+
+	if (pstAdec->bStart)
+	{
+		pstAdec->bStart = HI_FALSE;
+    	//pthread_cancel(pstAdec->stAdPid);
+    	pthread_join(pstAdec->stAdPid, 0);
+	}    
     
     return HI_SUCCESS;
 }
+
+/******************************************************************************
+* function : Destory the thread to set Ao volume 
+******************************************************************************/
+HI_S32 SAMPLE_COMM_AUDIO_DestoryTrdAoVolCtrl(AUDIO_DEV AoDev)
+{
+    SAMPLE_AO_S *pstAoCtl = NULL;
+
+    pstAoCtl =  &gs_stSampleAo[AoDev];
+
+	if (pstAoCtl->bStart)
+	{
+		pstAoCtl->bStart = HI_FALSE;
+    	//pthread_cancel(pstAoCtl->stAoPid);
+    	pthread_join(pstAoCtl->stAoPid, 0);
+	}    
+
+    return HI_SUCCESS;
+}
+
+/******************************************************************************
+* function : Destory the all thread
+******************************************************************************/
+HI_S32 SAMPLE_COMM_AUDIO_DestoryAllTrd()
+{
+    HI_U32 u32DevId, u32ChnId;
+
+    for (u32DevId = 0; u32DevId < AI_DEV_MAX_NUM; u32DevId ++)
+    {
+        for (u32ChnId = 0; u32ChnId < AIO_MAX_CHN_NUM; u32ChnId ++)
+        {
+            SAMPLE_COMM_AUDIO_DestoryTrdAi(u32DevId, u32ChnId);
+        }      
+    }
+ 
+    for (u32ChnId = 0; u32ChnId < AENC_MAX_CHN_NUM; u32ChnId ++)
+    {
+        SAMPLE_COMM_AUDIO_DestoryTrdAencAdec(u32ChnId);
+    }    
+
+    for (u32ChnId = 0; u32ChnId < ADEC_MAX_CHN_NUM; u32ChnId ++)
+    {
+        SAMPLE_COMM_AUDIO_DestoryTrdFileAdec(u32ChnId);
+    }  
+
+    for (u32ChnId = 0; u32ChnId < AO_DEV_MAX_NUM; u32ChnId ++)
+    {
+        SAMPLE_COMM_AUDIO_DestoryTrdAoVolCtrl(u32ChnId);
+    }
+    
+    
+    return HI_SUCCESS;
+}
+
 
 /******************************************************************************
 * function : Ao bind Adec
@@ -1162,77 +1400,137 @@ HI_S32 SAMPLE_COMM_AUDIO_DisableAcodec()
 * function : Start Ai
 ******************************************************************************/
 HI_S32 SAMPLE_COMM_AUDIO_StartAi(AUDIO_DEV AiDevId, HI_S32 s32AiChnCnt,
-        AIO_ATTR_S *pstAioAttr, HI_BOOL bAnrEn, AUDIO_RESAMPLE_ATTR_S *pstAiReSmpAttr)
+                                 AIO_ATTR_S* pstAioAttr, AUDIO_SAMPLE_RATE_E enOutSampleRate, HI_BOOL bResampleEn, HI_VOID* pstAiVqeAttr, HI_U32 u32AiVqeType)
 {
-    HI_S32 i, s32Ret;
-    
+    HI_S32 i;
+    HI_S32 s32Ret;
+
+    if (pstAioAttr->u32ClkChnCnt == 0)
+    {
+        pstAioAttr->u32ClkChnCnt = pstAioAttr->u32ChnCnt;
+    }
+
     s32Ret = HI_MPI_AI_SetPubAttr(AiDevId, pstAioAttr);
     if (s32Ret)
     {
         printf("%s: HI_MPI_AI_SetPubAttr(%d) failed with %#x\n", __FUNCTION__, AiDevId, s32Ret);
-        return HI_FAILURE;
+        return s32Ret;
     }
-    if (HI_MPI_AI_Enable(AiDevId))
+
+    s32Ret = HI_MPI_AI_Enable(AiDevId);
+    if (s32Ret)
     {
         printf("%s: HI_MPI_AI_Enable(%d) failed with %#x\n", __FUNCTION__, AiDevId, s32Ret);
-        return HI_FAILURE;
-    }                
-    for (i=0; i<s32AiChnCnt; i++)
+        return s32Ret;
+    }
+
+    for (i = 0; i < s32AiChnCnt; i++)
     {
-        if (HI_MPI_AI_EnableChn(AiDevId, i))
+        s32Ret = HI_MPI_AI_EnableChn(AiDevId, i);
+        if (s32Ret)
         {
-            printf("%s: HI_MPI_AI_EnableChn(%d,%d) failed with %#x\n", __FUNCTION__,\
-                    AiDevId, i, s32Ret);
-            return HI_FAILURE;
+            printf("%s: HI_MPI_AI_EnableChn(%d,%d) failed with %#x\n", __FUNCTION__, AiDevId, i, s32Ret);
+            return s32Ret;
         }
 
-        if (HI_TRUE == bAnrEn)
+        if (HI_TRUE == bResampleEn)
         {
-            if (HI_MPI_AI_EnableAnr(AiDevId, i))
+            s32Ret = HI_MPI_AI_EnableReSmp(AiDevId, i, enOutSampleRate);
+            if (s32Ret)
             {
-                printf("%s: HI_MPI_AI_EnableAnr(%d,%d) failed with %#x\n", __FUNCTION__,\
-                    AiDevId, i, s32Ret);
-                return HI_FAILURE;
+                printf("%s: HI_MPI_AI_EnableReSmp(%d,%d) failed with %#x\n", __FUNCTION__, AiDevId, i, s32Ret);
+                return s32Ret;
             }
         }
 
-        if (NULL != pstAiReSmpAttr)
+        if (NULL != pstAiVqeAttr)
         {
-            if (HI_MPI_AI_EnableReSmp(AiDevId, i, pstAiReSmpAttr))
+			HI_BOOL bAiVqe = HI_TRUE;
+			switch (u32AiVqeType)
             {
-                printf("%s: HI_MPI_AI_EnableReSmp(%d,%d) failed with %#x\n",\
-                        __FUNCTION__, AiDevId, i, s32Ret);
-                return HI_FAILURE;
+				case 0:
+                    s32Ret = HI_SUCCESS;
+					bAiVqe = HI_FALSE;
+                    break;
+                case 1:
+                    s32Ret = HI_MPI_AI_SetVqeAttr(AiDevId, i, SAMPLE_AUDIO_AO_DEV, i, (AI_VQE_CONFIG_S *)pstAiVqeAttr);
+                    break;
+                default:
+                    s32Ret = HI_FAILURE;
+                    break;
+            }
+            if (s32Ret)
+            {
+                printf("%s: HI_MPI_AI_SetVqeAttr(%d,%d) failed with %#x\n", __FUNCTION__, AiDevId, i, s32Ret);
+                return s32Ret;
+            }
+			
+		    if (bAiVqe)
+            {
+                s32Ret = HI_MPI_AI_EnableVqe(AiDevId, i);
+	            if (s32Ret)
+	            {
+	                printf("%s: HI_MPI_AI_EnableVqe(%d,%d) failed with %#x\n", __FUNCTION__, AiDevId, i, s32Ret);
+	                return s32Ret;
+	            }
             }
         }
     }
-    
+
     return HI_SUCCESS;
 }
+
 
 /******************************************************************************
 * function : Stop Ai
 ******************************************************************************/
 HI_S32 SAMPLE_COMM_AUDIO_StopAi(AUDIO_DEV AiDevId, HI_S32 s32AiChnCnt,
-        HI_BOOL bAnrEn, HI_BOOL bResampleEn)
+                                HI_BOOL bResampleEn, HI_BOOL bVqeEn)
 {
-    HI_S32 i;    
-    for (i=0; i<s32AiChnCnt; i++)
+    HI_S32 i;
+    HI_S32 s32Ret;
+
+    for (i = 0; i < s32AiChnCnt; i++)
     {
         if (HI_TRUE == bResampleEn)
         {
-            HI_MPI_AI_DisableReSmp(AiDevId, i);
+            s32Ret = HI_MPI_AI_DisableReSmp(AiDevId, i);
+            if (HI_SUCCESS != s32Ret)
+            {
+                printf("[Func]:%s [Line]:%d [Info]:%s\n", __FUNCTION__, __LINE__, "failed");
+                return s32Ret;
+            }
         }
-        if (HI_TRUE == bAnrEn)
+
+        if (HI_TRUE == bVqeEn)
         {
-            HI_MPI_AI_DisableAnr(AiDevId, i);
+            s32Ret = HI_MPI_AI_DisableVqe(AiDevId, i);
+            if (HI_SUCCESS != s32Ret)
+            {
+                printf("[Func]:%s [Line]:%d [Info]:%s\n", __FUNCTION__, __LINE__, "failed");
+                return s32Ret;
+            }
         }
-        HI_MPI_AI_DisableChn(AiDevId, i);
-    }  
-    HI_MPI_AI_Disable(AiDevId);
+
+        s32Ret = HI_MPI_AI_DisableChn(AiDevId, i);
+        if (HI_SUCCESS != s32Ret)
+        {
+            printf("[Func]:%s [Line]:%d [Info]:%s\n", __FUNCTION__, __LINE__, "failed");
+            return s32Ret;
+        }
+    }
+
+    s32Ret = HI_MPI_AI_Disable(AiDevId);
+    if (HI_SUCCESS != s32Ret)
+    {
+        printf("[Func]:%s [Line]:%d [Info]:%s\n", __FUNCTION__, __LINE__, "failed");
+        return s32Ret;
+    }
+
     return HI_SUCCESS;
 }
 
+#ifdef HI_ACODEC_TYPE_HDMI
 HI_S32 SAMPLE_COMM_AUDIO_StartHdmi(AIO_ATTR_S *pstAioAttr)
 {
     HI_S32 s32Ret;
@@ -1241,12 +1539,11 @@ HI_S32 SAMPLE_COMM_AUDIO_StartHdmi(AIO_ATTR_S *pstAioAttr)
     VO_PUB_ATTR_S stPubAttr;
     VO_DEV VoDev = 0;
     
-    stPubAttr.u32BgColor = 0x0000ff00;
-    stPubAttr.enIntfType = VO_INTF_HDMI|VO_INTF_VGA;
-    stPubAttr.bDoubleFrame = HI_FALSE;
+    stPubAttr.u32BgColor = 0x000000ff;
+    stPubAttr.enIntfType = VO_INTF_HDMI; 
     stPubAttr.enIntfSync = VO_OUTPUT_1080P30;
 
-    if(HI_SUCCESS != SAMPLE_COMM_VO_StartDevLayer(VoDev, &stPubAttr, 25))
+    if(HI_SUCCESS != SAMPLE_COMM_VO_StartDev(VoDev, &stPubAttr))
     {
         printf("[Func]:%s [Line]:%d [Info]:%s\n", __FUNCTION__, __LINE__, "failed");
         return HI_FAILURE;
@@ -1259,7 +1556,12 @@ HI_S32 SAMPLE_COMM_AUDIO_StartHdmi(AIO_ATTR_S *pstAioAttr)
         return HI_FAILURE;
     }
 
-    HI_MPI_HDMI_SetAVMute(enHdmi, HI_TRUE);
+    s32Ret = HI_MPI_HDMI_SetAVMute(enHdmi, HI_TRUE);
+    if(HI_SUCCESS != s32Ret)
+    {
+        printf("[Func]:%s [Line]:%d [Info]:%s\n", __FUNCTION__, __LINE__, "failed");
+        return HI_FAILURE;
+    }
     
     s32Ret = HI_MPI_HDMI_GetAttr(enHdmi, &stHdmiAttr);
     if(HI_SUCCESS != s32Ret)
@@ -1267,16 +1569,17 @@ HI_S32 SAMPLE_COMM_AUDIO_StartHdmi(AIO_ATTR_S *pstAioAttr)
         printf("[Func]:%s [Line]:%d [Info]:%s\n", __FUNCTION__, __LINE__, "failed");
         return HI_FAILURE;
     }
-    stHdmiAttr.bEnableAudio = HI_TRUE;        /**< \CAǷ\F1Enable\D2\F4Ƶ */
-    stHdmiAttr.enSoundIntf = HI_HDMI_SND_INTERFACE_I2S; /**< HDMI\D2\F4Ƶ\C0\B4Դ, \BD\A8\D2\E9HI_HDMI_SND_INTERFACE_I2S,\B4˲\CE\CA\FD\D0\E8Ҫ\D3\EBAO\CA\E4\C8뱣\B3\D6һ\D6\C2 */
-    stHdmiAttr.enSampleRate = pstAioAttr->enSamplerate;        /**< PCM\D2\F4Ƶ\B2\C9\D1\F9\C2\CA,\B4˲\CE\CA\FD\D0\E8Ҫ\D3\EBAO\B5\C4\C5\E4\D6ñ\A3\B3\D6һ\D6\C2 */
-    stHdmiAttr.u8DownSampleParm = HI_FALSE;    /**< PCM\D2\F4Ƶ\CF\F2\CF\C2downsample\B2\C9\D1\F9\C2ʵĲ\CE\CA\FD\A3\ACĬ\C8\CFΪ0 */
     
-    stHdmiAttr.enBitDepth = 8 * (pstAioAttr->enBitwidth+1);   /**< \D2\F4Ƶλ\BF\ED\A3\ACĬ\C8\CFΪ16,\B4˲\CE\CA\FD\D0\E8Ҫ\D3\EBAO\B5\C4\C5\E4\D6ñ\A3\B3\D6һ\D6\C2 */
-    stHdmiAttr.u8I2SCtlVbit = 0;        /**< \B1\A3\C1\F4\A3\AC\C7\EB\C5\E4\D6\C3Ϊ0, I2S control (0x7A:0x1D) */
+    stHdmiAttr.bEnableAudio = HI_TRUE;        /**< if enable audio */
+    stHdmiAttr.enSoundIntf = HI_HDMI_SND_INTERFACE_I2S; /**< source of HDMI audio, HI_HDMI_SND_INTERFACE_I2S suggested.the parameter must be consistent with the input of AO*/
+    stHdmiAttr.enSampleRate = pstAioAttr->enSamplerate;        /**< sampling rate of PCM audio,the parameter must be consistent with the input of AO */
+    stHdmiAttr.u8DownSampleParm = HI_FALSE;    /**< parameter of downsampling  rate of PCM audio,default :0 */
     
-    stHdmiAttr.bEnableAviInfoFrame = HI_TRUE; /**< \CAǷ\F1ʹ\C4\DC AVI InfoFrame\A3\AC\BD\A8\D2\E9ʹ\C4\DC */
-    stHdmiAttr.bEnableAudInfoFrame = HI_TRUE;; /**< \CAǷ\F1ʹ\C4\DC AUDIO InfoFrame\A3\AC\BD\A8\D2\E9ʹ\C4\DC */
+    stHdmiAttr.enBitDepth = 8 * (pstAioAttr->enBitwidth+1);   /**< bitwidth of audio,default :16,the parameter must be consistent with the config of AO */
+    stHdmiAttr.u8I2SCtlVbit = 0;        /**< reserved,should be 0, I2S control (0x7A:0x1D) */
+    
+    stHdmiAttr.bEnableAviInfoFrame = HI_TRUE; /**< if enable  AVI InfoFrame*/
+    stHdmiAttr.bEnableAudInfoFrame = HI_TRUE;; /**< if enable AUDIO InfoFrame*/
 
     s32Ret = HI_MPI_HDMI_SetAttr(enHdmi, &stHdmiAttr);
     if(HI_SUCCESS != s32Ret)
@@ -1284,7 +1587,13 @@ HI_S32 SAMPLE_COMM_AUDIO_StartHdmi(AIO_ATTR_S *pstAioAttr)
         printf("[Func]:%s [Line]:%d [Info]:%s\n", __FUNCTION__, __LINE__, "failed");
         return HI_FAILURE;
     }
-    HI_MPI_HDMI_SetAVMute(enHdmi, HI_FALSE);
+    
+    s32Ret = HI_MPI_HDMI_SetAVMute(enHdmi, HI_FALSE);
+    if(HI_SUCCESS != s32Ret)
+    {
+        printf("[Func]:%s [Line]:%d [Info]:%s\n", __FUNCTION__, __LINE__, "failed");
+        return HI_FAILURE;
+    }
     
     return HI_SUCCESS;
 }
@@ -1295,56 +1604,107 @@ inline HI_S32 SAMPLE_COMM_AUDIO_StopHdmi(HI_VOID)
     VO_DEV VoDev = 0;
     
     s32Ret =  SAMPLE_COMM_VO_HdmiStop();
-    s32Ret |= SAMPLE_COMM_VO_StopDevLayer(VoDev);
+    s32Ret |= HI_MPI_VO_Disable(VoDev);
+    if(HI_SUCCESS != s32Ret)
+    {
+        printf("%s: HI_MPI_VO_Disable failed with %#x!\n", __FUNCTION__, s32Ret);
+        return HI_FAILURE;
+    }
+    
     return s32Ret;
 }
+#endif
 
 /******************************************************************************
 * function : Start Ao
 ******************************************************************************/
-HI_S32 SAMPLE_COMM_AUDIO_StartAo(AUDIO_DEV AoDevId, AO_CHN AoChn,
-        AIO_ATTR_S *pstAioAttr, AUDIO_RESAMPLE_ATTR_S *pstAoReSmpAttr)
+HI_S32 SAMPLE_COMM_AUDIO_StartAo(AUDIO_DEV AoDevId, HI_S32 s32AoChnCnt,
+                                 AIO_ATTR_S* pstAioAttr, AUDIO_SAMPLE_RATE_E enInSampleRate, HI_BOOL bResampleEn, HI_VOID* pstAoVqeAttr, HI_U32 u32AoVqeType)
 {
+    HI_S32 i;
     HI_S32 s32Ret;
 
-#if (HICHIP != HI3532_V100)
+    if (pstAioAttr->u32ClkChnCnt == 0)
+    {
+        pstAioAttr->u32ClkChnCnt = pstAioAttr->u32ChnCnt;
+    }
+	
     if (SAMPLE_AUDIO_HDMI_AO_DEV == AoDevId)
     {
+    #ifdef HI_ACODEC_TYPE_HDMI 
+        pstAioAttr->u32ClkSel = 0;
+        
         SAMPLE_COMM_AUDIO_StartHdmi(pstAioAttr);
+    #endif
     }
-#endif
 
     s32Ret = HI_MPI_AO_SetPubAttr(AoDevId, pstAioAttr);
-    if(HI_SUCCESS != s32Ret)
+    if (HI_SUCCESS != s32Ret)
     {
         printf("%s: HI_MPI_AO_SetPubAttr(%d) failed with %#x!\n", __FUNCTION__, \
-               AoDevId,s32Ret);
-        return HI_FAILURE;
-    }
-    s32Ret = HI_MPI_AO_Enable(AoDevId);
-    if(HI_SUCCESS != s32Ret)
-    {
-        printf("%s: HI_MPI_AO_Enable(%d) failed with %#x!\n", __FUNCTION__, \
                AoDevId, s32Ret);
         return HI_FAILURE;
     }
-    s32Ret = HI_MPI_AO_EnableChn(AoDevId, AoChn);
-    if(HI_SUCCESS != s32Ret)
+
+    s32Ret = HI_MPI_AO_Enable(AoDevId);
+    if (HI_SUCCESS != s32Ret)
     {
-        printf("%s: HI_MPI_AO_EnableChn(%d) failed with %#x!\n", __FUNCTION__,\
-               AoChn, s32Ret);
+        printf("%s: HI_MPI_AO_Enable(%d) failed with %#x!\n", __FUNCTION__, AoDevId, s32Ret);
         return HI_FAILURE;
     }
-    
-    if (NULL != pstAoReSmpAttr)
+
+    for (i = 0; i < s32AoChnCnt; i++)
     {
-        s32Ret = HI_MPI_AO_DisableReSmp(AoDevId, AoChn);
-        s32Ret |= HI_MPI_AO_EnableReSmp(AoDevId, AoChn, pstAoReSmpAttr);
-        if(HI_SUCCESS != s32Ret)
+        s32Ret = HI_MPI_AO_EnableChn(AoDevId, i);
+        if (HI_SUCCESS != s32Ret)
         {
-            printf("%s: HI_MPI_AO_EnableReSmp(%d,%d) failed with %#x!\n", \
-                   __FUNCTION__, AoDevId, AoChn, s32Ret);
+            printf("%s: HI_MPI_AO_EnableChn(%d) failed with %#x!\n", __FUNCTION__, i, s32Ret);
             return HI_FAILURE;
+        }
+
+        if (HI_TRUE == bResampleEn)
+        {
+            s32Ret = HI_MPI_AO_DisableReSmp(AoDevId, i);
+            s32Ret |= HI_MPI_AO_EnableReSmp(AoDevId, i, enInSampleRate);
+            if (HI_SUCCESS != s32Ret)
+            {
+                printf("%s: HI_MPI_AO_EnableReSmp(%d,%d) failed with %#x!\n", __FUNCTION__, AoDevId, i, s32Ret);
+                return HI_FAILURE;
+            }
+        }
+
+		if (NULL != pstAoVqeAttr)
+        {
+			HI_BOOL bAoVqe = HI_TRUE;
+			switch (u32AoVqeType)
+            {
+				case 0:
+                    s32Ret = HI_SUCCESS;
+					bAoVqe = HI_FALSE;
+                    break;
+                case 1:
+                    s32Ret = HI_MPI_AO_SetVqeAttr(AoDevId, i, (AO_VQE_CONFIG_S *)pstAoVqeAttr);
+                    break;
+                default:
+                    s32Ret = HI_FAILURE;
+                    break;
+            }
+            
+            if (s32Ret)
+            {
+                printf("%s: SetAoVqe%d(%d,%d) failed with %#x\n", __FUNCTION__, u32AoVqeType, AoDevId, i, s32Ret);
+                return s32Ret;
+            }
+			
+		    if (bAoVqe)
+            {
+                s32Ret = HI_MPI_AO_EnableVqe(AoDevId, i);
+	            if (s32Ret)
+	            {
+	                printf("%s: HI_MPI_AI_EnableVqe(%d,%d) failed with %#x\n", __FUNCTION__, AoDevId, i, s32Ret);
+	                return s32Ret;
+	            }
+            }
         }
     }
 
@@ -1354,61 +1714,116 @@ HI_S32 SAMPLE_COMM_AUDIO_StartAo(AUDIO_DEV AoDevId, AO_CHN AoChn,
 /******************************************************************************
 * function : Stop Ao
 ******************************************************************************/
-HI_S32 SAMPLE_COMM_AUDIO_StopAo(AUDIO_DEV AoDevId, AO_CHN AoChn, HI_BOOL bResampleEn)
+HI_S32 SAMPLE_COMM_AUDIO_StopAo(AUDIO_DEV AoDevId, HI_S32 s32AoChnCnt, HI_BOOL bResampleEn, HI_BOOL bVqeEn)
 {
-    if (HI_TRUE == bResampleEn)
+    HI_S32 i;
+    HI_S32 s32Ret;
+
+    for (i = 0; i < s32AoChnCnt; i++)
     {
-        HI_MPI_AO_DisableReSmp(AoDevId, AoChn);
+        if (HI_TRUE == bResampleEn)
+        {
+            s32Ret = HI_MPI_AO_DisableReSmp(AoDevId, i);
+            if (HI_SUCCESS != s32Ret)
+            {
+                printf("%s: HI_MPI_AO_DisableReSmp failed with %#x!\n", __FUNCTION__, s32Ret);
+                return s32Ret;
+            }
+        }
+
+		if (HI_TRUE == bVqeEn)
+        {
+            s32Ret = HI_MPI_AO_DisableVqe(AoDevId, i);
+            if (HI_SUCCESS != s32Ret)
+            {
+                printf("[Func]:%s [Line]:%d [Info]:%s\n", __FUNCTION__, __LINE__, "failed");
+                return s32Ret;
+            }
+        }
+
+        s32Ret = HI_MPI_AO_DisableChn(AoDevId, i);
+        if (HI_SUCCESS != s32Ret)
+        {
+            printf("%s: HI_MPI_AO_DisableChn failed with %#x!\n", __FUNCTION__, s32Ret);
+            return s32Ret;
+        }
     }
-    HI_MPI_AO_DisableChn(AoDevId, AoChn);
-    HI_MPI_AO_Disable(AoDevId);
-    
-#if (HICHIP != HI3532_V100)
+
+    s32Ret = HI_MPI_AO_Disable(AoDevId);
+    if (HI_SUCCESS != s32Ret)
+    {
+        printf("%s: HI_MPI_AO_Disable failed with %#x!\n", __FUNCTION__, s32Ret);
+        return s32Ret;
+    }
+
     if (SAMPLE_AUDIO_HDMI_AO_DEV == AoDevId)
     {
-        SAMPLE_COMM_AUDIO_StopHdmi();
+
+    #ifdef HI_ACODEC_TYPE_HDMI
+        s32Ret = SAMPLE_COMM_AUDIO_StopHdmi();
+        if (HI_SUCCESS != s32Ret)
+        {
+            printf("%s: SAMPLE_COMM_AUDIO_StopHdmi failed with %#x!\n", __FUNCTION__, s32Ret);
+            return s32Ret;
+        }
+
+    #endif
     }
-#endif
 
     return HI_SUCCESS;
 }
 
+
 /******************************************************************************
 * function : Start Aenc
 ******************************************************************************/
-HI_S32 SAMPLE_COMM_AUDIO_StartAenc(HI_S32 s32AencChnCnt, PAYLOAD_TYPE_E enType)
+HI_S32 SAMPLE_COMM_AUDIO_StartAenc(HI_S32 s32AencChnCnt, HI_U32 u32AencPtNumPerFrm, PAYLOAD_TYPE_E enType)
 {
     AENC_CHN AeChn;
     HI_S32 s32Ret, i;
     AENC_CHN_ATTR_S stAencAttr;
+    AENC_ATTR_ADPCM_S stAdpcmAenc;
+    AENC_ATTR_G711_S stAencG711;
+    AENC_ATTR_G726_S stAencG726;
+    AENC_ATTR_LPCM_S stAencLpcm;
+    //AENC_ATTR_AAC_S stAencAac;
     
     /* set AENC chn attr */
     
     stAencAttr.enType = enType;
     stAencAttr.u32BufSize = 30;
+    stAencAttr.u32PtNumPerFrm = u32AencPtNumPerFrm;
     
     if (PT_ADPCMA == stAencAttr.enType)
     {
-        AENC_ATTR_ADPCM_S stAdpcmAenc;
         stAencAttr.pValue       = &stAdpcmAenc;
         stAdpcmAenc.enADPCMType = AUDIO_ADPCM_TYPE;
     }
     else if (PT_G711A == stAencAttr.enType || PT_G711U == stAencAttr.enType)
     {
-        AENC_ATTR_G711_S stAencG711;
         stAencAttr.pValue       = &stAencG711;
     }
     else if (PT_G726 == stAencAttr.enType)
     {
-        AENC_ATTR_G726_S stAencG726;
         stAencAttr.pValue       = &stAencG726;
         stAencG726.enG726bps    = G726_BPS;
     }
     else if (PT_LPCM == stAencAttr.enType)
     {
-        AENC_ATTR_LPCM_S stAencLpcm;
         stAencAttr.pValue = &stAencLpcm;
     }
+    #if 0
+    else if (PT_AAC== stAencAttr.enType)
+    {
+        
+        stAencAttr.pValue = &stAencAac;
+        stAencAac.enAACType = AAC_TYPE_AACLC;
+        stAencAac.enBitRate = AAC_BPS_48K;
+        stAencAac.enBitWidth = AUDIO_BIT_WIDTH_16;
+        stAencAac.enSmpRate = AUDIO_SAMPLE_RATE_48000;
+        stAencAac.enSoundMode = 0;
+    }
+    #endif
     else
     {
         printf("%s: invalid aenc payload type:%d\n", __FUNCTION__, stAencAttr.enType);
@@ -1421,16 +1836,17 @@ HI_S32 SAMPLE_COMM_AUDIO_StartAenc(HI_S32 s32AencChnCnt, PAYLOAD_TYPE_E enType)
         
         /* create aenc chn*/
         s32Ret = HI_MPI_AENC_CreateChn(AeChn, &stAencAttr);
-        if (s32Ret != HI_SUCCESS)
+        if (HI_SUCCESS != s32Ret)
         {
             printf("%s: HI_MPI_AENC_CreateChn(%d) failed with %#x!\n", __FUNCTION__,
                    AeChn, s32Ret);
-            return HI_FAILURE;
+            return s32Ret;
         }        
     }
     
     return HI_SUCCESS;
 }
+
 
 /******************************************************************************
 * function : Stop Aenc
@@ -1438,10 +1854,20 @@ HI_S32 SAMPLE_COMM_AUDIO_StartAenc(HI_S32 s32AencChnCnt, PAYLOAD_TYPE_E enType)
 HI_S32 SAMPLE_COMM_AUDIO_StopAenc(HI_S32 s32AencChnCnt)
 {
     HI_S32 i;
+    HI_S32 s32Ret;
+    
     for (i=0; i<s32AencChnCnt; i++)
     {
-        HI_MPI_AENC_DestroyChn(i);
+        s32Ret = HI_MPI_AENC_DestroyChn(i);
+        if (HI_SUCCESS != s32Ret)
+        {
+            printf("%s: HI_MPI_AENC_DestroyChn(%d) failed with %#x!\n", __FUNCTION__,
+                   i, s32Ret);
+            return s32Ret;
+        }
+        
     }
+    
     return HI_SUCCESS;
 }
 
@@ -1452,31 +1878,31 @@ HI_S32 SAMPLE_COMM_AUDIO_StartAdec(ADEC_CHN AdChn, PAYLOAD_TYPE_E enType)
 {
     HI_S32 s32Ret;
     ADEC_CHN_ATTR_S stAdecAttr;
-        
+    ADEC_ATTR_ADPCM_S stAdpcm;
+    ADEC_ATTR_G711_S stAdecG711;
+    ADEC_ATTR_G726_S stAdecG726;
+    ADEC_ATTR_LPCM_S stAdecLpcm;
+    
     stAdecAttr.enType = enType;
     stAdecAttr.u32BufSize = 20;
     stAdecAttr.enMode = ADEC_MODE_STREAM;/* propose use pack mode in your app */
         
     if (PT_ADPCMA == stAdecAttr.enType)
     {
-        ADEC_ATTR_ADPCM_S stAdpcm;
         stAdecAttr.pValue = &stAdpcm;
         stAdpcm.enADPCMType = AUDIO_ADPCM_TYPE ;
     }
     else if (PT_G711A == stAdecAttr.enType || PT_G711U == stAdecAttr.enType)
     {
-        ADEC_ATTR_G711_S stAdecG711;
         stAdecAttr.pValue = &stAdecG711;
     }
     else if (PT_G726 == stAdecAttr.enType)
     {
-        ADEC_ATTR_G726_S stAdecG726;
         stAdecAttr.pValue = &stAdecG726;
         stAdecG726.enG726bps = G726_BPS ;      
     }
     else if (PT_LPCM == stAdecAttr.enType)
     {
-        ADEC_ATTR_LPCM_S stAdecLpcm;
         stAdecAttr.pValue = &stAdecLpcm;
         stAdecAttr.enMode = ADEC_MODE_PACK;/* lpcm must use pack mode */
     }
@@ -1488,7 +1914,7 @@ HI_S32 SAMPLE_COMM_AUDIO_StartAdec(ADEC_CHN AdChn, PAYLOAD_TYPE_E enType)
     
     /* create adec chn*/
     s32Ret = HI_MPI_ADEC_CreateChn(AdChn, &stAdecAttr);
-    if (s32Ret)
+    if (HI_SUCCESS != s32Ret)
     {
         printf("%s: HI_MPI_ADEC_CreateChn(%d) failed with %#x!\n", __FUNCTION__,\
                AdChn,s32Ret);
@@ -1502,7 +1928,16 @@ HI_S32 SAMPLE_COMM_AUDIO_StartAdec(ADEC_CHN AdChn, PAYLOAD_TYPE_E enType)
 ******************************************************************************/
 HI_S32 SAMPLE_COMM_AUDIO_StopAdec(ADEC_CHN AdChn)
 {
-    HI_MPI_ADEC_DestroyChn(AdChn);
+    HI_S32 s32Ret;
+    
+    s32Ret = HI_MPI_ADEC_DestroyChn(AdChn);
+    if (HI_SUCCESS != s32Ret)
+    {
+        printf("%s: HI_MPI_ADEC_DestroyChn(%d) failed with %#x!\n", __FUNCTION__,
+               AdChn, s32Ret);
+        return s32Ret;
+    }
+    
     return HI_SUCCESS;
 }
 

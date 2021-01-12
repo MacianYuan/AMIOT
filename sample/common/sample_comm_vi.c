@@ -27,369 +27,406 @@ extern "C"{
 #include <signal.h>
 
 #include "sample_comm.h"
+#include <../../include/nvp6134/nvp6134.h>
 
 VI_DEV_ATTR_S DEV_ATTR_BT656D1_4MUX =
 {
-    /*接口模式*/
+    /*interface mode*/
     VI_MODE_BT656,
-    /*1、2、4路工作模式*/
+    /*work mode*/
     VI_WORK_MODE_4Multiplex,
     /* r_mask    g_mask    b_mask*/
     {0xFF000000,    0x0},
-    /*逐行or隔行输入*/
-    VI_SCAN_INTERLACED,
+
+	/* for single/double edge, must be set when double edge*/
+	VI_CLK_EDGE_SINGLE_UP,
+	
     /*AdChnId*/
-    {-1, -1, -1, -1}
+    {-1, -1, -1, -1},
+    /*enDataSeq, just support YUV*/
+    VI_INPUT_DATA_YVYU,
+    /**/
+    {
+    /*port_vsync   port_vsync_neg     port_hsync        port_hsync_neg        */
+    VI_VSYNC_FIELD, VI_VSYNC_NEG_HIGH, VI_HSYNC_VALID_SINGNAL,VI_HSYNC_NEG_HIGH,VI_VSYNC_VALID_SINGAL,VI_VSYNC_VALID_NEG_HIGH,
+
+    /**/
+    /*hsync_hfb    hsync_act    hsync_hhb*/
+    {0,            0,        0,
+    /*vsync0_vhb vsync0_act vsync0_hhb*/
+     0,            0,        0,
+    /*vsync1_vhb vsync1_act vsync1_hhb*/
+     0,            0,            0}
+    },
+    /*whether use isp*/
+    VI_PATH_BYPASS,
+    /*data type*/
+    VI_DATA_TYPE_YUV
 };
 
-VI_DEV_ATTR_S DEV_ATTR_BT656D1_2MUX =
+VI_DEV_ATTR_S DEV_ATTR_6114_720P_2MUX_BASE =
 {
-    /*接口模式*/
+    /*interface mode*/
     VI_MODE_BT656,
-    /*1、2、4路工作模式*/
+    /*work mode*/
     VI_WORK_MODE_2Multiplex,
     /* r_mask    g_mask    b_mask*/
     {0xFF000000,    0x0},
-    /*逐行or隔行输入*/
-    VI_SCAN_INTERLACED,
-    /*AdChnId*/
-    {-1, -1, -1, -1}
-};
 
-VI_DEV_ATTR_S DEV_ATTR_BT656D1_1MUX =
-{
-    /*接口模式*/
-    VI_MODE_BT656,
-    /*1、2、4路工作模式*/
-    VI_WORK_MODE_1Multiplex,
-    /* r_mask    g_mask    b_mask*/
-    {0xFF000000,    0x0},
-    /*逐行or隔行输入*/
-    VI_SCAN_INTERLACED,
-    /*AdChnId*/
-    {-1, -1, -1, -1}
-};
-
-
-VI_DEV_ATTR_S DEV_ATTR_7441_BT1120_1080P =
-/* 典型时序3:7441 BT1120 1080P@60fps典型时序 (对接时序: 时序)*/
-{
-    /*接口模式*/
-    VI_MODE_BT1120_STANDARD,
-    /*1、2、4路工作模式*/
-    VI_WORK_MODE_1Multiplex,
-    /* r_mask    g_mask    b_mask*/
-    {0xFF000000,    0xFF0000},
-    /*逐行or隔行输入*/
-    VI_SCAN_PROGRESSIVE,
+	/* for single/double edge, must be set when double edge*/
+	VI_CLK_EDGE_SINGLE_UP,
+	
     /*AdChnId*/
     {-1, -1, -1, -1},
-    /*enDataSeq, 仅支持YUV格式*/
-    VI_INPUT_DATA_UVUV,
-     
-    /*同步信息，对应reg手册的如下配置, --bt1120时序无效*/
+    /*enDataSeq, just support YUV*/
+    VI_INPUT_DATA_YVYU,
+    /**/
     {
     /*port_vsync   port_vsync_neg     port_hsync        port_hsync_neg        */
-    VI_VSYNC_PULSE, VI_VSYNC_NEG_HIGH, VI_HSYNC_VALID_SINGNAL,VI_HSYNC_NEG_HIGH,VI_VSYNC_NORM_PULSE,VI_VSYNC_VALID_NEG_HIGH,
-    
-    /*timing信息，对应reg手册的如下配置*/
+    VI_VSYNC_FIELD, VI_VSYNC_NEG_HIGH, VI_HSYNC_VALID_SINGNAL,VI_HSYNC_NEG_HIGH,VI_VSYNC_VALID_SINGAL,VI_VSYNC_VALID_NEG_HIGH,
+
+    /**/
     /*hsync_hfb    hsync_act    hsync_hhb*/
-    {0,            1920,        0,
+    {0,            0,        0,
     /*vsync0_vhb vsync0_act vsync0_hhb*/
-     0,            1080,        0,
-    /*vsync1_vhb vsync1_act vsync1_hhb*/ 
+     0,            0,        0,
+    /*vsync1_vhb vsync1_act vsync1_hhb*/
      0,            0,            0}
-    }
+    },
+    /*whether use isp*/
+    VI_PATH_BYPASS,
+    /*data type*/
+    VI_DATA_TYPE_YUV
 };
 
 
-VI_DEV_ATTR_S DEV_ATTR_7441_BT1120_720P =
-/* 典型时序3:7441 BT1120 720P@60fps典型时序 (对接时序: 时序)*/
-{
-    /*接口模式*/
-    VI_MODE_BT1120_STANDARD,
-    /*1、2、4路工作模式*/
-    VI_WORK_MODE_1Multiplex,
-    /* r_mask    g_mask    b_mask*/
-    {0xFF00,    0xFF},
-    /*逐行or隔行输入*/
-    VI_SCAN_PROGRESSIVE,
-    /*AdChnId*/
-    {-1, -1, -1, -1},
-    /*enDataSeq, 仅支持YUV格式*/
-    VI_INPUT_DATA_UVUV,
-     
-    /*同步信息，对应reg手册的如下配置, --bt1120时序无效*/
-    {
-    /*port_vsync   port_vsync_neg     port_hsync        port_hsync_neg        */
-    VI_VSYNC_PULSE, VI_VSYNC_NEG_HIGH, VI_HSYNC_VALID_SINGNAL,VI_HSYNC_NEG_HIGH,VI_VSYNC_NORM_PULSE,VI_VSYNC_VALID_NEG_HIGH,
-    
-    /*timing信息，对应reg手册的如下配置*/
-    /*hsync_hfb    hsync_act    hsync_hhb*/
-    {0,            1280,        0,
-    /*vsync0_vhb vsync0_act vsync0_hhb*/
-     0,            720,        0,
-    /*vsync1_vhb vsync1_act vsync1_hhb*/ 
-     0,            0,            0}
-    }
-};
 
-VI_DEV_ATTR_S DEV_ATTR_7441_INTERLEAVED_720P =
-/* 典型时序3:7441 BT1120 720P@60fps典型时序 (对接时序: 时序)*/
-{
-    /*接口模式*/
-    VI_MODE_BT1120_INTERLEAVED,
-    /*1、2、4路工作模式*/
-    VI_WORK_MODE_1Multiplex,
-    /* r_mask    g_mask    b_mask*/
-    {0xFF000000,    0x0},
-    /*逐行or隔行输入*/
-    VI_SCAN_PROGRESSIVE,
-    /*AdChnId*/
-    {-1, -1, -1, -1},
-    /*enDataSeq, 仅支持YUV格式*/
-    VI_INPUT_DATA_UVUV,
-     
-    /*同步信息，对应reg手册的如下配置, --bt1120时序无效*/
-    {
-    /*port_vsync   port_vsync_neg     port_hsync        port_hsync_neg        */
-    VI_VSYNC_PULSE, VI_VSYNC_NEG_HIGH, VI_HSYNC_VALID_SINGNAL,VI_HSYNC_NEG_HIGH,VI_VSYNC_NORM_PULSE,VI_VSYNC_VALID_NEG_HIGH,
-    
-    /*timing信息，对应reg手册的如下配置*/
-    /*hsync_hfb    hsync_act    hsync_hhb*/
-    {0,            1280,        0,
-    /*vsync0_vhb vsync0_act vsync0_hhb*/
-     0,            720,        0,
-    /*vsync1_vhb vsync1_act vsync1_hhb*/ 
-     0,            0,            0}
-    }
-};
 
 VI_DEV g_as32ViDev[VIU_MAX_DEV_NUM];
 VI_CHN g_as32MaxChn[VIU_MAX_CHN_NUM];
 VI_CHN g_as32SubChn[VIU_MAX_CHN_NUM];
 
-
 HI_S32 SAMPLE_TW2865_CfgV(VIDEO_NORM_E enVideoMode,VI_WORK_MODE_E enWorkMode)
 {
-    int fd, i;
-    int video_mode;
-    tw2865_video_norm stVideoMode;
-    tw2865_work_mode work_mode;
-
-    int chip_cnt = 2;
-
-    fd = open(TW2865_FILE, O_RDWR);
-    if (fd < 0)
-    {
-        SAMPLE_PRT("open 2865 (%s) fail\n", TW2865_FILE);
-        return -1;
-    }
-
-    video_mode = (VIDEO_ENCODING_MODE_PAL == enVideoMode) ? TW2865_PAL : TW2865_NTSC ;
-
-    for (i=0; i<chip_cnt; i++)
-    {
-        stVideoMode.chip    = i;
-        stVideoMode.mode    = video_mode;
-        if (ioctl(fd, TW2865_SET_VIDEO_NORM, &stVideoMode))
-        {
-            SAMPLE_PRT("set tw2865(%d) video mode fail\n", i);
-            close(fd);
-            return -1;
-        }
-    }
-
-    for (i=0; i<chip_cnt; i++)
-    {
-        work_mode.chip = i;
-        if (VI_WORK_MODE_4Multiplex== enWorkMode)
-        {
-            work_mode.mode = TW2865_4D1_MODE;
-        }
-        else if (VI_WORK_MODE_2Multiplex== enWorkMode)
-        {
-            work_mode.mode = TW2865_2D1_MODE;
-        }
-        else if (VI_WORK_MODE_1Multiplex == enWorkMode)
-        {
-            work_mode.mode = TW2865_1D1_MODE;
-        }
-        else
-        {
-            SAMPLE_PRT("work mode not support\n");
-            return -1;
-        }
-        ioctl(fd, TW2865_SET_WORK_MODE, &work_mode);
-    }
-
-    close(fd);
     return 0;
 }
-
 
 HI_S32 SAMPLE_TW2960_CfgV(VIDEO_NORM_E enVideoMode,VI_WORK_MODE_E enWorkMode)
 {
+
+    return 0;
+}
+
+HI_S32 SAMPLE_NVP6114_CfgV(VIDEO_NORM_E enVideoMode,VI_WORK_MODE_E enWorkMode)
+{
+    return 0;
+}
+
+
+HI_S32 VI_MST_NVP6124_CfgV(VIDEO_NORM_E enVideoMode,SAMPLE_VI_6124_MODE_E enViMode)
+{
+
     int fd, i;
     int video_mode;
-    tw2865_video_norm stVideoMode;
-    tw2865_work_mode work_mode;
+	nvp6124_opt_mode optmode;
+	nvp6124_chn_mode schnmode;
 
-    int chip_cnt = 4;
+    int chip_cnt = 2;
 
-    fd = open(TW2960_FILE, O_RDWR);
+    fd = open(NVP6124_FILE, O_RDWR);
     if (fd < 0)
     {
-        SAMPLE_PRT("open 2960(%s) fail\n", TW2960_FILE);
+        printf("open nvp6124 (%s) fail\n", NVP6124_FILE);
         return -1;
     }
 
-    video_mode = (VIDEO_ENCODING_MODE_PAL == enVideoMode) ? TW2960_PAL : TW2960_NTSC ;
+    video_mode = (VIDEO_ENCODING_MODE_PAL == enVideoMode) ? 1 : 0 ;
 
-    for (i=0; i<chip_cnt; i++)
+    switch(enViMode)
     {
-        stVideoMode.chip    = i;
-        stVideoMode.mode    = video_mode;
-        if (ioctl(fd, TW2960_SET_VIDEO_NORM, &stVideoMode))
-        {
-            SAMPLE_PRT("set tw2865(%d) video mode fail\n", i);
-            close(fd);
-            return -1;
-        }
-    }
+    	case SAMPLE_VI_MODE_6124_960H:
+			for(i=0;i<chip_cnt*4;i++)
+			{
+				schnmode.ch = i;
+				schnmode.vformat = video_mode;
+				schnmode.chmode = NVP6124_VI_SD;
+				ioctl(fd, IOC_VDEC_SET_CHNMODE, &schnmode);
+			}
+			for(i=0;i<chip_cnt;i++)
+			{
+				optmode.chipsel = i;
+				optmode.portsel = 2;
+				optmode.portmode = NVP6124_OUTMODE_4MUX_SD;
+				optmode.chid = 0;
+				ioctl(fd, IOC_VDEC_SET_OUTPORTMODE, &optmode);
+                optmode.chipsel = i;
+				optmode.portsel = 3;
+				optmode.portmode = NVP6124_OUTMODE_4MUX_SD;
+				optmode.chid = 0;
+				ioctl(fd, IOC_VDEC_SET_OUTPORTMODE, &optmode);
+			}
+			break;
+		case SAMPLE_VI_MODE_6124_HDX:  
+			for(i=0;i<chip_cnt*4;i++)
+			{
+				schnmode.ch = i;
+				schnmode.vformat = video_mode;
+				schnmode.chmode = NVP6124_VI_720P_2530;
+				ioctl(fd, IOC_VDEC_SET_CHNMODE, &schnmode);
+			}
+			for(i=0;i<chip_cnt;i++)
+			{
+				optmode.chipsel = i;
+				optmode.portsel = 2;
+				optmode.portmode = NVP6124_OUTMODE_4MUX_HD_X;
+				optmode.chid = 0;
+				ioctl(fd, IOC_VDEC_SET_OUTPORTMODE, &optmode);
+			}
+            for(i=0;i<chip_cnt;i++)
+			{
+				optmode.chipsel = i;
+				optmode.portsel = 3;
+				optmode.portmode = NVP6124_OUTMODE_4MUX_HD_X;
+				optmode.chid = 0;
+				ioctl(fd, IOC_VDEC_SET_OUTPORTMODE, &optmode);
+			}
+			break;
+		case SAMPLE_VI_MODE_6124_HD:   
+			for(i=0;i<chip_cnt*4;i++)
+			{
+				schnmode.ch = i;
+				schnmode.vformat = video_mode;
+				schnmode.chmode = NVP6124_VI_720P_2530;
+				ioctl(fd, IOC_VDEC_SET_CHNMODE, &schnmode);
+			}
+			for(i=0;i<chip_cnt;i++)
+			{
+				optmode.chipsel = i;
+				optmode.portsel = 2;
+				optmode.portmode = NVP6124_OUTMODE_2MUX_HD;
+				optmode.chid = 0;
+				ioctl(fd, IOC_VDEC_SET_OUTPORTMODE, &optmode);
+				optmode.portsel = 3;
+				optmode.portmode = NVP6124_OUTMODE_2MUX_HD;
+				optmode.chid = 1;
+				ioctl(fd, IOC_VDEC_SET_OUTPORTMODE, &optmode);
+			}
+			break;
+		case SAMPLE_VI_MODE_6124_FHDX: 
+			for(i=0;i<chip_cnt*4;i++)
+			{
+				schnmode.ch = i;
+				schnmode.vformat = video_mode;
+				schnmode.chmode = NVP6124_VI_1080P_2530;
+				ioctl(fd, IOC_VDEC_SET_CHNMODE, &schnmode);
+			}
+			for(i=0;i<chip_cnt;i++)
+			{
+				optmode.chipsel = i;
+				optmode.portsel = 2;
+				optmode.portmode = NVP6124_OUTMODE_2MUX_FHD_X;
+				optmode.chid = 0;
+				ioctl(fd, IOC_VDEC_SET_OUTPORTMODE, &optmode);
+				optmode.portsel = 3;
+				optmode.portmode = NVP6124_OUTMODE_2MUX_FHD_X;
+				optmode.chid = 1;
+				ioctl(fd, IOC_VDEC_SET_OUTPORTMODE, &optmode);
+			}
+			break;
+		case SAMPLE_VI_MODE_6124_FHD:   
+			for(i=0;i<chip_cnt*4;i++)
+			{
+				schnmode.ch = i;
+				schnmode.vformat = video_mode;
+				schnmode.chmode = NVP6124_VI_1080P_2530;
+				ioctl(fd, IOC_VDEC_SET_CHNMODE, &schnmode);
+			}
+			for(i=0;i<chip_cnt;i++)
+			{
+				optmode.chipsel = i;
+				optmode.portsel = 2;
+				optmode.portmode = NVP6124_OUTMODE_1MUX_FHD;
+				optmode.chid = 0;
+				ioctl(fd, IOC_VDEC_SET_OUTPORTMODE, &optmode);
+				optmode.portsel = 3;
+				optmode.portmode = NVP6124_OUTMODE_1MUX_FHD;
+				optmode.chid = 1;
+				ioctl(fd, IOC_VDEC_SET_OUTPORTMODE, &optmode);
+			}
+			break;
+    	case SAMPLE_VI_MODE_960H_720P_2MUX:
+			for(i=0;i<chip_cnt*4;i++)
+			{
+				schnmode.ch = i;
+				schnmode.vformat = video_mode;
+				schnmode.chmode = i%2?NVP6124_VI_720P_2530:NVP6124_VI_1920H;
+				ioctl(fd, IOC_VDEC_SET_CHNMODE, &schnmode);
+			}
+			for(i=0;i<chip_cnt;i++)
+			{
+				optmode.chipsel = i;
+				optmode.portsel = 2;
+				optmode.portmode = NVP6124_OUTMODE_2MUX_HD;
+				optmode.chid = 0;
+				ioctl(fd, IOC_VDEC_SET_OUTPORTMODE, &optmode);
+				optmode.portsel = 3;
+				optmode.portmode = NVP6124_OUTMODE_2MUX_HD;
+				optmode.chid = 1;
+				ioctl(fd, IOC_VDEC_SET_OUTPORTMODE, &optmode);
+			}
+			break;
+        case SAMPLE_VI_MODE_6124_2MUX_FHD:            
+            for(i=0;i<chip_cnt*4;i++)
+            {
+                schnmode.ch = i;
+                schnmode.vformat = video_mode;
+                schnmode.chmode = NVP6124_VI_1080P_2530;
+                ioctl(fd, IOC_VDEC_SET_CHNMODE, &schnmode);
+            }
+            for(i=0;i<chip_cnt;i++)
+            {
+                optmode.chipsel = i;
+                optmode.portsel = 2;
+                optmode.portmode = NVP6124_OUTMODE_2MUX_FHD;
+                optmode.chid = 0;
+                ioctl(fd, IOC_VDEC_SET_OUTPORTMODE, &optmode);
+                optmode.portsel = 3;
+                optmode.portmode = NVP6124_OUTMODE_2MUX_FHD;
+                optmode.chid = 1;
+                ioctl(fd, IOC_VDEC_SET_OUTPORTMODE, &optmode);
+            }
+            break;
 
-    for (i=0; i<chip_cnt; i++)
-    {
-        work_mode.chip = i;
-        if (VI_WORK_MODE_4Multiplex== enWorkMode)
-        {
-            work_mode.mode = TW2960_4D1_MODE;
-        }
-        else if (VI_WORK_MODE_2Multiplex== enWorkMode)
-        {
-            work_mode.mode = TW2960_2D1_MODE;
-        }
-        else if (VI_WORK_MODE_1Multiplex == enWorkMode)
-        {
-            work_mode.mode = TW2960_1D1_MODE;
-        }
-        else
-        {
-            SAMPLE_PRT("work mode not support\n");
+            
+            case SAMPLE_VI_MODE_6124_4MUX_HD:
+                #if 1
+            for(i=0;i<chip_cnt*4;i++)
+            {
+                schnmode.ch = i;
+                schnmode.vformat = video_mode;
+                schnmode.chmode = NVP6124_VI_720P_2530;
+                ioctl(fd, IOC_VDEC_SET_CHNMODE, &schnmode);
+            }
+            for(i=0;i<chip_cnt;i++)
+            {
+                optmode.chipsel = i;
+                optmode.portsel = 2;
+                optmode.portmode = NVP6124_OUTMODE_4MUX_HD;
+                optmode.chid = 0;
+                ioctl(fd, IOC_VDEC_SET_OUTPORTMODE, &optmode);
+                optmode.portsel = 3;
+                optmode.portmode = NVP6124_OUTMODE_4MUX_HD;
+                optmode.chid = 1;
+                ioctl(fd, IOC_VDEC_SET_OUTPORTMODE, &optmode);
+            }
+            #endif
+            printf("do not support 4mux 720P\n");
             return -1;
-        }
-        ioctl(fd, TW2960_SET_WORK_MODE, &work_mode);
+            break;
+
+		default:
+			printf("enViMode %d not supported\n", enViMode);
+			break;
     }
 
     close(fd);
     return 0;
 }
 
-
-HI_S32 SAMPLE_CX26828_CfgV(VIDEO_NORM_E enVideoMode, int resolution_ratio, 
-                                      VI_WORK_MODE_E enWorkMode)
+HI_S32 SAMPLE_NVP6134_CfgV(VIDEO_NORM_E enVideoMode,VI_WORK_MODE_E enWorkMode)
 {
-    int fd, i;
-    int video_mode;
-    int chip_cnt = 1;
-    cx26828_video_norm stVideoMode;
-    cx26828_work_mode work_mode;
-    cx26828_Multiplex_mode multiplex_mode;
-    
-    fd = open(CX26828_FILE, O_RDWR);
-    if (fd < 0)
-    {
-        printf("open %s fail\n", CX26828_FILE);
-        return -1;
-    }
 
-    video_mode = (VIDEO_ENCODING_MODE_PAL == enVideoMode) ? CX26828_MODE_PAL : CX26828_MODE_NTSC;
-    for (i=0; i<chip_cnt; i++)
-    {
-        stVideoMode.chip    = i;
-        stVideoMode.mode    = video_mode;
-        if (ioctl(fd, CX26828_SET_VIDEO_NORM, &stVideoMode))
-        {
-            printf("set cx26828(%d) video mode fail\n", i);
-            close(fd);
-            return -1;
-        }
-    }
+	int fd, i,j;
+	int video_mode;
+	nvp6134_opt_mode optmode;
+	nvp6134_chn_mode schnmode;
 
-    for (i=0; i<chip_cnt; i++)
-    {
-        work_mode.chip = i;
-        if (0 == resolution_ratio)
-        {
-            work_mode.mode = CX26828_16D1;
-        }
-        else if (1 == resolution_ratio)
-        {
-            work_mode.mode = CX26828_16E1;
-        }
-        else
-        {
-            printf("work mode not support.\n");
-            return -1;
-        }
-        ioctl(fd, CX26828_SET_WORK_MODE, &work_mode);
-    }
+	int chip_cnt = 1;
 
-    for (i=0; i<chip_cnt; i++)
-    {
-        multiplex_mode.chip = i;
-        if (VI_WORK_MODE_4Multiplex== enWorkMode)
-        {
-            multiplex_mode.mode = CX26828_4D1_MODE;
-        }
-        else if (VI_WORK_MODE_2Multiplex== enWorkMode)
-        {
-            multiplex_mode.mode = CX26828_2D1_MODE;
-        }
-        else if (VI_WORK_MODE_1Multiplex== enWorkMode)
-        {
-            multiplex_mode.mode = CX26828_1D1_MODE;
-        }
-        else
-        {
-            printf("multiplex mode not support\n");
-            return -1;
-        }
-        ioctl(fd, CX26828_SET_Multiplex_MODE, &multiplex_mode);
-    }
+	fd = open(NVP6134_FILE, O_RDWR);
 
-    close(fd);
-   
-    return 0;
+	if (fd < 0)
+	{
+		printf("open nvp6134 (%s) fail\n", NVP6134_FILE);
+		return -1;
+	}
+
+	//video_mode = (VIDEO_ENCODING_MODE_PAL == enVideoMode) ? 1 : 0 ;
+	video_mode = VIDEO_ENCODING_MODE_NTSC;// actually PAL
+	switch(enWorkMode)
+	{
+		case VI_WORK_MODE_4Multiplex://16 cvbs
+			for(i=0;i<chip_cnt*4;i++)
+			{
+				schnmode.ch = i;
+				schnmode.vformat = video_mode;
+				schnmode.chmode =  NVP6134_VI_720H;
+				ioctl(fd, IOC_VDEC_SET_CHNMODE, &schnmode);
+			}
+			for(i=0;i<chip_cnt;i++)
+			{
+				for(j=1;j<3;j++)
+				{
+					optmode.chipsel = i;
+					optmode.portsel = j;
+					optmode.portmode = NVP6134_OUTMODE_2MUX_MIX;
+					optmode.chid = (j-1);
+					ioctl(fd, IOC_VDEC_SET_OUTPORTMODE, &optmode);
+				}
+			}
+			break;
+		case VI_WORK_MODE_1Multiplex://8 1080p
+			for(i=0;i<chip_cnt*4;i++)
+			{
+				schnmode.ch = i;
+				schnmode.vformat = video_mode;
+				schnmode.chmode = NVP6134_VI_1080P_2530;
+				ioctl(fd, IOC_VDEC_SET_CHNMODE, &schnmode);
+			}
+			for(i=0;i<chip_cnt;i++)
+			{
+				for(j=1;j<3;j++)
+				{
+					optmode.chipsel = i;
+					optmode.portsel = j;
+					optmode.portmode = NVP6134_OUTMODE_2MUX_FHD;
+					optmode.chid = (j-1);
+					ioctl(fd, IOC_VDEC_SET_OUTPORTMODE, &optmode);
+				}
+
+			}
+			break;
+		case VI_WORK_MODE_2Multiplex://8 720p
+		
+			for(i=0;i<chip_cnt*4;i++)
+			{
+				schnmode.ch = i;
+				schnmode.vformat = video_mode;
+				schnmode.chmode = NVP6134_VI_720P_2530;
+				ioctl(fd, IOC_VDEC_SET_CHNMODE, &schnmode);
+			}
+			for(i=0;i<chip_cnt;i++)
+			{
+				for(j=1;j<3;j++)//NVP6134C port 0,1
+				{
+					optmode.chipsel = i;
+					optmode.portsel = j;
+					optmode.portmode = NVP6134_OUTMODE_2MUX_MIX;//NVP6134_OUTMODE_2MUX_MIX;//
+					optmode.chid = (j-1);
+					ioctl(fd, IOC_VDEC_SET_OUTPORTMODE, &optmode);
+				}
+			}
+		
+			break;
+		default:
+			printf("enViMode %d not supported\n", enWorkMode);
+			break;
+	}
+
+	close(fd);
+	return 0;
+
 }
-
-
-HI_S32 SAMPLE_AD_CfgV_D1(VIDEO_NORM_E enVideoMode,VI_WORK_MODE_E enWorkMode)
-{
-#ifndef NVP1918
-#ifdef DEMO
-    return SAMPLE_CX26828_CfgV(enVideoMode, 0, enWorkMode);
-#else
-    return SAMPLE_TW2865_CfgV(enVideoMode, enWorkMode);
-#endif
-    return 0;
-#endif
-}
-
-HI_S32 SAMPLE_AD_CfgV_960H(VIDEO_NORM_E enVideoMode,VI_WORK_MODE_E enWorkMode)
-{
-#ifndef NVP1918
-#ifdef DEMO
-    return SAMPLE_CX26828_CfgV(enVideoMode, 1, enWorkMode);
-#else
-    return SAMPLE_TW2960_CfgV(enVideoMode, enWorkMode);
-#endif
-    return 0;
-#endif
-}
-    
-
-
 
 /*****************************************************************************
 * function : set vi mask.
@@ -399,7 +436,7 @@ HI_VOID SAMPLE_COMM_VI_SetMask(VI_DEV ViDev, VI_DEV_ATTR_S *pstDevAttr)
     switch (ViDev % 4)
     {
         case 0:
-            pstDevAttr->au32CompMask[0] = 0xFF000000;
+            pstDevAttr->au32CompMask[0] = 0xFF;
             if (VI_MODE_BT1120_STANDARD == pstDevAttr->enIntfMode)
             {
                 pstDevAttr->au32CompMask[1] = 0x00FF0000;
@@ -410,14 +447,14 @@ HI_VOID SAMPLE_COMM_VI_SetMask(VI_DEV ViDev, VI_DEV_ATTR_S *pstDevAttr)
             }
             break;
         case 1:
-            pstDevAttr->au32CompMask[0] = 0xFF0000;
+            pstDevAttr->au32CompMask[0] = 0xFF00;
             if (VI_MODE_BT1120_INTERLEAVED == pstDevAttr->enIntfMode)
             {
                 pstDevAttr->au32CompMask[1] = 0x0;
             }
             break;
         case 2:
-            pstDevAttr->au32CompMask[0] = 0xFF00;
+            pstDevAttr->au32CompMask[0] = 0xFF0000;
             if (VI_MODE_BT1120_STANDARD == pstDevAttr->enIntfMode)
             {
                 pstDevAttr->au32CompMask[1] = 0xFF;
@@ -426,21 +463,9 @@ HI_VOID SAMPLE_COMM_VI_SetMask(VI_DEV ViDev, VI_DEV_ATTR_S *pstDevAttr)
             {
                 pstDevAttr->au32CompMask[1] = 0x0;
             }
-
-            #if HICHIP == HI3531_V100
-                #ifndef HI_FPGA
-                    if ((VI_MODE_BT1120_STANDARD != pstDevAttr->enIntfMode)
-                        && (VI_MODE_BT1120_INTERLEAVED != pstDevAttr->enIntfMode))
-                    {
-                        /* 3531的ASIC板是两个BT1120口出16D1，此时dev2/6要设成dev1/5的MASK */
-                        pstDevAttr->au32CompMask[0] = 0xFF0000; 
-                    }
-                #endif
-            #endif
-            
             break;
         case 3:
-            pstDevAttr->au32CompMask[0] = 0xFF;
+            pstDevAttr->au32CompMask[0] = 0xFF000000;
             if (VI_MODE_BT1120_INTERLEAVED == pstDevAttr->enIntfMode)
             {
                 pstDevAttr->au32CompMask[1] = 0x0;
@@ -455,79 +480,32 @@ HI_S32 SAMPLE_COMM_VI_Mode2Param(SAMPLE_VI_MODE_E enViMode, SAMPLE_VI_PARAM_S *p
 {
     switch (enViMode)
     {
-        case SAMPLE_VI_MODE_1_D1:
-		case SAMPLE_VI_MODE_1_D1Cif:
-            pstViParam->s32ViDevCnt = 1;
-            pstViParam->s32ViDevInterval = 1;
-            pstViParam->s32ViChnCnt = 1;
-            pstViParam->s32ViChnInterval = 1;
-            break;
         case SAMPLE_VI_MODE_16_D1:
-            pstViParam->s32ViDevCnt = 4;
-            pstViParam->s32ViDevInterval = 2;
-            pstViParam->s32ViChnCnt = 16;
-            pstViParam->s32ViChnInterval = 1;
-            break;
         case SAMPLE_VI_MODE_16_960H:
-            pstViParam->s32ViDevCnt = 4;
-            pstViParam->s32ViDevInterval = 2;
-            pstViParam->s32ViChnCnt = 16;
-            pstViParam->s32ViChnInterval = 1;
+        case SAMPLE_VI_MODE_16_1280H:
+        case SAMPLE_VI_MODE_16_HALF720P:
+		case SAMPLE_VI_MODE_16_720P:
+            pstViParam->s32ViDevCnt = 2;
+            pstViParam->s32ViDevInterval = 1;
+            pstViParam->s32ViChnCnt = 4;
+            pstViParam->s32ViChnInterval = 2;
             break;
-        case SAMPLE_VI_MODE_4_720P:
+        case SAMPLE_VI_MODE_8_720P:
+        case SAMPLE_VI_MODE_8_1080P:
+            /* use chn 0,2,4,6,8,10,12,14 */
+            pstViParam->s32ViDevCnt = 2;
+            pstViParam->s32ViDevInterval = 1;
+            pstViParam->s32ViChnCnt = 4;//8
+            pstViParam->s32ViChnInterval = 2;
+            break;
+        case SAMPLE_VI_MODE_4_1080P:
+        case SAMPLE_VI_MODE_4_3M:
+            /* use chn 0,4,8,12 */
             pstViParam->s32ViDevCnt = 4;
-            pstViParam->s32ViDevInterval = 2;
+            pstViParam->s32ViDevInterval = 1;
             pstViParam->s32ViChnCnt = 4;
             pstViParam->s32ViChnInterval = 4;
             break;
-        
-        case SAMPLE_VI_MODE_4_1080P:
-            pstViParam->s32ViDevCnt = 4;
-            pstViParam->s32ViDevInterval = 2;
-            pstViParam->s32ViChnCnt = 4;
-            pstViParam->s32ViChnInterval = 4;            
-            break;
-        case SAMPLE_VI_MODE_1_1080P:    
-            pstViParam->s32ViDevCnt = 1;
-            pstViParam->s32ViDevInterval = 1;
-            pstViParam->s32ViChnCnt = 1;
-            pstViParam->s32ViChnInterval = 1;
-            break;
-
-        /*For Hi3521*/
-		case SAMPLE_VI_MODE_8_D1:
-            pstViParam->s32ViDevCnt = 2;
-            pstViParam->s32ViDevInterval = 1;
-            pstViParam->s32ViChnCnt = 8;
-            pstViParam->s32ViChnInterval = 1;	
-			break;
-		case SAMPLE_VI_MODE_1_720P:
-            pstViParam->s32ViDevCnt = 1;
-            pstViParam->s32ViDevInterval = 1;
-            pstViParam->s32ViChnCnt = 1;
-            pstViParam->s32ViChnInterval = 1;	
-			break;
-		case SAMPLE_VI_MODE_16_Cif:
-        case SAMPLE_VI_MODE_16_2Cif:
-		case SAMPLE_VI_MODE_16_D1Cif:
-            pstViParam->s32ViDevCnt = 4;
-            pstViParam->s32ViDevInterval = 1;
-            pstViParam->s32ViChnCnt = 16;
-            pstViParam->s32ViChnInterval = 1;	
-			break;
-        case SAMPLE_VI_MODE_4_D1:
-            pstViParam->s32ViDevCnt = 1;
-            pstViParam->s32ViDevInterval = 1;
-            pstViParam->s32ViChnCnt = 4;
-            pstViParam->s32ViChnInterval = 1;	
-			break; 
-        case SAMPLE_VI_MODE_8_2Cif:
-        case SAMPLE_VI_MODE_8_D1Cif:
-            pstViParam->s32ViDevCnt = 2;
-            pstViParam->s32ViDevInterval = 1;
-            pstViParam->s32ViChnCnt = 8;
-            pstViParam->s32ViChnInterval = 1;	
-			break;  
         default:
             SAMPLE_PRT("ViMode invaild!\n");
             return HI_FAILURE;
@@ -542,40 +520,14 @@ HI_S32 SAMPLE_COMM_VI_ADStart(SAMPLE_VI_MODE_E enViMode, VIDEO_NORM_E enNorm)
 {
     VI_WORK_MODE_E enWorkMode;
     HI_S32 s32Ret;
+    SAMPLE_VI_6124_MODE_E enMode;
     
     switch (enViMode)
     {
-        case SAMPLE_VI_MODE_1_D1:
-		case SAMPLE_VI_MODE_1_D1Cif:
-            enWorkMode = VI_WORK_MODE_4Multiplex;
-            s32Ret = SAMPLE_AD_CfgV_D1(enNorm, enWorkMode);
-            if (s32Ret != HI_SUCCESS)
-            {
-                SAMPLE_PRT("SAMPLE_TW2865_CfgV failed with %#x!\n",\
-                        s32Ret);
-                return HI_FAILURE;
-            }
-            break;
-        case SAMPLE_VI_MODE_16_D1:
-		case SAMPLE_VI_MODE_8_D1:
-        case SAMPLE_VI_MODE_4_D1:
-        case SAMPLE_VI_MODE_16_Cif:
-		case SAMPLE_VI_MODE_16_2Cif:
-        case SAMPLE_VI_MODE_8_2Cif:
-        case SAMPLE_VI_MODE_8_D1Cif:
-		case SAMPLE_VI_MODE_16_D1Cif:
-            enWorkMode = VI_WORK_MODE_4Multiplex;
-            s32Ret = SAMPLE_AD_CfgV_D1(enNorm, enWorkMode);
-            if (s32Ret != HI_SUCCESS)
-            {
-                SAMPLE_PRT("SAMPLE_TW2865_CfgV failed with %#x!\n",\
-                        s32Ret);
-                return HI_FAILURE;
-            }
-            break;
-        case SAMPLE_VI_MODE_16_960H:
-            enWorkMode = VI_WORK_MODE_4Multiplex;
-            s32Ret = SAMPLE_AD_CfgV_960H(enNorm, enWorkMode);
+		case SAMPLE_VI_MODE_16_D1:  
+        case SAMPLE_VI_MODE_16_960H: 
+			enWorkMode = VI_WORK_MODE_4Multiplex;		
+            s32Ret = SAMPLE_NVP6134_CfgV(enNorm, enWorkMode);
             if (s32Ret != HI_SUCCESS)
             {
                 SAMPLE_PRT("SAMPLE_TW2960_CfgV failed with %#x!\n",\
@@ -583,11 +535,26 @@ HI_S32 SAMPLE_COMM_VI_ADStart(SAMPLE_VI_MODE_E enViMode, VIDEO_NORM_E enNorm)
                 return HI_FAILURE;
             }
             break;
-        case SAMPLE_VI_MODE_4_720P:
-		case SAMPLE_VI_MODE_1_720P:
+        case SAMPLE_VI_MODE_8_720P:
+		case SAMPLE_VI_MODE_16_720P:		
+            enWorkMode = VI_WORK_MODE_2Multiplex;
+            s32Ret = SAMPLE_NVP6134_CfgV(enNorm, enWorkMode);
+            if (s32Ret != HI_SUCCESS)
+            {
+                SAMPLE_PRT("SAMPLE_NVP6114_CfgV failed with %#x!\n",\
+                        s32Ret);
+                return HI_FAILURE;
+            }
             break;
-        case SAMPLE_VI_MODE_4_1080P:
-        case SAMPLE_VI_MODE_1_1080P:
+        case SAMPLE_VI_MODE_8_1080P:
+            enWorkMode = VI_WORK_MODE_1Multiplex;
+            s32Ret = SAMPLE_NVP6134_CfgV(enNorm, enWorkMode);
+            if (s32Ret != HI_SUCCESS)
+            {
+                SAMPLE_PRT("SAMPLE_NVP6114_CfgV failed with %#x!\n",\
+                        s32Ret);
+                return HI_FAILURE;
+            }
             break;
         default:
             SAMPLE_PRT("AD not support!\n");
@@ -607,9 +574,7 @@ HI_S32 SAMPLE_COMM_VI_Mode2Size(SAMPLE_VI_MODE_E enViMode, VIDEO_NORM_E enNorm, 
     pstCapRect->s32Y = 0;
     switch (enViMode)
     {
-        case SAMPLE_VI_MODE_1_D1:
         case SAMPLE_VI_MODE_16_D1:
-		case SAMPLE_VI_MODE_8_D1:
             pstDestSize->u32Width = D1_WIDTH;
             pstDestSize->u32Height = (VIDEO_ENCODING_MODE_PAL==enNorm)?576:480;
             pstCapRect->u32Width = D1_WIDTH;
@@ -621,86 +586,27 @@ HI_S32 SAMPLE_COMM_VI_Mode2Size(SAMPLE_VI_MODE_E enViMode, VIDEO_NORM_E enNorm, 
             pstCapRect->u32Width = 960;
             pstCapRect->u32Height = (VIDEO_ENCODING_MODE_PAL==enNorm)?576:480;
             break;
-        case SAMPLE_VI_MODE_4_720P:
-		case SAMPLE_VI_MODE_1_720P:	
-            pstDestSize->u32Width = 1280;
-            pstDestSize->u32Height = 720;
-            pstCapRect->u32Width = 1280;
-            pstCapRect->u32Height = 720;
+        case SAMPLE_VI_MODE_8_720P:
+        case SAMPLE_VI_MODE_16_720P:
+            pstDestSize->u32Width  = _720P_WIDTH;
+            pstDestSize->u32Height = _720P_HEIGHT;
+            pstCapRect->u32Width  = _720P_WIDTH;
+            pstCapRect->u32Height = _720P_HEIGHT;
             break;
-        case SAMPLE_VI_MODE_4_1080P:
-        case SAMPLE_VI_MODE_1_1080P:
-            pstDestSize->u32Width = 1920;
-            pstDestSize->u32Height = 1080;
-            pstCapRect->u32Width = 1920;
-            pstCapRect->u32Height = 1080;
+            
+     case SAMPLE_VI_MODE_8_1080P:       
+            pstDestSize->u32Width  = HD_WIDTH;
+            pstDestSize->u32Height = HD_HEIGHT;
+            pstCapRect->u32Width  = HD_WIDTH;
+            pstCapRect->u32Height = HD_HEIGHT;
             break;
-		/*For Hi3521*/
-		case SAMPLE_VI_MODE_16_2Cif:
-		    pstDestSize->u32Width = D1_WIDTH / 2;
-            pstDestSize->u32Height = (VIDEO_ENCODING_MODE_PAL==enNorm)?576:480;
-            pstCapRect->u32Width = D1_WIDTH;
-            pstCapRect->u32Height = (VIDEO_ENCODING_MODE_PAL==enNorm)?576:480;
-			break;
-        /*For Hi3520A*/
-		case SAMPLE_VI_MODE_16_Cif:
-		    pstDestSize->u32Width = D1_WIDTH /2 ;
-            pstDestSize->u32Height = (VIDEO_ENCODING_MODE_PAL==enNorm)?288:240;
-            pstCapRect->u32Width = D1_WIDTH;
-            pstCapRect->u32Height = (VIDEO_ENCODING_MODE_PAL==enNorm)?576:480;
-			break;
-        case SAMPLE_VI_MODE_4_D1:
-            pstDestSize->u32Width = D1_WIDTH;
-            pstDestSize->u32Height = (VIDEO_ENCODING_MODE_PAL==enNorm)?576:480;
-            pstCapRect->u32Width = D1_WIDTH;
-            pstCapRect->u32Height = (VIDEO_ENCODING_MODE_PAL==enNorm)?576:480;
-            break;
-        case SAMPLE_VI_MODE_8_2Cif:
-		    pstDestSize->u32Width = D1_WIDTH / 2;
-            pstDestSize->u32Height = (VIDEO_ENCODING_MODE_PAL==enNorm)?576:480;
-            pstCapRect->u32Width = D1_WIDTH;
-            pstCapRect->u32Height = (VIDEO_ENCODING_MODE_PAL==enNorm)?576:480;
-			break;
+
         default:
             SAMPLE_PRT("vi mode invaild!\n");
             return HI_FAILURE;
     }
     
     return HI_SUCCESS;
-}
-
-HI_S32 SAMPLE_COMM_VI_GetSubChnSize(VI_CHN ViChn_Sub, VIDEO_NORM_E enNorm, SIZE_S *pstSize)
-{
-    VI_CHN ViChn;
-    
-    ViChn = ViChn_Sub - 16;
-
-    if (0==(ViChn%4)) //(0,4,8,12) subchn max size is 960x1600
-    {
-        pstSize->u32Width = 720;
-        pstSize->u32Height = (VIDEO_ENCODING_MODE_PAL==enNorm)?576:480;
-    }
-    else if (0==(ViChn%2)) //(2,6,10,14) subchn max size is 640x720
-    {
-        pstSize->u32Width = SAMPLE_VI_SUBCHN_2_W;
-        pstSize->u32Height = SAMPLE_VI_SUBCHN_2_H;
-    }
-    else
-    {
-        SAMPLE_PRT("Vi odd sub_chn(%d) is invaild!\n", ViChn_Sub);
-        return HI_FAILURE;
-    }
-    return HI_SUCCESS;
-}
-/*****************************************************************************
-* function : vi input is hd or not.
-*****************************************************************************/
-HI_BOOL SAMPLE_COMM_VI_IsHd(SAMPLE_VI_MODE_E enViMode)
-{
-    if (SAMPLE_VI_MODE_4_720P == enViMode || SAMPLE_VI_MODE_4_1080P == enViMode)
-        return HI_TRUE;
-    else
-        return HI_FALSE;
 }
 
 /*****************************************************************************
@@ -722,95 +628,18 @@ VI_DEV SAMPLE_COMM_VI_GetDev(SAMPLE_VI_MODE_E enViMode, VI_CHN ViChn)
     return (VI_DEV)(ViChn /stViParam.s32ViChnInterval / s32ChnPerDev * stViParam.s32ViDevInterval);
 }
 
-/******************************************************************************
-* function : Set vi system memory location
-******************************************************************************/
-HI_S32 SAMPLE_COMM_VI_MemConfig(SAMPLE_VI_MODE_E enViMode)
-{
-    HI_CHAR * pcMmzName;
-    MPP_CHN_S stMppChnVI;
-    SAMPLE_VI_PARAM_S stViParam;
-    VI_DEV ViDev;
-    VI_CHN ViChn;
-
-    HI_S32 i, j, s32Ret;
-
-    s32Ret = SAMPLE_COMM_VI_Mode2Param(enViMode, &stViParam);
-    if (HI_SUCCESS !=s32Ret)
-    {
-        SAMPLE_PRT("vi get param failed!\n");
-        return HI_FAILURE;
-    }
-
-    j = 0;
-    for(i=0; i<stViParam.s32ViChnCnt; i++)
-    {
-        ViChn = i * stViParam.s32ViChnInterval;
-        ViDev = SAMPLE_COMM_VI_GetDev(enViMode, ViChn);
-        //printf("dev:%d, chn:%d\n", ViDev, ViChn);
-        if (ViDev < 0)
-        {
-            SAMPLE_PRT("get vi dev failed !\n");
-            return HI_FAILURE;
-        }
-
-        pcMmzName = (0==i%2)?NULL: "ddr1";
-        stMppChnVI.enModId = HI_ID_VIU;
-        stMppChnVI.s32DevId = 0; //For VIU mode, this item must be set to zero
-        stMppChnVI.s32ChnId = ViChn;
-        s32Ret = HI_MPI_SYS_SetMemConf(&stMppChnVI,pcMmzName);
-        if (s32Ret)
-        {
-            SAMPLE_PRT("VI HI_MPI_SYS_SetMemConf failed with %#x!\n", s32Ret);
-            return HI_FAILURE;
-        }
-        
-        /* HD mode, we will start vi sub-chn */
-        if (HI_TRUE == SAMPLE_COMM_VI_IsHd(enViMode))
-        {
-            ViChn += 16;
-            
-            pcMmzName = (0==j%2)?NULL: "ddr1";
-            stMppChnVI.enModId = HI_ID_VIU;
-            stMppChnVI.s32DevId = 0; //For VIU mode, this item must be set to zero
-            stMppChnVI.s32ChnId = ViChn;
-            s32Ret = HI_MPI_SYS_SetMemConf(&stMppChnVI, pcMmzName);
-            if (s32Ret)
-            {
-                SAMPLE_PRT("VI subchn HI_MPI_SYS_SetMemConf failed with %#x!\n", s32Ret);
-                return HI_FAILURE;
-            }
-            j++;
-        }
-    }
-
-    return HI_SUCCESS;
-}
-
 /*****************************************************************************
 * function : star vi dev (cfg vi_dev_attr; set_dev_cfg; enable dev)
 *****************************************************************************/
 HI_S32 SAMPLE_COMM_VI_StartDev(VI_DEV ViDev, SAMPLE_VI_MODE_E enViMode)
 {
     HI_S32 s32Ret;
-    VI_DEV_ATTR_S    stViDevAttr;
+    VI_DEV_ATTR_S stViDevAttr;
     memset(&stViDevAttr,0,sizeof(stViDevAttr));
 
     switch (enViMode)
     {
-        case SAMPLE_VI_MODE_1_D1:
-		case SAMPLE_VI_MODE_1_D1Cif:
-            memcpy(&stViDevAttr,&DEV_ATTR_BT656D1_4MUX,sizeof(stViDevAttr));
-            SAMPLE_COMM_VI_SetMask(ViDev,&stViDevAttr);
-            break;
         case SAMPLE_VI_MODE_16_D1:
-		case SAMPLE_VI_MODE_8_D1:
-        case SAMPLE_VI_MODE_4_D1:
-        case SAMPLE_VI_MODE_16_Cif:
-		case SAMPLE_VI_MODE_16_2Cif:
-        case SAMPLE_VI_MODE_8_2Cif:
-        case SAMPLE_VI_MODE_8_D1Cif:
-		case SAMPLE_VI_MODE_16_D1Cif:
             memcpy(&stViDevAttr,&DEV_ATTR_BT656D1_4MUX,sizeof(stViDevAttr));
             SAMPLE_COMM_VI_SetMask(ViDev,&stViDevAttr);
             break;
@@ -818,14 +647,10 @@ HI_S32 SAMPLE_COMM_VI_StartDev(VI_DEV ViDev, SAMPLE_VI_MODE_E enViMode)
             memcpy(&stViDevAttr,&DEV_ATTR_BT656D1_4MUX,sizeof(stViDevAttr));
             SAMPLE_COMM_VI_SetMask(ViDev,&stViDevAttr);
             break;
-        case SAMPLE_VI_MODE_4_720P:
-		case SAMPLE_VI_MODE_1_720P:
-            memcpy(&stViDevAttr,&DEV_ATTR_7441_BT1120_720P,sizeof(stViDevAttr));
-            SAMPLE_COMM_VI_SetMask(ViDev,&stViDevAttr);
-            break;
-        case SAMPLE_VI_MODE_4_1080P:
-        case SAMPLE_VI_MODE_1_1080P:
-            memcpy(&stViDevAttr,&DEV_ATTR_7441_BT1120_1080P,sizeof(stViDevAttr));
+        case SAMPLE_VI_MODE_8_720P:
+        case SAMPLE_VI_MODE_16_720P:
+        case SAMPLE_VI_MODE_8_1080P:
+            memcpy(&stViDevAttr,&DEV_ATTR_6114_720P_2MUX_BASE,sizeof(stViDevAttr));
             SAMPLE_COMM_VI_SetMask(ViDev,&stViDevAttr);
             break;
         default:
@@ -833,12 +658,11 @@ HI_S32 SAMPLE_COMM_VI_StartDev(VI_DEV ViDev, SAMPLE_VI_MODE_E enViMode)
             return HI_FAILURE;
     }
 
-#ifdef DEMO
-    stViDevAttr.bDataRev = HI_TRUE;
-#else
-    stViDevAttr.bDataRev = HI_FALSE;
-#endif
-    
+    if(SAMPLE_VI_MODE_8_1080P == enViMode)
+    {
+        stViDevAttr.enClkEdge = VI_CLK_EDGE_DOUBLE;
+    }
+
     s32Ret = HI_MPI_VI_SetDevAttr(ViDev, &stViDevAttr);
     if (s32Ret != HI_SUCCESS)
     {
@@ -867,24 +691,35 @@ HI_S32 SAMPLE_COMM_VI_StartChn(VI_CHN ViChn, RECT_S *pstCapRect, SIZE_S *pstTarS
 
     /* step  5: config & start vicap dev */
     memcpy(&stChnAttr.stCapRect, pstCapRect, sizeof(RECT_S));
-    if (SAMPLE_VI_MODE_16_Cif == enViMode)
-    {
-        stChnAttr.enCapSel = VI_CAPSEL_BOTTOM;
-    }
-    else
-    {
-        stChnAttr.enCapSel = VI_CAPSEL_BOTH;
-    }
     /* to show scale. this is a sample only, we want to show dist_size = D1 only */
     stChnAttr.stDestSize.u32Width = pstTarSize->u32Width;
     stChnAttr.stDestSize.u32Height = pstTarSize->u32Height;
+    stChnAttr.enCapSel = VI_CAPSEL_BOTH;
     stChnAttr.enPixFormat = SAMPLE_PIXEL_FORMAT;   /* sp420 or sp422 */
     stChnAttr.bMirror = (VI_CHN_SET_MIRROR == enViChnSet)?HI_TRUE:HI_FALSE;
     stChnAttr.bFlip = (VI_CHN_SET_FILP == enViChnSet)?HI_TRUE:HI_FALSE;
-
-    stChnAttr.bChromaResample = HI_FALSE;
     stChnAttr.s32SrcFrameRate = -1;
-    stChnAttr.s32FrameRate = -1;
+    stChnAttr.s32DstFrameRate = -1;
+    switch (enViMode)
+    {
+        case SAMPLE_VI_MODE_16_D1:
+        case SAMPLE_VI_MODE_16_960H:
+        case SAMPLE_VI_MODE_16_1280H:
+            stChnAttr.enScanMode = VI_SCAN_INTERLACED;
+            break;
+        case SAMPLE_VI_MODE_16_HALF720P:
+        case SAMPLE_VI_MODE_8_720P:
+        case SAMPLE_VI_MODE_16_720P:
+        case SAMPLE_VI_MODE_4_1080P:
+        case SAMPLE_VI_MODE_8_1080P:
+        case SAMPLE_VI_MODE_16_1080P:
+        case SAMPLE_VI_MODE_4_3M:
+            stChnAttr.enScanMode = VI_SCAN_PROGRESSIVE;
+            break;
+        default:
+            SAMPLE_PRT("ViMode invaild!\n");
+            return HI_FAILURE;
+    }
 
     s32Ret = HI_MPI_VI_SetChnAttr(ViChn, &stChnAttr);
     if (s32Ret != HI_SUCCESS)
@@ -910,13 +745,13 @@ HI_S32 SAMPLE_COMM_VI_StartChn(VI_CHN ViChn, RECT_S *pstCapRect, SIZE_S *pstTarS
 HI_S32 SAMPLE_COMM_VI_Start(SAMPLE_VI_MODE_E enViMode, VIDEO_NORM_E enNorm)
 {
     VI_DEV ViDev;
-    VI_CHN ViChn, ViChn_Sub;
+    VI_CHN ViChn;
     HI_S32 i;
     HI_S32 s32Ret;
     SAMPLE_VI_PARAM_S stViParam;
-    SIZE_S stMainTargetSize;
-    SIZE_S stSubTargetSize;
+    SIZE_S stTargetSize;
     RECT_S stCapRect;
+    VI_CHN_BIND_ATTR_S stChnBindAttr;
     
     /*** get parameter from Sample_Vi_Mode ***/
     s32Ret = SAMPLE_COMM_VI_Mode2Param(enViMode, &stViParam);
@@ -925,13 +760,13 @@ HI_S32 SAMPLE_COMM_VI_Start(SAMPLE_VI_MODE_E enViMode, VIDEO_NORM_E enNorm)
         SAMPLE_PRT("vi get param failed!\n");
         return HI_FAILURE;
     }
-    s32Ret = SAMPLE_COMM_VI_Mode2Size(enViMode, enNorm, &stCapRect, &stMainTargetSize);
+    s32Ret = SAMPLE_COMM_VI_Mode2Size(enViMode, enNorm, &stCapRect, &stTargetSize);
     if (HI_SUCCESS !=s32Ret)
     {
         SAMPLE_PRT("vi get size failed!\n");
         return HI_FAILURE;
     }
-    
+#if 1    
     /*** Start AD ***/
     s32Ret = SAMPLE_COMM_VI_ADStart(enViMode, enNorm);
     if (HI_SUCCESS !=s32Ret)
@@ -939,7 +774,8 @@ HI_S32 SAMPLE_COMM_VI_Start(SAMPLE_VI_MODE_E enViMode, VIDEO_NORM_E enNorm)
         SAMPLE_PRT("Start AD failed!\n");
         return HI_FAILURE;
     }
-    
+#endif
+#if 1    
     /*** Start VI Dev ***/
     for(i=0; i<stViParam.s32ViDevCnt; i++)
     {
@@ -951,35 +787,66 @@ HI_S32 SAMPLE_COMM_VI_Start(SAMPLE_VI_MODE_E enViMode, VIDEO_NORM_E enNorm)
             return HI_FAILURE;
         }
     }
-    
+ #endif   
     /*** Start VI Chn ***/
     for(i=0; i<stViParam.s32ViChnCnt; i++)
     {
         ViChn = i * stViParam.s32ViChnInterval;
-        
-        s32Ret = SAMPLE_COMM_VI_StartChn(ViChn, &stCapRect, &stMainTargetSize, enViMode, VI_CHN_SET_NORMAL);
+
+        if (SAMPLE_VI_MODE_8_1080P == enViMode
+			|| SAMPLE_VI_MODE_16_D1 == enViMode
+			|| SAMPLE_VI_MODE_8_720P == enViMode)
+        {
+            /* When in the 8x1080p mode, bind chn 2,6,10,14 to way1 is needed */
+            if (ViChn%4 != 0)
+            {
+                s32Ret = HI_MPI_VI_GetChnBind(ViChn, &stChnBindAttr);
+                //if (HI_ERR_VI_FAILED_NOTBIND == s32Ret)
+                {
+					s32Ret = HI_MPI_VI_UnBindChn(ViChn);
+                    if (HI_SUCCESS != s32Ret)
+                    {
+                        SAMPLE_PRT("call HI_MPI_VI_BindChn failed with %#x\n", s32Ret);
+                        return HI_FAILURE;
+                    } 
+					
+					stChnBindAttr.ViDev = ViChn/4;
+                    stChnBindAttr.ViWay = 1;
+                    s32Ret = HI_MPI_VI_BindChn(ViChn, &stChnBindAttr);
+                    if (HI_SUCCESS != s32Ret)
+                    {
+                        SAMPLE_PRT("call HI_MPI_VI_BindChn failed with %#x\n", s32Ret);
+                        return HI_FAILURE;
+                    } 
+                } 
+            }
+        }
+		 if (SAMPLE_VI_MODE_16_720P == enViMode)
+        {
+            /* When in the 8x1080p mode, bind chn 2,6,10,14 to way1 is needed */
+            if (ViChn%4 != 0)
+            {
+                s32Ret = HI_MPI_VI_GetChnBind(ViChn, &stChnBindAttr);
+                if (HI_ERR_VI_FAILED_NOTBIND == s32Ret)
+                {
+                    stChnBindAttr.ViDev = ViChn/4;
+                    stChnBindAttr.ViWay = ViChn%4;//1
+                    s32Ret = HI_MPI_VI_BindChn(ViChn, &stChnBindAttr);
+                    if (HI_SUCCESS != s32Ret)
+                    {
+                        SAMPLE_PRT("call HI_MPI_VI_BindChn failed with %#x\n", s32Ret);
+                        return HI_FAILURE;
+                    } 
+                } 
+            }
+        }
+
+        s32Ret = SAMPLE_COMM_VI_StartChn(ViChn, &stCapRect, &stTargetSize, enViMode, VI_CHN_SET_NORMAL);
         if (HI_SUCCESS != s32Ret)
         {
             SAMPLE_PRT("call SAMPLE_COMM_VI_StarChn failed with %#x\n", s32Ret);
             return HI_FAILURE;
         } 
-        /* HD mode, we will start vi sub-chn */
-        if (HI_TRUE == SAMPLE_COMM_VI_IsHd(enViMode))
-        {
-            ViChn_Sub = SUBCHN(ViChn);
-            s32Ret = SAMPLE_COMM_VI_GetSubChnSize(ViChn_Sub, enNorm, &stSubTargetSize);
-            if (HI_SUCCESS != s32Ret)
-            {
-                SAMPLE_PRT("SAMPLE_COMM_VI_GetSubChnSize(%d) failed!\n", ViChn_Sub);
-                return HI_FAILURE;
-            }
-            s32Ret = SAMPLE_COMM_VI_StartChn(ViChn_Sub, &stCapRect, &stSubTargetSize,enViMode, VI_CHN_SET_NORMAL);
-            if (HI_SUCCESS != s32Ret)
-            {
-                SAMPLE_PRT("SAMPLE_COMM_VI_StartChn (Sub_Chn-%d) failed!\n", ViChn_Sub);
-                return HI_FAILURE;
-            }
-        }
     }
 
     return HI_SUCCESS;
@@ -1013,17 +880,6 @@ HI_S32 SAMPLE_COMM_VI_Stop(SAMPLE_VI_MODE_E enViMode)
         {
             SAMPLE_PRT("SAMPLE_COMM_VI_StopChn failed with %#x\n",s32Ret);
             return HI_FAILURE;
-        }
-        /* HD mode, we will stop vi sub-chn */
-        if (HI_TRUE == SAMPLE_COMM_VI_IsHd(enViMode))
-        {
-            ViChn += 16;
-            s32Ret = HI_MPI_VI_DisableChn(ViChn);
-            if (HI_SUCCESS != s32Ret)
-            {
-                SAMPLE_PRT("SAMPLE_COMM_VI_StopChn failed with %#x\n", s32Ret);
-                return HI_FAILURE;
-            }
         }
     }
 
@@ -1333,7 +1189,7 @@ HI_S32 SAMPLE_COMM_VI_ChangeDestSize(VI_CHN ViChn, HI_U32 u32Width, HI_U32 u32He
 
 /*****************************************************************************
 * function : star vi according to product type
-*           only for Hi3520D MixCap 
+*           only for Hi3521 MixCap 
 *****************************************************************************/
 HI_S32 SAMPLE_COMM_VI_MixCap_Start(SAMPLE_VI_MODE_E enViMode, VIDEO_NORM_E enNorm)
 {
@@ -1343,6 +1199,7 @@ HI_S32 SAMPLE_COMM_VI_MixCap_Start(SAMPLE_VI_MODE_E enViMode, VIDEO_NORM_E enNor
     HI_S32 s32Ret;
     SAMPLE_VI_PARAM_S stViParam;
     VI_CHN_ATTR_S stChnAttr,stChnMinorAttr;
+    VI_CHN_BIND_ATTR_S stChnBindAttr;
 	
     /*** get parameter from Sample_Vi_Mode ***/
     s32Ret = SAMPLE_COMM_VI_Mode2Param(enViMode, &stViParam);
@@ -1375,28 +1232,48 @@ HI_S32 SAMPLE_COMM_VI_MixCap_Start(SAMPLE_VI_MODE_E enViMode, VIDEO_NORM_E enNor
     /*** Start VI Chn ***/
     for(i=0; i<stViParam.s32ViChnCnt; i++)
     {
+        
         ViChn = i * stViParam.s32ViChnInterval;
+
+         if (SAMPLE_VI_MODE_8_1080P == enViMode
+         || SAMPLE_VI_MODE_8_720P == enViMode)
+        {
+            /* When in the 8x1080p mode, bind chn 2,6,10,14 to way1 is needed */
+            if (ViChn%4 != 0)
+            {
+                s32Ret = HI_MPI_VI_GetChnBind(ViChn, &stChnBindAttr);
+                if (HI_ERR_VI_FAILED_NOTBIND == s32Ret)
+                {
+                    stChnBindAttr.ViDev = ViChn/4;
+                    stChnBindAttr.ViWay = 1;
+                    s32Ret = HI_MPI_VI_BindChn(ViChn, &stChnBindAttr);
+                    if (HI_SUCCESS != s32Ret)
+                    {
+                        SAMPLE_PRT("call HI_MPI_VI_BindChn failed with %#x\n", s32Ret);
+                        return HI_FAILURE;
+                    } 
+                } 
+            }
+        }
 
 	    stChnAttr.stCapRect.s32X = 0;
 	    stChnAttr.stCapRect.s32Y = 0;
 	    stChnAttr.enCapSel = VI_CAPSEL_BOTH;                      
 	    stChnAttr.enPixFormat = SAMPLE_PIXEL_FORMAT;   /* sp420 or sp422 */
 	    stChnAttr.bMirror = HI_FALSE;                             
-	    stChnAttr.bFlip   = HI_FALSE;                              
-	    stChnAttr.bChromaResample = HI_FALSE;                      
-	    stChnAttr.s32SrcFrameRate = -1;
-	    stChnAttr.s32FrameRate = -1;
-		stChnAttr.stCapRect.u32Width= D1_WIDTH;
-	    stChnAttr.stCapRect.u32Height= (VIDEO_ENCODING_MODE_PAL==enNorm)?576:480;	
-	    stChnAttr.stDestSize.u32Width= D1_WIDTH;
-	    stChnAttr.stDestSize.u32Height= (VIDEO_ENCODING_MODE_PAL==enNorm)?576:480;
+	    stChnAttr.bFlip   = HI_FALSE;  
+		stChnAttr.stCapRect.u32Width= HD_WIDTH;
+	    stChnAttr.stCapRect.u32Height= 1080;	
+	    stChnAttr.stDestSize.u32Width= HD_WIDTH;
+	    stChnAttr.stDestSize.u32Height= 1080;
+        stChnAttr.enScanMode = VI_SCAN_PROGRESSIVE;
 		
 		memcpy(&stChnMinorAttr, &stChnAttr, sizeof(VI_CHN_ATTR_S));
-	    stChnMinorAttr.stDestSize.u32Width= D1_WIDTH / 2;
-	    stChnMinorAttr.stDestSize.u32Height= (VIDEO_ENCODING_MODE_PAL==enNorm)?576:480;
+	    stChnMinorAttr.stDestSize.u32Width= HD_WIDTH / 2;
+	    stChnMinorAttr.stDestSize.u32Height= 540;
 
-		stChnAttr.s32SrcFrameRate = (VIDEO_ENCODING_MODE_PAL== enNorm)?25:30;
-		stChnAttr.s32FrameRate = 6;
+		stChnAttr.s32SrcFrameRate = 30;
+		stChnAttr.s32DstFrameRate = 10;
 		
 		s32Ret = HI_MPI_VI_SetChnAttr(ViChn, &stChnAttr);
         if (HI_SUCCESS != s32Ret)
@@ -1405,6 +1282,14 @@ HI_S32 SAMPLE_COMM_VI_MixCap_Start(SAMPLE_VI_MODE_E enViMode, VIDEO_NORM_E enNor
             return HI_FAILURE;
         } 
 		s32Ret = HI_MPI_VI_SetChnMinorAttr(ViChn, &stChnMinorAttr);
+		if (HI_SUCCESS != s32Ret)
+		{
+			SAMPLE_PRT("call HI_MPI_VI_SetChnMinorAttr failed with %#x\n", s32Ret);
+			return HI_FAILURE;
+		} 
+
+
+        s32Ret = HI_MPI_VI_SetChnMinorAttr(ViChn, &stChnMinorAttr);
 		if (HI_SUCCESS != s32Ret)
 		{
 			SAMPLE_PRT("call HI_MPI_VI_SetChnMinorAttr failed with %#x\n", s32Ret);
@@ -1437,7 +1322,7 @@ HI_S32 SAMPLE_COMM_VI_ChangeMixCap(VI_CHN ViChn,HI_BOOL bMixCap,HI_U32 FrameRate
 		memcpy(&stChnMinorAttr, &stChnAttr, sizeof(VI_CHN_ATTR_S));
 	    stChnMinorAttr.stDestSize.u32Width = D1_WIDTH / 2;
 		
-		stChnAttr.s32FrameRate = FrameRate;
+		stChnAttr.s32DstFrameRate = FrameRate;
 		
 		S32Ret = HI_MPI_VI_SetChnAttr(ViChn, &stChnAttr);
         if (HI_SUCCESS != S32Ret)
@@ -1454,7 +1339,7 @@ HI_S32 SAMPLE_COMM_VI_ChangeMixCap(VI_CHN ViChn,HI_BOOL bMixCap,HI_U32 FrameRate
 	}
 	else
 	{
-		stChnAttr.s32FrameRate = stChnAttr.s32SrcFrameRate;
+		stChnAttr.s32DstFrameRate = stChnAttr.s32SrcFrameRate;
 		S32Ret = HI_MPI_VI_SetChnAttr(ViChn, &stChnAttr);
         if (HI_SUCCESS != S32Ret)
         {

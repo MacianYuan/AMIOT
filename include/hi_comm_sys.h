@@ -49,6 +49,57 @@ typedef struct hiMPP_SYS_CONF_S
 
 }MPP_SYS_CONF_S;
 
+typedef enum hiEN_SYS_ERR_CODE_E
+{
+    ERR_SYS_NOHEARTBEAT = 0x40,
+
+    ERR_SYS_BUTT
+}EN_SYS_ERR_CODE_E;
+
+typedef enum hiSCALE_RANGE_E
+{
+    SCALE_RANGE_0 = 0,      /* scale range <  1/4 */
+    SCALE_RANGE_1,          /* scale range >= 1/4 */
+    SCALE_RANGE_2,          /* scale range >= 1/3 */
+    SCALE_RANGE_3,          /* scale range >= 1/2 */
+    SCALE_RANGE_4,          /* scale range >= 3/4 */
+    SCALE_RANGE_5,          /* scale range == 1/1 */
+    SCALE_RANGE_6,          /* scale range >  1   */
+    SCALE_RANGE_BUTT,
+} SCALE_RANGE_E;
+
+typedef enum hiCOEFF_LEVEL_E
+{
+    COEFF_LEVEL_0 = 0,      /* coefficient level 0 */
+    COEFF_LEVEL_1,          /* coefficient level 1 */
+    COEFF_LEVEL_2,          /* coefficient level 2 */
+    COEFF_LEVEL_3,          /* coefficient level 3 */
+    COEFF_LEVEL_4,          /* coefficient level 4 */
+    COEFF_LEVEL_5,          /* coefficient level 5 */
+    COEFF_LEVEL_6,          /* coefficient level 6 */
+    COEFF_LEVEL_BUTT,
+} COEFF_LEVEL_E;
+
+typedef struct hiSCALE_COEFF_LEVEL_S
+{
+    COEFF_LEVEL_E enHorLum; /* horizontal luminance   coefficient level */    
+    COEFF_LEVEL_E enHorChr; /* horizontal chrominance coefficient level */    
+    COEFF_LEVEL_E enVerLum; /* vertical   luminance   coefficient level */    
+    COEFF_LEVEL_E enVerChr; /* vertical   chrominance coefficient level */    
+} SCALE_COEFF_LEVEL_S;
+
+typedef struct hiSCALE_RANGE_S
+{
+    SCALE_RANGE_E enHorizontal;
+    SCALE_RANGE_E enVertical;   
+} SCALE_RANGE_S;
+
+typedef struct hiSCALE_COEFF_INFO_S
+{
+    SCALE_RANGE_S stScaleRange;
+    SCALE_COEFF_LEVEL_S stScaleCoeffLevel;   
+} SCALE_COEFF_INFO_S;
+
 
 #define HI_ERR_SYS_NULL_PTR         HI_DEF_ERR(HI_ID_SYS, EN_ERR_LEVEL_ERROR, EN_ERR_NULL_PTR)
 #define HI_ERR_SYS_NOTREADY         HI_DEF_ERR(HI_ID_SYS, EN_ERR_LEVEL_ERROR, EN_ERR_SYS_NOTREADY)
@@ -57,6 +108,7 @@ typedef struct hiMPP_SYS_CONF_S
 #define HI_ERR_SYS_ILLEGAL_PARAM    HI_DEF_ERR(HI_ID_SYS, EN_ERR_LEVEL_ERROR, EN_ERR_ILLEGAL_PARAM)
 #define HI_ERR_SYS_BUSY             HI_DEF_ERR(HI_ID_SYS, EN_ERR_LEVEL_ERROR, EN_ERR_BUSY)
 #define HI_ERR_SYS_NOT_SUPPORT      HI_DEF_ERR(HI_ID_SYS, EN_ERR_LEVEL_ERROR, EN_ERR_NOT_SUPPORT)
+#define HI_ERR_SYS_NOHEARTBEAT      HI_DEF_ERR(HI_ID_SYS, EN_ERR_LEVEL_ERROR, ERR_SYS_NOHEARTBEAT)
 
 
 #ifdef __cplusplus

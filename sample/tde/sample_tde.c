@@ -8,25 +8,23 @@
 #include <linux/fb.h>
 #include <sys/mman.h>
 #include <fcntl.h>
+#include <signal.h>
 
 #include "hi_tde_api.h"
 #include "hi_tde_type.h"
 #include "hi_tde_errcode.h"
 #include "hifb.h"
-
+#include "hi_type.h"
 #include "hi_comm_vo.h"
 #include "mpi_sys.h"
-
 #include "mpi_vo.h"
 #include "sample_comm.h"
+#include "hi_comm_ive.h"
 
 
 #define TDE_PRINT printf
-
 #define VoDev 0
 #define VoChn 0
-
-
 #define MIN(x,y) ((x) > (y) ? (y) : (x))
 #define MAX(x,y) ((x) > (y) ? (x) : (y))
 
@@ -53,14 +51,55 @@ static const HI_CHAR *pszImageNames[] =
 #define SCREEN_HEIGHT   576
 #define CYCLE_LEN       60
 
-#ifndef HI_FLOAT
-typedef float HI_FLOAT;
-#endif
-
 static HI_S32   g_s32FrameNum;
 static TDE2_SURFACE_S g_stScreen[2];
 static TDE2_SURFACE_S g_stBackGround;
 static TDE2_SURFACE_S g_stImgSur[N_IMAGES];
+HI_S32 g_s32Fd = -1;
+HI_U32 g_u32Size;
+HI_U8* g_pu8Screen = NULL;
+HI_U8* g_pu8BackGroundVir = NULL;
+
+
+int IntType = 0;
+
+/******************************************************************************
+* function : to process abnormal case                                         
+******************************************************************************/
+void SAMPLE_TDE_HandleSig(HI_S32 signo)
+{
+    if (SIGINT == signo || SIGTERM == signo)
+    {
+        if (NULL != g_pu8Screen)
+        {
+            munmap(g_pu8Screen, g_u32Size);
+            g_pu8Screen = NULL;
+        }
+
+        if (NULL != g_pu8BackGroundVir)
+        {
+            HI_MPI_SYS_MmzFree(g_stBackGround.u32PhyAddr, g_pu8BackGroundVir);
+            g_pu8BackGroundVir = NULL;
+        }
+        
+        if (g_s32Fd != -1)
+        {
+            close(g_s32Fd);
+            g_s32Fd = -1;
+        }
+        
+        HI_TDE2_Close();
+        
+        if (IntType & VO_INTF_HDMI)
+        {
+             SAMPLE_COMM_VO_HdmiStop();
+        }
+        HI_MPI_VO_Disable(VoDev);
+        SAMPLE_COMM_SYS_Exit();
+        printf("\033[0;31mprogram termination abnormally!\033[0;39m\n");
+    }
+    exit(-1);
+}
 
 static HI_S32 TDE_CreateSurfaceByFile(const HI_CHAR *pszFileName, TDE2_SURFACE_S *pstSurface, HI_U8 *pu8Virt)
 {
@@ -112,14 +151,17 @@ static HI_VOID circumrotate (HI_U32 u32CurOnShow)
     HI_U32 u32NextOnShow;
     TDE2_RECT_S stSrcRect;
     TDE2_RECT_S stDstRect;
-	HI_S32 s32Ret = HI_SUCCESS;
+    HI_S32 s32Ret = HI_SUCCESS;
 
     u32NextOnShow = !u32CurOnShow;
 
-    stOpt.enOutAlphaFrom = TDE2_OUTALPHA_FROM_FOREGROUND;
+    stOpt.enOutAlphaFrom = TDE2_COLORKEY_MODE_FOREGROUND;
+    stOpt.unColorKeyValue.struCkARGB.stRed.u8CompMask = 0xff;
+    stOpt.unColorKeyValue.struCkARGB.stGreen.u8CompMask = 0xff;
+    stOpt.unColorKeyValue.struCkARGB.stBlue.u8CompMask = 0xff;
     stOpt.enColorKeyMode = TDE2_COLORKEY_MODE_FOREGROUND;
     stOpt.unColorKeyValue.struCkARGB.stAlpha.bCompIgnore = HI_TRUE;
-    
+
     f = (float) (g_s32FrameNum % CYCLE_LEN) / CYCLE_LEN;
 
     stSrcRect.s32Xpos = 0;
@@ -144,11 +186,11 @@ static HI_VOID circumrotate (HI_U32 u32CurOnShow)
     s32Ret = HI_TDE2_QuickCopy(s32Handle, &g_stBackGround, &stSrcRect, 
         &g_stScreen[u32NextOnShow], &stSrcRect);
     if(s32Ret < 0)
-	{
+    {
         TDE_PRINT("Line:%d failed,ret=0x%x!\n", __LINE__, s32Ret);
-		HI_TDE2_CancelJob(s32Handle);
+        HI_TDE2_CancelJob(s32Handle);
         return ;
-	}
+    }
     
     for(i = 0; i < N_IMAGES; i++)
     {
@@ -172,22 +214,22 @@ static HI_VOID circumrotate (HI_U32 u32CurOnShow)
         /* 4. bitblt image to screen */
         s32Ret = HI_TDE2_Bitblit(s32Handle, &g_stScreen[u32NextOnShow], &stDstRect, 
             &g_stImgSur[i], &stSrcRect, &g_stScreen[u32NextOnShow], &stDstRect, &stOpt);
-		if(s32Ret < 0)
-		{
-			TDE_PRINT("Line:%d,HI_TDE2_Bitblit failed,ret=0x%x!\n", __LINE__, s32Ret);
-			HI_TDE2_CancelJob(s32Handle);
-			return ;
-		}
+        if(s32Ret < 0)
+        {
+        	TDE_PRINT("Line:%d,HI_TDE2_Bitblit failed,ret=0x%x!\n", __LINE__, s32Ret);
+        	HI_TDE2_CancelJob(s32Handle);
+        	return ;
+        }
     }
 
     /* 5. submit job */
     s32Ret = HI_TDE2_EndJob(s32Handle, HI_FALSE, HI_TRUE, 10);
-	if(s32Ret < 0)
-	{
-		TDE_PRINT("Line:%d,HI_TDE2_EndJob failed,ret=0x%x!\n", __LINE__, s32Ret);
-		HI_TDE2_CancelJob(s32Handle);
-		return ;
-	}
+    if(s32Ret < 0)
+    {
+        TDE_PRINT("Line:%d,HI_TDE2_EndJob failed,ret=0x%x!\n", __LINE__, s32Ret);
+        HI_TDE2_CancelJob(s32Handle);
+        return ;
+    }
 
     g_s32FrameNum++;
     return;
@@ -195,12 +237,7 @@ static HI_VOID circumrotate (HI_U32 u32CurOnShow)
 
 HI_S32 TDE_DrawGraphicSample()
 {
-    HI_U32 u32Size;
-    HI_S32 s32Fd;
     HI_U32 u32Times;
-    HI_U8* pu8Screen;
-    HI_U8* pu8BackGroundVir;
-
     HI_U32 u32PhyAddr;
     HI_S32 s32Ret = -1;
     HI_U32 i = 0;
@@ -218,32 +255,32 @@ HI_S32 TDE_DrawGraphicSample()
     HI_TDE2_Open();
 
     /* 2. framebuffer operation */
-    s32Fd = open("/dev/fb0", O_RDWR);
-    if (s32Fd == -1)
+    g_s32Fd = open("/dev/fb0", O_RDWR);
+    if (g_s32Fd == -1)
     {
         printf("open frame buffer device error\n");
         goto FB_OPEN_ERROR;
     }
 
-	bCompress = HI_FALSE ;
-	if (ioctl(s32Fd, FBIOPUT_COMPRESSION_HIFB, &bCompress) < 0)
-	{
-		printf(" FBIOPUT_COMPRESSION_HIFB failed!\n");
-		close(s32Fd);
-		goto FB_PROCESS_ERROR2;
-	}
+    bCompress = HI_FALSE ;
+    if (ioctl(g_s32Fd, FBIOPUT_COMPRESSION_HIFB, &bCompress) < 0)
+    {
+        printf(" FBIOPUT_COMPRESSION_HIFB failed!\n");
+        close(g_s32Fd);
+        goto FB_PROCESS_ERROR2;
+    }
     stAlpha.bAlphaChannel = HI_FALSE;
     stAlpha.bAlphaEnable = HI_FALSE;
-    if (ioctl(s32Fd, FBIOPUT_ALPHA_HIFB, &stAlpha) < 0)
+    if (ioctl(g_s32Fd, FBIOPUT_ALPHA_HIFB, &stAlpha) < 0)
     {
-   	    printf("Put alpha info failed!\n");
+        printf("Put alpha info failed!\n");
         goto FB_PROCESS_ERROR0;
     }
 
-	/* get the variable screen info */
-    if (ioctl(s32Fd, FBIOGET_VSCREENINFO, &stVarInfo) < 0)
+    /* get the variable screen info */
+    if (ioctl(g_s32Fd, FBIOGET_VSCREENINFO, &stVarInfo) < 0)
     {
-   	    printf("Get variable screen info failed!\n");
+        printf("Get variable screen info failed!\n");
         goto FB_PROCESS_ERROR0;
     }
 	
@@ -260,27 +297,27 @@ HI_S32 TDE_DrawGraphicSample()
     stVarInfo.blue  = stB32;
     stVarInfo.transp = stA32;
 
-    if (ioctl(s32Fd, FBIOPUT_VSCREENINFO, &stVarInfo) < 0)
+    if (ioctl(g_s32Fd, FBIOPUT_VSCREENINFO, &stVarInfo) < 0)
     {
         printf("process frame buffer device error\n");
         goto FB_PROCESS_ERROR0;
     }
 
-    if (ioctl(s32Fd, FBIOGET_FSCREENINFO, &stFixInfo) < 0)
+    if (ioctl(g_s32Fd, FBIOGET_FSCREENINFO, &stFixInfo) < 0)
     {
         printf("process frame buffer device error\n");
         goto FB_PROCESS_ERROR0;
     }
     
-    u32Size 	= stFixInfo.smem_len;
+    g_u32Size 	= stFixInfo.smem_len;
     u32PhyAddr  = stFixInfo.smem_start;
-    pu8Screen   = mmap(NULL, u32Size, PROT_READ|PROT_WRITE, MAP_SHARED, s32Fd, 0);
-    if (NULL == pu8Screen)
+    g_pu8Screen   = mmap(NULL, g_u32Size, PROT_READ|PROT_WRITE, MAP_SHARED, g_s32Fd, 0);
+    if (NULL == g_pu8Screen)
     {
         printf("mmap fb0 failed!\n");
         goto FB_PROCESS_ERROR0;
     }
-    memset(pu8Screen, 0x00, stFixInfo.smem_len);
+    memset(g_pu8Screen, 0x00, stFixInfo.smem_len);
 
     /* 3. create surface */
     g_stScreen[0].enColorFmt = PIXFMT;
@@ -294,27 +331,27 @@ HI_S32 TDE_DrawGraphicSample()
     g_stScreen[1].u32PhyAddr = g_stScreen[0].u32PhyAddr + g_stScreen[0].u32Stride * g_stScreen[0].u32Height;
 
     /* allocate memory (720*576*2*N_IMAGES bytes) to save Images' infornation */
-    if (HI_FAILURE == HI_MPI_SYS_MmzAlloc(&(g_stBackGround.u32PhyAddr), ((void**)&pu8BackGroundVir), 
+    if (HI_FAILURE == HI_MPI_SYS_MmzAlloc(&(g_stBackGround.u32PhyAddr), ((void**)&g_pu8BackGroundVir), 
             NULL, NULL, 720*576*2*N_IMAGES))
     {
         TDE_PRINT("allocate memory (720*576*2*N_IMAGES bytes) failed\n");
         goto FB_PROCESS_ERROR1;
     }
     
-    TDE_CreateSurfaceByFile(BACKGROUND_NAME, &g_stBackGround, pu8BackGroundVir);
+    TDE_CreateSurfaceByFile(BACKGROUND_NAME, &g_stBackGround, g_pu8BackGroundVir);
 
     g_stImgSur[0].u32PhyAddr = g_stBackGround.u32PhyAddr + g_stBackGround.u32Stride * g_stBackGround.u32Height;
     for(i = 0; i < N_IMAGES - 1; i++)
     {
-      TDE_CreateSurfaceByFile(pszImageNames[i], &g_stImgSur[i], 
-            pu8BackGroundVir + ((HI_U32)g_stImgSur[i].u32PhyAddr - g_stBackGround.u32PhyAddr));
-      g_stImgSur[i+1].u32PhyAddr = g_stImgSur[i].u32PhyAddr + g_stImgSur[i].u32Stride * g_stImgSur[i].u32Height;
+        TDE_CreateSurfaceByFile(pszImageNames[i], &g_stImgSur[i], 
+            g_pu8BackGroundVir + ((HI_U32)g_stImgSur[i].u32PhyAddr - g_stBackGround.u32PhyAddr));
+        g_stImgSur[i+1].u32PhyAddr = g_stImgSur[i].u32PhyAddr + g_stImgSur[i].u32Stride * g_stImgSur[i].u32Height;
     }
     TDE_CreateSurfaceByFile(pszImageNames[i], &g_stImgSur[i], 
-            pu8BackGroundVir + ((HI_U32)g_stImgSur[i].u32PhyAddr - g_stBackGround.u32PhyAddr));
+            g_pu8BackGroundVir + ((HI_U32)g_stImgSur[i].u32PhyAddr - g_stBackGround.u32PhyAddr));
 
     bShow = HI_TRUE;
-    if (ioctl(s32Fd, FBIOPUT_SHOW_HIFB, &bShow) < 0)
+    if (ioctl(g_s32Fd, FBIOPUT_SHOW_HIFB, &bShow) < 0)
     {
         fprintf (stderr, "Couldn't show fb\n");
         goto FB_PROCESS_ERROR2;
@@ -329,7 +366,7 @@ HI_S32 TDE_DrawGraphicSample()
         stVarInfo.yoffset = (u32Times%2)?0:576;
 
         /*set frame buffer start position*/
-        if (ioctl(s32Fd, FBIOPAN_DISPLAY, &stVarInfo) < 0)
+        if (ioctl(g_s32Fd, FBIOPAN_DISPLAY, &stVarInfo) < 0)
         {
             TDE_PRINT("process frame buffer device error\n");
             goto FB_PROCESS_ERROR2;
@@ -340,11 +377,14 @@ HI_S32 TDE_DrawGraphicSample()
     s32Ret = 0;
     
 FB_PROCESS_ERROR2:    
-    HI_MPI_SYS_MmzFree(g_stBackGround.u32PhyAddr, pu8BackGroundVir);
+    HI_MPI_SYS_MmzFree(g_stBackGround.u32PhyAddr, g_pu8BackGroundVir);
+    g_pu8BackGroundVir = NULL;
 FB_PROCESS_ERROR1:
-    munmap(pu8Screen, u32Size);
+    munmap(g_pu8Screen, g_u32Size);
+    g_pu8Screen = NULL;
 FB_PROCESS_ERROR0:
-    close(s32Fd);
+    close(g_s32Fd);
+    g_s32Fd = -1;
 FB_OPEN_ERROR:
     HI_TDE2_Close();
 
@@ -362,59 +402,57 @@ note	   :    for showing graphic layer, VO device should be enabled first.
 *****************************************************************************/
 int main()
 {
-	HI_S32 s32Ret = 0;
-	VO_PUB_ATTR_S stPubAttr;
-	VB_CONF_S stVbConf;
+    HI_S32 s32Ret = 0;
+    VO_PUB_ATTR_S stPubAttr;
+    VB_CONF_S stVbConf;
 
-	stPubAttr.u32BgColor = 0x000000ff;
-#ifdef HI_FPGA 
-    stPubAttr.enIntfType = VO_INTF_BT1120|VO_INTF_VGA;
-#else
-    stPubAttr.enIntfType = VO_INTF_VGA;
-#endif
-    stPubAttr.enIntfSync = VO_OUTPUT_720P50;
-	stPubAttr.bDoubleFrame = HI_FALSE;
+    signal(SIGINT, SAMPLE_TDE_HandleSig);
+    signal(SIGTERM, SAMPLE_TDE_HandleSig);
+    
+    stPubAttr.u32BgColor = 0x000000ff;
+    stPubAttr.enIntfType = VO_INTF_VGA | VO_INTF_HDMI;
+    stPubAttr.enIntfSync = VO_OUTPUT_1080P60;
 
-	memset(&stVbConf, 0, sizeof(VB_CONF_S));
+    memset(&stVbConf, 0, sizeof(VB_CONF_S));
     stVbConf.u32MaxPoolCnt             = 16;
-	/*no need common video buffer!*/	
+    /*no need common video buffer!*/	
 	
     /*1 enable Vo device HD first*/
-	if(HI_SUCCESS != SAMPLE_COMM_SYS_Init(&stVbConf))
-	{
-		return -1;
-	}
-	if(HI_SUCCESS != SAMPLE_COMM_VO_StartDevLayer(VoDev, &stPubAttr,25))
-	{
-		SAMPLE_COMM_SYS_Exit();
-		return -1;
-	}
+    if(HI_SUCCESS != SAMPLE_COMM_SYS_Init(&stVbConf))
+    {
+        return -1;
+    }
+    if(HI_SUCCESS != SAMPLE_COMM_VO_StartDev(VoDev, &stPubAttr))
+    {
+        SAMPLE_COMM_SYS_Exit();
+        return -1;
+    }
 
     /* if it's displayed on HDMI, we should start HDMI */
     if (stPubAttr.enIntfType & VO_INTF_HDMI)
     {
+        IntType = VO_INTF_HDMI;
         if (HI_SUCCESS != SAMPLE_COMM_VO_HdmiStart(stPubAttr.enIntfSync))
         {
             goto err;
         }
     }
 	
-	/*2 run tde sample which draw grahpic on HiFB memory*/
-	s32Ret = TDE_DrawGraphicSample();
-	if(s32Ret != HI_SUCCESS)
-	{
-		goto err;
-	}
+    /*2 run tde sample which draw grahpic on HiFB memory*/
+    s32Ret = TDE_DrawGraphicSample();
+    if(s32Ret != HI_SUCCESS)
+    {
+        goto err;
+    }
 
 err:
     if (stPubAttr.enIntfType & VO_INTF_HDMI)
     {
          SAMPLE_COMM_VO_HdmiStop();
     }
-	SAMPLE_COMM_VO_StopDevLayer(VoDev);
-	SAMPLE_COMM_SYS_Exit();
-
-	return 0;
+    HI_MPI_VO_Disable(VoDev);
+    SAMPLE_COMM_SYS_Exit();
+    return 0;
 }		
 
 

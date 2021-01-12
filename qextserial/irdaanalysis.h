@@ -14,7 +14,7 @@
 #include "menuwidget.h"
 #include "hiir.h"
 #include "hiir_codedef.h"
-#include "public/device_public.h"
+#include "device_public.h"
 
 class IrdaAnalysis : public QObject
 {

@@ -18,22 +18,18 @@
     Modification: add a new funtion "HI_MPI_SYS_GetVersion"
 
 ******************************************************************************/
+#ifndef __MPI_SYS_H__
+#define __MPI_SYS_H__
 
 #include "hi_type.h"
 #include "hi_common.h"
 #include "hi_comm_sys.h"
 
-#ifndef __MPI_SYS_H__
-#define __MPI_SYS_H__
-
-/******************************************/
 #ifdef __cplusplus
 #if __cplusplus
-extern "C"
-{
+extern "C"{
 #endif
-#endif /* __cplusplus */
-/******************************************/
+#endif /* End of #ifdef __cplusplus */
 
 HI_S32 HI_MPI_SYS_Init();
 HI_S32 HI_MPI_SYS_Exit();
@@ -42,25 +38,20 @@ HI_S32 HI_MPI_SYS_SetConf(const MPP_SYS_CONF_S *pstSysConf);
 HI_S32 HI_MPI_SYS_GetConf(MPP_SYS_CONF_S *pstSysConf);
 
 HI_S32  HI_MPI_SYS_Bind(MPP_CHN_S *pstSrcChn, MPP_CHN_S *pstDestChn);
-
 HI_S32  HI_MPI_SYS_UnBind(MPP_CHN_S *pstSrcChn, MPP_CHN_S *pstDestChn);
-
 HI_S32  HI_MPI_SYS_GetBindbyDest(MPP_CHN_S *pstDestChn, MPP_CHN_S *pstSrcChn);
 
-
 HI_S32 HI_MPI_SYS_GetVersion(MPP_VERSION_S *pstVersion);
-
-/* Get the current PTS of this system */
-HI_S32 HI_MPI_SYS_GetCurPts(HI_U64 *pu64CurPts);
 
 /*
 ** u64Base is the global PTS of the system.
 ** ADVICE:
-** 1. Bester to call HI_MPI_SYS_GetCurPts on the host board to get the u64Base.
-** 2. When the linux start up, call HI_MPI_SYS_InitPtsBase to set the init pts.
-** 3. When media bussines is running, synchronize the PTS one time per minute.
-**    And should call HI_MPI_SYS_SyncPts.
+** 1. Better to call HI_MPI_SYS_GetCurPts on the host board to get u64Base.
+** 2. When os start up, call HI_MPI_SYS_InitPtsBase to set the init PTS.
+** 3. When media bussines is running, synchronize the PTS one time per minute 
+**     by calling HI_MPI_SYS_SyncPts.
 */
+HI_S32 HI_MPI_SYS_GetCurPts(HI_U64 *pu64CurPts);
 HI_S32 HI_MPI_SYS_InitPtsBase(HI_U64 u64PtsBase);
 HI_S32 HI_MPI_SYS_SyncPts(HI_U64 u64PtsBase);
 
@@ -83,7 +74,10 @@ HI_S32 HI_MPI_SYS_MmzFlushCache(HI_U32 u32PhyAddr, HI_VOID *pVitAddr, HI_U32 u32
 ** The system function mmap is too complicated, so we packge it.
 */
 HI_VOID * HI_MPI_SYS_Mmap(HI_U32 u32PhyAddr, HI_U32 u32Size);
+HI_VOID* HI_MPI_SYS_MmapCache(HI_U32 u32PhyAddr, HI_U32 u32Size);
 HI_S32 HI_MPI_SYS_Munmap(HI_VOID* pVirAddr, HI_U32 u32Size);
+HI_S32 HI_MPI_SYS_MflushCache(HI_U32 u32PhyAddr, HI_VOID *pVirAddr, HI_U32 u32Size);
+
 
 /*
 ** Access the physical address.
@@ -92,25 +86,20 @@ HI_S32 HI_MPI_SYS_Munmap(HI_VOID* pVirAddr, HI_U32 u32Size);
 HI_S32 HI_MPI_SYS_SetReg(HI_U32 u32Addr, HI_U32 u32Value);
 HI_S32 HI_MPI_SYS_GetReg(HI_U32 u32Addr, HI_U32 *pu32Value);
 
-
 HI_S32 HI_MPI_SYS_SetMemConf(MPP_CHN_S *pstMppChn,const HI_CHAR *pcMmzName);
 HI_S32 HI_MPI_SYS_GetMemConf(MPP_CHN_S *pstMppChn,HI_CHAR *pcMmzName);
-
-/* Get address of virtual register */
-HI_S32 HI_MPI_SYS_GetVRegAddr(HI_U32 *pu32Addr);
-
 
 /* Close all the FD which is used by sys module */
 HI_S32 HI_MPI_SYS_CloseFd(HI_VOID);
 
 
-/******************************************/
+
+
 #ifdef __cplusplus
 #if __cplusplus
 }
 #endif
-#endif /* __cplusplus */
-/******************************************/
-#endif /*__MPI_SYS_H__ */
+#endif /* End of #ifdef __cplusplus */
 
+#endif /*__MPI_SYS_H__ */
 

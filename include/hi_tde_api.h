@@ -281,10 +281,6 @@ HI_S32      HI_TDE2_BitmapMaskBlend(TDE_HANDLE s32Handle,
                                     HI_U8 u8Alpha, TDE2_ALUCMD_E enBlendMode);
 
 
-HI_S32 HI_TDE2_Rotate(TDE_HANDLE s32Handle, 
-                    TDE2_SURFACE_S *pstSrc, TDE2_RECT_S *pstSrcRect, 
-                    TDE2_SURFACE_S *pstDst, HI_S32 s32DstPointX,  HI_S32 s32DstPointY,
-                    TDE_ROTATE_ANGLE_E enRotateAngle);
 
 /*****************************************************************************
 * Function:      HI_TDE2_SetDeflickerLevel
@@ -375,79 +371,17 @@ HI_S32 HI_TDE2_PatternFill(TDE_HANDLE s32Handle, TDE2_SURFACE_S *pstBackGround,
 * Others:        None
 *****************************************************************************/
 HI_S32 HI_TDE2_EnableRegionDeflicker(HI_BOOL bRegionDeflicker);
-
 /*****************************************************************************
-* Function:      HI_TDE2_BeginVideoJob
-* Description:   Creates a TDE video task
-* Input:         None
-* Output:        None
-* Return:        Success / Error code
-* Others:        None
-*****************************************************************************/
-TDE_HANDLE  HI_TDE2_BeginVideoJob(HI_VOID);
-
-/*****************************************************************************
-* Function:      HI_TDE2_Mb2Mb
-* Description:   Adds the transfer operation with additional functions performed on the 
-                    macroblock bitmap to a TDE video task
+* Function:      HI_TDE2_MultiBlending
+* Description:   multi blend surface by surface list
 * Input:         s32Handle:  job handle
-*                pstMBIn: input surface (macroblock picture)
-*                pstInRect: operating region of the input surface
-*                pstMbOut: target surface (macroblock picture)
-*                pstMbOutRect : target operating region
-*                pstMbOpt:  operation parameter settings
+		 pstSurfaceList:  composed surface list
 * Output:        None
 * Return:        Success / Error code
 * Others:        None
 *****************************************************************************/
-HI_S32 HI_TDE2_Mb2Mb(TDE_HANDLE s32Handle, TDE2_MB_S* pstMBIn, TDE2_RECT_S  *pstInRect, TDE2_MB_S* pstMbOut, TDE2_RECT_S  *pstOutRect,
-                           TDE2_MBOPT_S* pstMbOpt);
+HI_S32 HI_TDE2_MultiBlending(TDE_HANDLE s32Handle, TDE_SURFACE_LIST_S *pstSurfaceList);
 
-
-/*****************************************************************************
-* Function:      HI_TDE2_Osd2Mb
-* Description:   Adds the operation of blending raster data to the macroblock
-                    bitmap to a task
-* Input:         s32Handle:  job handle
-*                pstBackGround: background surface (macroblock picture)
-*                pstBackGroundRect: operating region of the background
-*                pstForeGround: the foreground picture information(raster picture)
-*                pstForeGroundRect: the foreground picture operation region
-*                pstMbOut: target surface (macroblock picture)
-*                pstMbOutRect : target operating region
-*                pOpt:  operation parameter settings
-* Output:        None
-* Return:        Success / Error code
-* Others:        None
-*****************************************************************************/
-HI_S32 HI_TDE2_Osd2Mb(TDE_HANDLE s32Handle, TDE2_MB_S* pstBackGround, TDE2_RECT_S  *pstBackGroundRect, TDE2_SURFACE_S* pstForeGround, TDE2_RECT_S  *pstForeGroundRect, 
-                           TDE2_MB_S* pstMbOut, TDE2_RECT_S  *pstMbOutRect, TDE2_OPT_S* pstOpt);
-
-/*****************************************************************************
-* Function:      HI_TDE2_MbFill
-* Description:   Adds a macroblock filling operation to a task
-* Input:         s32Handle:  job handle
-*                pstMb: the MB picture information
-*                pstRect: the MB picture operation region
-*                u32YFill: Filling value of the luminance component
-*                u32CFill: Filling value of the chrominance component
-*                eMbFill:  Macroblock filling mode
-* Output:        None
-* Return:        Success / Error code
-* Others:        None
-*****************************************************************************/
-HI_S32 HI_TDE2_MbFill(TDE_HANDLE s32Handle, TDE2_MB_S *pstMb, TDE2_RECT_S *pstRect, HI_U32 u32YFill, HI_U32 u32CFill, TDE2_MBFILL_E eMbFill);
-
-HI_S32 HI_TDE2_MbQuickCopy(TDE_HANDLE s32Handle, TDE2_MB_S* pstSrc, 
-                TDE2_RECT_S  *pstSrcRect, TDE2_MB_S* pstDst, TDE2_RECT_S *pstDstRect);
-
-HI_S32 HI_TDE2_MbRotate(TDE_HANDLE s32Handle, TDE2_MB_S *pstSrc, 
-        TDE2_RECT_S *pstSrcRect, TDE2_MB_S *pstDst, TDE2_RECT_S *pstDstRect,
-        TDE_ROTATE_ANGLE_E enRotateAngle);
-
-HI_S32 HI_TDE2_MbLDC(TDE_HANDLE s32Handle, TDE2_MB_S *pstSrc, 
-        TDE2_RECT_S *pstSrcRect, TDE2_MB_S *pstDst, TDE2_RECT_S *pstDstRect,
-        LDC_ATTR_S *pstLDCAttr);
 
 #ifdef __cplusplus
  #if __cplusplus

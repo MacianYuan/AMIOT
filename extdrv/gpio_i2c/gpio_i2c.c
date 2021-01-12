@@ -13,6 +13,12 @@
 #include <asm/system.h>
 #include <asm/io.h>
 
+#include <asm/io.h>
+#include <mach/io.h>
+
+#include <asm/system.h>
+
+
 #include "gpio_i2c.h" 
 
 #ifdef HI_FPGA
@@ -26,11 +32,11 @@
 
 #else
 
-#define GPIO_0_BASE 0x20160000
-#define SCL                 (1 << 7)    /* GPIO 1_7 */
-#define SDA                 (1 << 6)    /* GPIO 1_6 */
-#define GPIO_I2C_SCL_REG    IO_ADDRESS(GPIO_0_BASE + 0x200)
-#define GPIO_I2C_SDA_REG    IO_ADDRESS(GPIO_0_BASE + 0x100)
+#define GPIO_0_BASE 0x12210000		//GPIO12 base
+#define SCL                 (1 << 6)    /* GPIO 12_6 */
+#define SDA                 (1 << 7)    /* GPIO 12_7 */
+#define GPIO_I2C_SCL_REG    IO_ADDRESS(GPIO_0_BASE + 0x100)
+#define GPIO_I2C_SDA_REG    IO_ADDRESS(GPIO_0_BASE + 0x200)
 #define GPIO_I2C_SCLSDA_REG IO_ADDRESS(GPIO_0_BASE + 0x300)
 
 #endif
@@ -355,9 +361,41 @@ unsigned char gpio_i2c_read(unsigned char devaddress, unsigned char address)
     return rxdata;
 }
 
+EXPORT_SYMBOL(gpio_i2c_read_sp);
+unsigned char gpio_i2c_read_sp(unsigned char devaddress, unsigned char address)
+{
+    int rxdata;
+    
+    i2c_start_bit();
+    i2c_send_byte((unsigned char)(devaddress));
+    i2c_receive_ack();
+    i2c_send_byte(address);
+    i2c_receive_ack();   
+    i2c_start_bit();
+    i2c_send_byte((unsigned char)(devaddress) | 1);
+    i2c_receive_ack();
+    rxdata = i2c_receive_byte();
+    //i2c_send_ack();
+    i2c_stop_bit();
+
+    return rxdata;
+}
 
 EXPORT_SYMBOL(gpio_i2c_write);
 void gpio_i2c_write(unsigned char devaddress, unsigned char address, unsigned char data)
+{
+    i2c_start_bit();
+    i2c_send_byte((unsigned char)(devaddress));
+    i2c_receive_ack();
+    i2c_send_byte(address);
+    i2c_receive_ack();
+    i2c_send_byte(data); 
+   // i2c_receive_ack();//add by hyping for tw2815
+    i2c_stop_bit();
+}
+
+EXPORT_SYMBOL(gpio_i2c_write_sp);
+void gpio_i2c_write_sp(unsigned char devaddress, unsigned char address, unsigned char data)
 {
     i2c_start_bit();
     i2c_send_byte((unsigned char)(devaddress));

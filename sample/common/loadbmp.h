@@ -93,6 +93,7 @@ typedef struct hiOSD_COMPONENT_INFO_S{
 HI_S32 LoadImage(const HI_CHAR *filename, OSD_LOGO_T *pVideoLogo);
 HI_S32 LoadBitMap2Surface(const HI_CHAR *pszFileName, const OSD_SURFACE_S *pstSurface, HI_U8 *pu8Virt);
 HI_S32 CreateSurfaceByBitMap(const HI_CHAR *pszFileName, OSD_SURFACE_S *pstSurface, HI_U8 *pu8Virt);
+HI_S32 CreateSurfaceByCanvas(const HI_CHAR *pszFileName, OSD_SURFACE_S *pstSurface, HI_U8 *pu8Virt, HI_U32 u32Width, HI_U32 u32Height, HI_U32 u32Stride);
 HI_S32 GetBmpInfo(const HI_CHAR *filename, OSD_BITMAPFILEHEADER  *pBmpFileHeader,OSD_BITMAPINFO *pBmpInfo);
 
 

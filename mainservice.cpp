@@ -4,7 +4,7 @@ MainService::MainService(QObject *parent) : QObject(parent)
 {
     thread_tts = new QThread;
     text_to_speech = new TextToSpeech;
-    mqttlogic_processing = new MqttLogicProcessing;
+//    mqttlogic_processing = new MqttLogicProcessing;
 
 }
 
@@ -17,103 +17,103 @@ void MainService::init(){
 
 void MainService::on_service_flow(unsigned int flow)
 {
-    qDebug()<<"on_service_flow";
-    switch(flow){
-        case START_SYSTEM_FLOW_TTS:{
-            //与4G EC20通信 语音播报功能
-            text_to_speech->moveToThread(thread_tts);
-            connect(this,SIGNAL(tts_message(unsigned int ,QString)),text_to_speech,SLOT(on_tts_message(unsigned int ,QString)),Qt::BlockingQueuedConnection);
-            thread_tts->start();
-        }break;
-        case START_SYSTEM_FLOW_KEY:{
-            //与单片机串口通信 创建一个线程实现与单片机串口通信，用于处理单片机发送接受相关事件 获取按键信息
-            QThread * thread_serial = new QThread;
-            SerialCommunication* serial_communication = new SerialCommunication;
-            serial_communication->moveToThread(thread_serial);
+//    qDebug()<<"on_service_flow";
+//    switch(flow){
+//        case START_SYSTEM_FLOW_TTS:{
+//            //与4G EC20通信 语音播报功能
+//            text_to_speech->moveToThread(thread_tts);
+//            connect(this,SIGNAL(tts_message(unsigned int ,QString)),text_to_speech,SLOT(on_tts_message(unsigned int ,QString)),Qt::BlockingQueuedConnection);
+//            thread_tts->start();
+//        }break;
+//        case START_SYSTEM_FLOW_KEY:{
+//            //与单片机串口通信 创建一个线程实现与单片机串口通信，用于处理单片机发送接受相关事件 获取按键信息
+//            QThread * thread_serial = new QThread;
+//            SerialCommunication* serial_communication = new SerialCommunication;
+//            serial_communication->moveToThread(thread_serial);
 
-            thread_serial->start();
+//            thread_serial->start();
 
-            //红外检测到菜单键，menuwidget显示隐藏
-            connect(serial_communication,SIGNAL(menushowSelect()),this,SLOT(on_menushowSelect()));
-            //红外检测到上下键，stackedwidget翻页
-            connect(serial_communication,SIGNAL(stackedshowSelect(bool)),this,SLOT(on_stackedshowSelect(bool)));
+//            //红外检测到菜单键，menuwidget显示隐藏
+//            connect(serial_communication,SIGNAL(menushowSelect()),this,SLOT(on_menushowSelect()));
+//            //红外检测到上下键，stackedwidget翻页
+//            connect(serial_communication,SIGNAL(stackedshowSelect(bool)),this,SLOT(on_stackedshowSelect(bool)));
 
-            connect(serial_communication,SIGNAL(stream_change(bool)),this,SLOT(on_stream_change(bool)));
-        }break;
-        case START_SYSTEM_FLOW_IAR:{
-            //红外键盘解码  创建一个线程实现红外键盘解码，用于处理红外按键相关事件
-            QThread * thread_Irda  = new QThread;
-            IrdaAnalysis *irdaanalysis = new IrdaAnalysis;
-            irdaanalysis->moveToThread(thread_Irda);
+//            connect(serial_communication,SIGNAL(stream_change(bool)),this,SLOT(on_stream_change(bool)));
+//        }break;
+//        case START_SYSTEM_FLOW_IAR:{
+//            //红外键盘解码  创建一个线程实现红外键盘解码，用于处理红外按键相关事件
+//            QThread * thread_Irda  = new QThread;
+//            IrdaAnalysis *irdaanalysis = new IrdaAnalysis;
+//            irdaanalysis->moveToThread(thread_Irda);
 
-            thread_Irda->start();
-            //红外检测到菜单键，menuwidget显示隐藏
-            connect(irdaanalysis,SIGNAL(menushowSelect()),this,SLOT(on_menushowSelect()));
-            //红外检测到上下键，stackedwidget翻页
-            connect(irdaanalysis,SIGNAL(stackedshowSelect(bool)),this,SLOT(on_stackedshowSelect(bool)));
+//            thread_Irda->start();
+//            //红外检测到菜单键，menuwidget显示隐藏
+//            connect(irdaanalysis,SIGNAL(menushowSelect()),this,SLOT(on_menushowSelect()));
+//            //红外检测到上下键，stackedwidget翻页
+//            connect(irdaanalysis,SIGNAL(stackedshowSelect(bool)),this,SLOT(on_stackedshowSelect(bool)));
 
-            connect(irdaanalysis,SIGNAL(stream_change(bool)),this,SLOT(on_stream_change(bool)));
+//            connect(irdaanalysis,SIGNAL(stream_change(bool)),this,SLOT(on_stream_change(bool)));
 
-        }break;
-        case START_SYSTEM_FLOW_GPS:{
-            //与单片机串口通信 GPS 获取定位信息
-            QThread * thread_gps = new QThread;
-            GpsAnalysis* gps_analysis= new GpsAnalysis;
-            gps_analysis->moveToThread(thread_gps);
+//        }break;
+//        case START_SYSTEM_FLOW_GPS:{
+//            //与单片机串口通信 GPS 获取定位信息
+//            QThread * thread_gps = new QThread;
+//            GpsAnalysis* gps_analysis= new GpsAnalysis;
+//            gps_analysis->moveToThread(thread_gps);
 
-            thread_gps->start();
-            connect(gps_analysis,SIGNAL(tts_message(unsigned int ,QString)),text_to_speech,SLOT(on_tts_message(unsigned int ,QString)),Qt::BlockingQueuedConnection);
+//            thread_gps->start();
+//            connect(gps_analysis,SIGNAL(tts_message(unsigned int ,QString)),text_to_speech,SLOT(on_tts_message(unsigned int ,QString)),Qt::BlockingQueuedConnection);
 
-        }break;
-        case START_SYSTEM_FLOW_SENSOR:{
-            //传感器信息获取
-            sensor_analysis = new SensorAnalysis;
-            sensor_analysis->init();
-            sensor_analysis->start();
-            // 传感器线程中 语音播报
-            connect(sensor_analysis,SIGNAL(tts_message(unsigned int ,QString)),text_to_speech,SLOT(on_tts_message(unsigned int ,QString)),Qt::BlockingQueuedConnection);
-        }break;
-        case START_SYSTEM_FLOW_GETKEY:{
-            //HTTP获取密钥和产品key
-            HttpGetKey * httpgetkey = new HttpGetKey;
-            httpgetkey->init();
-        }break;
-        case START_SYSTEM_FLOW_ALIYUN:{
-            //(1.b)获取机具识别号 传感器初始化    (2.a)HTTP获取密钥和产品key (2.b)触发阿里云登录信号，登录aliyun服务器
-            //QThread * thread_Aliyun = new QThread;
-            AliyunClient *aliyunclient = new AliyunClient;
+//        }break;
+//        case START_SYSTEM_FLOW_SENSOR:{
+//            //传感器信息获取
+//            sensor_analysis = new SensorAnalysis;
+//            sensor_analysis->init();
+//            sensor_analysis->start();
+//            // 传感器线程中 语音播报
+//            connect(sensor_analysis,SIGNAL(tts_message(unsigned int ,QString)),text_to_speech,SLOT(on_tts_message(unsigned int ,QString)),Qt::BlockingQueuedConnection);
+//        }break;
+//        case START_SYSTEM_FLOW_GETKEY:{
+//            //HTTP获取密钥和产品key
+//            HttpGetKey * httpgetkey = new HttpGetKey;
+//            httpgetkey->init();
+//        }break;
+//        case START_SYSTEM_FLOW_ALIYUN:{
+//            //(1.b)获取机具识别号 传感器初始化    (2.a)HTTP获取密钥和产品key (2.b)触发阿里云登录信号，登录aliyun服务器
+//            //QThread * thread_Aliyun = new QThread;
+//            AliyunClient *aliyunclient = new AliyunClient;
 
-            connect(aliyunclient,SIGNAL(tts_message(unsigned int ,QString)),text_to_speech,SLOT(on_tts_message(unsigned int ,QString)),Qt::BlockingQueuedConnection);
-            //aliyunclient->moveToThread(thread_Aliyun);
-            //thread_Aliyun->start();
-            //获取工作模式
-            mqttlogic_processing->mqtt_logic_get_mode();
-            qDebug()<<"  mqttlogic_processing->mqtt_logic_get_mode()";
-        }break;
-        case START_SYSTEM_FLOW_UPDATE:{
-        //推送版本号，等待更新版本
-           // mqttlogic_processing->mqtt_logic_post_version();
-            if(Device_public::Update_flag == 1){
-                //远程升级
-                HttpGetFile * getfile = new HttpGetFile;
-                QUrl url(Device_public::file_Url);
-                if (!getfile->getFile(url)){
-                    //下载错误
-                   break ;
-                }
-                connect(getfile, SIGNAL(done()), getfile, SLOT(copy_update_file()));
-            }
-        }break;
-        case START_SYSTEM_FLOW_UPLOAD:{
-            httpService = new HttpService;
-            httpService->start();
+//            connect(aliyunclient,SIGNAL(tts_message(unsigned int ,QString)),text_to_speech,SLOT(on_tts_message(unsigned int ,QString)),Qt::BlockingQueuedConnection);
+//            //aliyunclient->moveToThread(thread_Aliyun);
+//            //thread_Aliyun->start();
+//            //获取工作模式
+//            mqttlogic_processing->mqtt_logic_get_mode();
+//            qDebug()<<"  mqttlogic_processing->mqtt_logic_get_mode()";
+//        }break;
+//        case START_SYSTEM_FLOW_UPDATE:{
+//        //推送版本号，等待更新版本
+//           // mqttlogic_processing->mqtt_logic_post_version();
+//            if(Device_public::Update_flag == 1){
+//                //远程升级
+////                HttpGetFile * getfile = new HttpGetFile;
+////                QUrl url(Device_public::file_Url);
+////                if (!getfile->getFile(url)){
+////                    //下载错误
+////                   break ;
+////                }
+////                connect(getfile, SIGNAL(done()), getfile, SLOT(copy_update_file()));
+//            }
+//        }break;
+//        case START_SYSTEM_FLOW_UPLOAD:{
+////            httpService = new HttpService;
+////            httpService->start();
 
-            qDebug()<<"httpService->UpLoadJpgResume()";
-            //httpService->UpLoadJpgResume();
-        }break;
-       default:
-        break;
-    }
+////            qDebug()<<"httpService->UpLoadJpgResume()";
+////            //httpService->UpLoadJpgResume();
+//        }break;
+//       default:
+//        break;
+//    }
 }
 
 
@@ -264,6 +264,6 @@ void MainService::on_menushowSelect()
 MainService::~MainService(){
     sensor_analysis->stopImmediately();
     sensor_analysis->wait();
-    httpService->stopImmediately();
-    httpService->wait();
+//    httpService->stopImmediately();
+//    httpService->wait();
 }

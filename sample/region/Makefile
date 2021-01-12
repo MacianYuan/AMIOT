@@ -17,6 +17,7 @@ all: $(TARGET)
 
 MPI_LIBS := $(REL_LIB)/libmpi.a
 MPI_LIBS += $(REL_LIB)/libhdmi.a
+MPI_LIBS += $(REL_LIB)/libtde.a
 
 $(TARGET):%:%.o $(COMM_OBJ)
 	$(CC) $(CFLAGS) -lpthread -lm -o $@ $^ $(MPI_LIBS) $(AUDIO_LIBA) $(JPEGD_LIBA)
@@ -27,7 +28,7 @@ clean:
 	@rm -f $(COMM_OBJ)
 
 cleanstream:
-	@rm -f *.h264
-	@rm -f *.jpg
-	@rm -f *.mjp
-	@rm -f *.mp4
+#	@rm -f *.h264
+#	@rm -f *.jpg
+#	@rm -f *.mjp
+#	@rm -f *.mp4

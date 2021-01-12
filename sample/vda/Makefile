@@ -27,7 +27,7 @@ clean:
 	@rm -f $(COMM_OBJ)
 
 cleanstream:
-	@rm -f *.h264
-	@rm -f *.jpg
-	@rm -f *.mjp
-	@rm -f *.mp4
+#	@rm -f *.h264
+#	@rm -f *.jpg
+#	@rm -f *.mjp
+#	@rm -f *.mp4

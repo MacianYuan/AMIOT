@@ -76,7 +76,8 @@ typedef struct hiLOG_LEVEL_CONF_S
 
 #define HI_PRINT printf
 
-#ifdef HI_DEBUG
+/* #ifdef HI_DEBUG */
+#if 1
     /* Using samples:   HI_ASSERT(x>y); */
     #define HI_ASSERT(expr)               \
     do{                                   \
@@ -110,7 +111,8 @@ typedef struct hiLOG_LEVEL_CONF_S
 extern HI_S32 HI_ChkLogLevel(HI_S32 s32Levle, MOD_ID_E enModId);
 asmlinkage int HI_LOG(HI_S32 level, MOD_ID_E enModId,const char *fmt, ...);
 
-#ifdef HI_DEBUG
+/* #ifdef HI_DEBUG */
+#if 1
     /* Using samples:   HI_ASSERT(x>y); */
     #define HI_ASSERT(expr)               \
     do{                                   \

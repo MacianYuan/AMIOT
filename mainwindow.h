@@ -11,27 +11,24 @@
 #include <QPainter>
 #include <QPoint>
 #include <QMouseEvent>
-#include <QWSServer>
+//#include <QWSServer>
 #include <QMenu>
 #include <QAction>
-#include <QtGui/QButtonGroup>
+//#include <QtGui/QButtonGroup>
 #include <QThread>
 
 #include "stackedwidget.h"
 #include "menuwidget.h"
-#include "public/device_public.h"
-#include "qextserial/serialcommunication.h"
-
-#include "LinkSDK/ntp_posix.h"
-#include "qextserial/irdaanalysis.h"
-#include "rtc/hi_rtc.h"
-#include "rtc/rtc_test.h"
-#include "public/httpgetfile.h"
-#include "qextserial/texttospeech.h"
-#include "qextserial/gpsanalysis.h"
-#include "qextserial/sensoranalysis.h"
-#include "sample/common/mal.h"
-#include "public/httpservice.h"
+#include "device_public.h"
+#include "serialcommunication.h"
+#include "irdaanalysis.h"
+//#include "rtc/hi_rtc.h"
+//#include "rtc/rtc_test.h"
+#include "httpgetfile.h"
+#include "texttospeech.h"
+#include "gpsanalysis.h"
+#include "sensoranalysis.h"
+#include "httpservice.h"
 
 namespace Ui {
 class MainWindow;

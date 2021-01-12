@@ -14,7 +14,7 @@ History       : May modify the code to errcode.h FOR hi3110
 #define __TDE_ERRCODE_H__
 
 //#include "hi_debug.h"
-#include "hi_common.h"
+#include "hi_type.h"
 
 #ifdef __cplusplus
 #if __cplusplus
@@ -39,7 +39,8 @@ enum
     HI_ERR_TDE_CLIP_AREA,                       /**<  clip area and operation area have no intersection */
     HI_ERR_TDE_JOB_TIMEOUT,                     /**<  blocked job wait timeout */
     HI_ERR_TDE_UNSUPPORTED_OPERATION,           /**<  unsupported operation */
-    HI_ERR_TDE_QUERY_TIMEOUT                    /**<  query time out */
+    HI_ERR_TDE_QUERY_TIMEOUT,                    /**<  query time out */
+    HI_ERR_TDE_INTERRUPT              		/**<   blocked job was interrupted */
 };
     
 

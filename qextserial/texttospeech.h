@@ -7,8 +7,8 @@
 #include <QTimer>
 #include <QDataStream>
 #include <QMessageBox>
-#include "public/device_public.h"
-#include "qextserial/qextserialport.h"
+#include "device_public.h"
+#include "qextserialport.h"
 #include <qsocketnotifier.h>
 #include "cJSON.h"
 

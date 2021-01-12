@@ -15,23 +15,20 @@
 #include "stackedwidget.h"
 #include "menuwidget.h"
 #include "mainwindow.h"
-#include "mainservice.h"
-#include "LinkSDK/aliyunclient.h"
-#include "LinkSDK/ntp_posix.h"
-#include "rtc/hi_rtc.h"
-#include "rtc/rtc_test.h"
-#include "public/httpgetfile.h"
-#include "public/device_public.h"
-#include "public/httpservice.h"
-#include "public/httpgetkey.h"
-#include "qextserial/irdaanalysis.h"
-#include "qextserial/texttospeech.h"
-#include "qextserial/gpsanalysis.h"
-#include "qextserial/sensoranalysis.h"
-#include "qextserial/serialcommunication.h"
-#include "sample/common/sample_comm.h"
-#include "sample/common/sample_vio.h"
-#include "sample/common/mal.h"
+
+//#include "rtc/hi_rtc.h"
+//#include "rtc/rtc_test.h"
+#include "httpgetfile.h"
+#include "device_public.h"
+#include "httpservice.h"
+#include "httpgetkey.h"
+#include "irdaanalysis.h"
+#include "texttospeech.h"
+#include "gpsanalysis.h"
+#include "sensoranalysis.h"
+#include "serialcommunication.h"
+#include "sample_comm.h"
+
 #include "FrameLessWidget/framelesswidget.h"
 #include <QtCore/QFileInfoList>
 
@@ -71,12 +68,12 @@ private:
 
     SensorAnalysis* sensor_analysis;
 
-    HttpService *httpService;
+//    HttpService *httpService;
 
     QTimer * mainTimer;
     QNetworkAccessManager *m_manager;
 
-    MqttLogicProcessing *mqttlogic_processing;
+//    MqttLogicProcessing *mqttlogic_processing;
 
 };
 

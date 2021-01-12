@@ -75,8 +75,27 @@ typedef enum hiHDMI_VIDEO_FMT_E
     HI_HDMI_VIDEO_FMT_VESA_1680X1050_60,
     HI_HDMI_VIDEO_FMT_VESA_1920X1080_60,
     HI_HDMI_VIDEO_FMT_VESA_1920X1200_60,
-    HI_HDMI_VIDEO_FMT_VESA_2560X1440_30,
     HI_HDMI_VIDEO_FMT_VESA_2048X1152_60,    /* Currently, not support */
+
+    
+	HI_HDMI_VIDEO_FMT_2560x1440_30,
+	HI_HDMI_VIDEO_FMT_2560x1440_60,
+	HI_HDMI_VIDEO_FMT_2560x1600_60,
+	HI_HDMI_VIDEO_FMT_1920x2160_30,
+	
+	HI_HDMI_VIDEO_FMT_3840X2160P_24, 	 	/** 93:3840x2160p @ 24Hz	No Repetition */
+	HI_HDMI_VIDEO_FMT_3840X2160P_25, 	 	/** 94:3840x2160p @ 25Hz	No Repetition */
+	HI_HDMI_VIDEO_FMT_3840X2160P_30, 	 	/** 95:3840x2160p @ 30Hz	No Repetition */
+	HI_HDMI_VIDEO_FMT_3840X2160P_50, 	 	/** 96:3840x2160p @ 50Hz	No Repetition */
+	HI_HDMI_VIDEO_FMT_3840X2160P_60, 	 	/** 97:3840x2160p @ 60Hz	No Repetition */
+	
+	HI_HDMI_VIDEO_FMT_4096X2160P_24, 	 	/** 98:4096x2160p @ 24Hz	No Repetition */
+	HI_HDMI_VIDEO_FMT_4096X2160P_25, 	 	/** 99:4096x2160p @ 25Hz	No Repetition */
+	HI_HDMI_VIDEO_FMT_4096X2160P_30, 	 	/** 100:4096x2160p @ 30Hz	No Repetition */
+	HI_HDMI_VIDEO_FMT_4096X2160P_50, 	 	/** 101:4096x2160p @ 50Hz	No Repetition */
+	HI_HDMI_VIDEO_FMT_4096X2160P_60, 	 	/** 102:4096x2160p @ 60Hz	No Repetition */
+
+
     HI_HDMI_VIDEO_FMT_VESA_CUSTOMER_DEFINE, /* Currently, not support */
 
     HI_HDMI_VIDEO_FMT_BUTT
@@ -142,9 +161,9 @@ typedef enum hiHDMI_BIT_DEPTH_E
 
 typedef enum hiHDMI_SND_INTERFACE_E
 {
-    HI_HDMI_SND_INTERFACE_I2S,              /**<I2S（Inter-IC Sound） */
-    HI_HDMI_SND_INTERFACE_SPDIF,            /**<SPDIF（Sony/Philips Digital Interface） */
-    HI_HDMI_SND_INTERFACE_HBR,              /**<SPDIF（Sony/Philips Digital Interface） */
+    HI_HDMI_SND_INTERFACE_I2S,              /**<I2S(Inter-IC Sound)*/
+    HI_HDMI_SND_INTERFACE_SPDIF,            /**<SPDIF(Sony/Philips Digital Interface)*/
+    HI_HDMI_SND_INTERFACE_HBR,              /**<SPDIF(Sony/Philips Digital Interface)*/
     HI_HDMI_SND_INTERFACE_BUTT
 }HI_HDMI_SND_INTERFACE_E;
 
@@ -348,7 +367,7 @@ typedef struct hiUNF_HDMI_ATTR_S
     HI_BOOL                 bEnableVideo;        /**< Whether to output video.The value must be HI_TRUE.If the value is HI_FALSE, the HDMI is forcibly set to HI_TRUE. */
     HI_HDMI_VIDEO_FMT_E     enVideoFmt;          /**< Video norm. This value of the video norm must be consistent with the norm of the video output. */
 
-    HI_HDMI_VIDEO_MODE_E    enVidOutMode;        /**< HDMI output video output mode.VIDEO_MODE_YCBCR444，VIDEO_MODE_YCBCR422，VIDEO_MODE_RGB444 */
+    HI_HDMI_VIDEO_MODE_E    enVidOutMode;        /**< HDMI output video output mode.VIDEO_MODE_YCBCR444,VIDEO_MODE_YCBCR422,VIDEO_MODE_RGB444 */
     HI_HDMI_DEEP_COLOR_E    enDeepColorMode;     /**< DeepColor output mode.It is HI_HDMI_DEEP_COLOR_24BIT by default. */
     HI_BOOL                 bxvYCCMode;          /**< Whether to enable the xvYCC output mode.It is HI_FALSE by default. */
 
@@ -433,7 +452,7 @@ typedef struct hiUNF_HDMI_AUD_INFOFRAME_VER1_S
     HI_U32                         u32SamplingFrequency;
     HI_U32                         u32ChannelAlloc;
     HI_U32                         u32LevelShift;
-    HI_BOOL                        u32DownmixInhibit;
+    HI_BOOL                        bDownmixInhibit;
 }HI_HDMI_AUD_INFOFRAME_VER1_S;
 
 /** HDMI Source Product Description InfoFrame struct , see EIA-CEA-861-D */
@@ -473,7 +492,7 @@ typedef struct hiUNF_HDMI_INFOFRAME_S
 
 typedef struct hiHI_HDMI_PARAM_S
 {
-    HI_HDMI_VIDEO_MODE_E    enVidInMode;        /**< HDMI output video input mode.VIDEO_MODE_YCBCR444，VIDEO_MODE_RGB444 */
+    HI_HDMI_VIDEO_MODE_E    enVidInMode;        /**< HDMI output video input mode.VIDEO_MODE_YCBCR444,VIDEO_MODE_RGB444 */
 }HI_HDMI_PARAM_S;
 
 typedef enum hiUNF_HDMI_3D_FORMAT_E
@@ -497,7 +516,7 @@ typedef enum hiUNF_HDMI_3D_FORMAT_E
 /**< One Touch Play Feature*/
 #define CEC_OPCODE_ACTIVE_SOURCE                  0X82  /**< <Active Source> Used by a new source to indicate that it has started to transmit a stream OR used in response to a <Request Active Source>  */
 #define CEC_OPCODE_IMAGE_VIEW_ON                  0X04  /**< <Image View On> Sent by a source device to the TV whenever it enters the active state (alternatively it may send <Text View On>). */
-#define CEC_OPCODE_TEXT_VIEW_ON                   0X0D  /**< <Text View On> As <Image View On>, but should also remove any text, menus and PIP windows from the TV’s display. */
+#define CEC_OPCODE_TEXT_VIEW_ON                   0X0D  /**< <Text View On> As <Image View On>, but should also remove any text, menus and PIP windows from the TV's display. */
 /**< Routing Control Feature*/
 #define CEC_OPCODE_INACTIVE_SOURCE                0X9D  /**< <Inactive Source> Used by the currently active source to inform the TV that it has no video to be presented to the user, or is going into standby as the result of a local user command on the device. */
 #define CEC_OPCODE_REQUEST_ACTIVE_SOURCE          0X85  /**< <Request Active Source> Used by a new device to discover the status of the system. */
@@ -529,8 +548,8 @@ typedef enum hiUNF_HDMI_3D_FORMAT_E
 #define CEC_OPCODE_GET_MENU_LANGUAGE              0X91  /**< <Get Menu Language> Sent by a device capable of character generation (for OSD and Menus) to a TV in order to discover the currently selected Menu language. Also used by a TV during installation to discover the currently set menu language of other devices. */
 #define CEC_OPCODE_SET_MENU_LANGUAGE              0X32  /**< <Set Menu Language> Used by a TV or another device to indicate the menu language. */
 /**< Deck Control Feature*/
-#define CEC_OPCODE_DECK_CONTROL                   0X42  /**< <Deck Control> Used to control a device’s media functions. */
-#define CEC_OPCODE_DECK_STATUS                    0X1B  /**< <Deck Status> Used to provide a deck’s status to the initiator of the <Give Deck Status> message. */
+#define CEC_OPCODE_DECK_CONTROL                   0X42  /**< <Deck Control> Used to control a device's media functions. */
+#define CEC_OPCODE_DECK_STATUS                    0X1B  /**< <Deck Status> Used to provide a deck's status to the initiator of the <Give Deck Status> message. */
 #define CEC_OPCODE_GIVE_DECK_STATUS               0X1A  /**< <Give Deck Status> Used to request the status of a device, regardless of whether or not it is the current active source. */
 #define CEC_OPCODE_PLAY                           0X41  /**< <Play> Used to control the playback behaviour of a source device. */
 /**< Tuner Control Feature*/
@@ -538,8 +557,8 @@ typedef enum hiUNF_HDMI_3D_FORMAT_E
 #define CEC_OPCODE_SELECT_ANALOGUE_SERVICE        0X92  /**< <Select Analogue Service> Directly selects an Analogue TV service */
 #define CEC_OPCODE_SELECT_DIGITAL_SERVICE         0X93  /**< <Select Digital Service> Directly selects a Digital TV, Radio or Data Broadcast Service */
 #define CEC_OPCODE_TUNER_DEVICE_STATUS            0X07  /**< <Tuner Device Status> Use by a tuner device to provide its status to the initiator of the <Give Tuner Device Status> message. */
-#define CEC_OPCODE_TUNER_STEP_DECREMENT           0X06  /**< <Tuner Step Decrement> Used to tune to next lowest service in a tuner’s service list. Can be used for PIP. */
-#define CEC_OPCODE_TUNER_STEP_INCREMENT           0X05  /**< <Tuner Step Increment> Used to tune to next highest service in a tuner’s service list. Can be used for PIP. */
+#define CEC_OPCODE_TUNER_STEP_DECREMENT           0X06  /**< <Tuner Step Decrement> Used to tune to next lowest service in a tuner's service list. Can be used for PIP. */
+#define CEC_OPCODE_TUNER_STEP_INCREMENT           0X05  /**< <Tuner Step Increment> Used to tune to next highest service in a tuner's service list. Can be used for PIP. */
 /**< Vendor Specific Command*/
 #define CEC_OPCODE_DEVICE_VENDOR_ID               0X87  /**< <Device Vendor ID> Reports the vendor ID of this device. */
 #define CEC_OPCODE_GIVE_DEVICE_VENDOR_ID          0X8C  /**< <Give Device Vendor ID> Requests the Vendor ID from a device. */
@@ -562,7 +581,7 @@ typedef enum hiUNF_HDMI_3D_FORMAT_E
 /**< System Audio Control Feature*/
 #define CEC_OPCODE_GIVE_AUDIO_STATUS              0X71  /**< <Give Audio Status> Requests an amplifier to send its volume and mute status */
 #define CEC_OPCODE_GIVE_SYSTEM_AUDIO_MODE_STATUS  0x7D  /**< <Give System Audio Mode Status> Requests the status of the System Audio Mode */
-#define CEC_OPCODE_REPORT_AUDIO_STATUS            0X7A  /**< <Report Audio Status> Reports an amplifier’s volume and mute status */
+#define CEC_OPCODE_REPORT_AUDIO_STATUS            0X7A  /**< <Report Audio Status> Reports an amplifier's volume and mute status */
 #define CEC_OPCODE_SET_SYSTEM_AUDIO_MODE          0X72  /**< <Set System Audio Mode> Turns the System Audio Mode On or Off. */
 #define CEC_OPCODE_SYSTEM_AUDIO_MODE_REQUEST      0X70  /**< <System Audio Mode Request> A device implementing System Audio Control and which has volume control RC buttons (eg TV or STB) requests to use System Audio Mode to the amplifier */
 #define CEC_OPCODE_SYSTEM_AUDIO_MODE_STATUS       0X7E  /**< <System Audio Mode Status> Reports the current status of the System Audio Mode */
@@ -706,7 +725,7 @@ typedef struct hiUNF_HDMI_CEC_STATUS_S
     HI_BOOL bEnable;
     HI_U8   u8PhysicalAddr[4];                        /**< CEC physic addr */
     HI_U8   u8LogicalAddr;                            /**< CEC logic addr, default:0x03. */
-    HI_U8   u8Network[HI_CEC_LOGICALADD_BUTT];    /**< CEC's net work，1:this device can answer cec command */
+    HI_U8   u8Network[HI_CEC_LOGICALADD_BUTT];    /**< CEC's net work,1:this device can answer cec command */
 }HI_HDMI_CEC_STATUS_S;
 
 
@@ -724,9 +743,8 @@ typedef enum hiERR_HDMI_CODE_E
     ERR_HDMI_FEATURE_NO_SUPPORT   = 10,
     ERR_HDMI_BUS_BUSY             = 11,
     ERR_HDMI_READ_EVENT_FAILED    = 12,
-    ERR_HDMI_NOT_START            = 13,
+    ERR_HDMI_NOT_START            = 13,    
     ERR_HDMI_READ_EDID_FAILED     = 14,
-    ERR_HDMI_READ_DVI_EDID_SUCCESS = 15,
 
     ERR_HDMI_BUTT,
 } ERR_HDMI_CODE_E;
@@ -745,10 +763,6 @@ typedef enum hiERR_HDMI_CODE_E
 #define HI_ERR_HDMI_READ_EVENT_FAILED   HI_DEF_ERR(HI_ID_HDMI, EN_ERR_LEVEL_ERROR, ERR_HDMI_READ_EVENT_FAILED)
 #define HI_ERR_HDMI_NOT_START           HI_DEF_ERR(HI_ID_HDMI, EN_ERR_LEVEL_ERROR, ERR_HDMI_NOT_START)
 #define HI_ERR_HDMI_READ_EDID_FAILED    HI_DEF_ERR(HI_ID_HDMI, EN_ERR_LEVEL_ERROR, ERR_HDMI_READ_EDID_FAILED)
-/*HSCP201311290001 l00183122  20131210 DVI模式下，有输出，但是读不到EDID
-  理论上，DVI模式下是可以读取前128位EDID，但是如果读取后返回成功，将改变原有流程，风险不可控；
-  因此为了不改变原有流程，设置一个特殊的错误码，在DVI模式下使用，既可以读到EDID，但流程上又按读不到处理，只影响用户读取EDID的结果*/
-#define HI_ERR_HDMI_READ_DVI_EDID_SUCCESS    HI_DEF_ERR(HI_ID_HDMI, EN_ERR_LEVEL_ERROR, ERR_HDMI_READ_DVI_EDID_SUCCESS)
 
 #ifdef __cplusplus
 #if __cplusplus

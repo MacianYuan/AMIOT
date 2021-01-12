@@ -388,8 +388,8 @@ bool SensorAnalysis::connect_devicenumber()
     //播报 正在获取内置机具号
     emit tts_message(1,"6B63572883B753D651857F6E673A517753F7");
     //读取配置文件中的特殊机具号(内置机具号)
-    IniParse ini(AMIOT_CONFIG);
-    Device_public::device_number = ini.GetString("Device.SpecificDeviceNumber").c_str();
+//    IniParse ini(AMIOT_CONFIG);
+//    Device_public::device_number = ini.GetString("Device.SpecificDeviceNumber").c_str();
     device_num_tts = Device_public::device_number;
 
     //如果获取的机具号是以20为开始的字符串，说明获取成功
@@ -680,9 +680,9 @@ void SensorAnalysis::on_sensor_data_analysis(QByteArray str)
         Device_public::device_number = Device_public::DeviceName.data();
         //qDebug()<<"device_number"<<Device_public::device_number;
         //机具号保存到配置文件中
-        IniParse ini(AMIOT_CONFIG);
-        ini.Set("Device.DeviceNumber",Device_public::device_number.toStdString());
-        ini.SaveFile();
+//        IniParse ini(AMIOT_CONFIG);
+//        ini.Set("Device.DeviceNumber",Device_public::device_number.toStdString());
+//        ini.SaveFile();
         //识别到外置机具号，未使用内置机具号
         Device_public::Internal_DN =0;
     }

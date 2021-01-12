@@ -10,13 +10,12 @@
 #include <QWidget>
 #include <QGraphicsScene>
 #include <QTimer>
-#include <QWebFrame>
-#include <QWebView>
+//#include <QWebFrame>
+//#include <QWebView>
 #include <QStackedWidget>
 #include <QMessageBox>
 #include <QProcess>
-#include "public/device_public.h"
-#include "LinkSDK/aliyunclient.h"
+#include "device_public.h"
 
 namespace Ui {
 class stackedwidget;
@@ -53,7 +52,7 @@ private slots:
 private:
 
     QGraphicsScene			*onlineMapScene;
-    QWebView				*onlineMapWebView;
+//    QWebView				*onlineMapWebView;
     QString					mapInformationLst;
     QTimer *timer;
 

@@ -1,1 +1,0 @@
-cmd_/home/pub/platform_h3/mpp/extdrv/hi3520D/ssp-GV7601/ssp.o := arm-hisiv100nptl-linux-ld -EL    -r -o /home/pub/platform_h3/mpp/extdrv/hi3520D/ssp-GV7601/ssp.o /home/pub/platform_h3/mpp/extdrv/hi3520D/ssp-GV7601/hi_ssp.o 

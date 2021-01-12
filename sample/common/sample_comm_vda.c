@@ -113,29 +113,29 @@ HI_S32 SAMPLE_COMM_VDA_MdPrtSad(FILE *fp, VDA_DATA_S *pstVdaData)
 
     for(i=0; i<pstVdaData->u32MbHeight; i++)
     {
-		pAddr = (HI_VOID *)((HI_U32)pstVdaData->unData.stMdData.stMbSadData.pAddr
-		  			+ i * pstVdaData->unData.stMdData.stMbSadData.u32Stride);
-	
-		for(j=0; j<pstVdaData->u32MbWidth; j++)
-		{
-	        HI_U8  *pu8Addr;
-	        HI_U16 *pu16Addr;
-		
-	        if(VDA_MB_SAD_8BIT == pstVdaData->unData.stMdData.stMbSadData.enMbSadBits)
-	        {
-	            pu8Addr = (HI_U8 *)pAddr + j;
+        pAddr = (HI_VOID *)((HI_U32)pstVdaData->unData.stMdData.stMbSadData.pAddr
+        		+ i * pstVdaData->unData.stMdData.stMbSadData.u32Stride);
 
-	            fprintf(fp, "%-2d ",*pu8Addr);
+        for(j=0; j<pstVdaData->u32MbWidth; j++)
+        {
+            HI_U8  *pu8Addr;
+            HI_U16 *pu16Addr;
 
-	        }
-	        else
-	        {
-	            pu16Addr = (HI_U16 *)pAddr + j;
+            if(VDA_MB_SAD_8BIT == pstVdaData->unData.stMdData.stMbSadData.enMbSadBits)
+            {
+                pu8Addr = (HI_U8 *)pAddr + j;
 
-				fprintf(fp, "%-4d ",*pu16Addr);
-	        }
-		}
-		
+                fprintf(fp, "%-2d ",*pu8Addr);
+
+            }
+            else
+            {
+                pu16Addr = (HI_U16 *)pAddr + j;
+
+                fprintf(fp, "%-4d ",*pu16Addr);
+            }
+        }
+
         printf("\n");
     }
 	
@@ -190,7 +190,7 @@ HI_VOID *SAMPLE_COMM_VDA_MdGetResult(HI_VOID *pdata)
         }
         else if (s32Ret == 0)
         {
-            SAMPLE_PRT("get venc stream time out, exit thread\n");
+            SAMPLE_PRT("get vda result time out, exit thread\n");
             break;
         }
         else
@@ -198,30 +198,30 @@ HI_VOID *SAMPLE_COMM_VDA_MdGetResult(HI_VOID *pdata)
             if (FD_ISSET(VdaFd, &read_fds))
             {
                 /*******************************************************
-                   step 2.3 : call mpi to get one-frame stream
-                   *******************************************************/
-                s32Ret = HI_MPI_VDA_GetData(VdaChn, &stVdaData, HI_TRUE);
+                step 2.3 : call mpi to get one-frame stream
+                *******************************************************/
+                s32Ret = HI_MPI_VDA_GetData(VdaChn, &stVdaData, -1);
                 if(s32Ret != HI_SUCCESS)
                 {
                     SAMPLE_PRT("HI_MPI_VDA_GetData failed with %#x!\n", s32Ret);
                     return NULL;
                 }
                 /*******************************************************
-                   *step 2.4 : save frame to file
-                   *******************************************************/
+                *step 2.4 : save frame to file
+                *******************************************************/
                 printf("\033[0;0H");/*move cursor*/
-		        SAMPLE_COMM_VDA_MdPrtSad(fp, &stVdaData);
-		        SAMPLE_COMM_VDA_MdPrtObj(fp, &stVdaData);
+                SAMPLE_COMM_VDA_MdPrtSad(fp, &stVdaData);
+                SAMPLE_COMM_VDA_MdPrtObj(fp, &stVdaData);
                 SAMPLE_COMM_VDA_MdPrtAp(fp, &stVdaData);
                 /*******************************************************
-                   *step 2.5 : release stream
-                   *******************************************************/
+                *step 2.5 : release stream
+                *******************************************************/
                 s32Ret = HI_MPI_VDA_ReleaseData(VdaChn,&stVdaData);
                 if(s32Ret != HI_SUCCESS)
-	            {
-	                SAMPLE_PRT("HI_MPI_VDA_ReleaseData failed with %#x!\n", s32Ret);
-	                return NULL;
-	            }
+                {
+                    SAMPLE_PRT("HI_MPI_VDA_ReleaseData failed with %#x!\n", s32Ret);
+                    return NULL;
+                }
             }
         }
     }
@@ -257,25 +257,23 @@ HI_VOID *SAMPLE_COMM_VDA_OdGetResult(HI_VOID *pdata)
     VDA_DATA_S stVdaData;
     HI_U32 u32RgnNum;
     VDA_OD_PARAM_S *pgs_stOdParam;
-    //FILE *fp=stdout;
+    FILE *fp=stdout;
 
     pgs_stOdParam = (VDA_OD_PARAM_S *)pdata;
-
     VdaChn    = pgs_stOdParam->VdaChn;
     
-
     while(HI_TRUE == pgs_stOdParam->bThreadStart)
     {
-        s32Ret = HI_MPI_VDA_GetData(VdaChn,&stVdaData,HI_TRUE);
+        s32Ret = HI_MPI_VDA_GetData(VdaChn,&stVdaData,-1);
         if(s32Ret != HI_SUCCESS)
         {
             SAMPLE_PRT("HI_MPI_VDA_GetData failed with %#x!\n", s32Ret);
             return NULL;
         }
 
-	    //SAMPLE_COMM_VDA_OdPrt(fp, &stVdaData);
+        SAMPLE_COMM_VDA_OdPrt(fp, &stVdaData);
 
-		u32RgnNum = stVdaData.unData.stOdData.u32RgnNum;
+        u32RgnNum = stVdaData.unData.stOdData.u32RgnNum;
 		
         for(i=0; i<u32RgnNum; i++)
         {
@@ -285,7 +283,7 @@ HI_VOID *SAMPLE_COMM_VDA_OdGetResult(HI_VOID *pdata)
                 s32Ret = HI_MPI_VDA_ResetOdRegion(VdaChn,i);
                 if(s32Ret != HI_SUCCESS)
                 {
-		            SAMPLE_PRT("HI_MPI_VDA_ResetOdRegion failed with %#x!\n", s32Ret);
+                    SAMPLE_PRT("HI_MPI_VDA_ResetOdRegion failed with %#x!\n", s32Ret);
                     return NULL;
                 }
             }
@@ -307,7 +305,7 @@ HI_VOID *SAMPLE_COMM_VDA_OdGetResult(HI_VOID *pdata)
 /******************************************************************************
 * funciton : start vda MD mode
 ******************************************************************************/
-HI_S32 SAMPLE_COMM_VDA_MdStart(VDA_CHN VdaChn, VI_CHN ViChn, SIZE_S *pstSize)
+HI_S32 SAMPLE_COMM_VDA_MdStart(VDA_CHN VdaChn, HI_U32 u32Chn, SIZE_S *pstSize)
 {
     HI_S32 s32Ret = HI_SUCCESS;
     VDA_CHN_ATTR_S stVdaChnAttr;
@@ -342,8 +340,8 @@ HI_S32 SAMPLE_COMM_VDA_MdStart(VDA_CHN VdaChn, VI_CHN ViChn, SIZE_S *pstSize)
     }
 
     /* step 2: vda chn bind vi chn */
-    stSrcChn.enModId = HI_ID_VIU;
-    stSrcChn.s32ChnId = ViChn;
+    stSrcChn.enModId = HI_ID_VPSS;
+    stSrcChn.s32ChnId = u32Chn;
     stSrcChn.s32DevId = 0;
 
     stDestChn.enModId = HI_ID_VDA;
@@ -375,7 +373,7 @@ HI_S32 SAMPLE_COMM_VDA_MdStart(VDA_CHN VdaChn, VI_CHN ViChn, SIZE_S *pstSize)
 /******************************************************************************
 * funciton : start vda OD mode
 ******************************************************************************/
-HI_S32 SAMPLE_COMM_VDA_OdStart(VDA_CHN VdaChn, VI_CHN ViChn, SIZE_S *pstSize)
+HI_S32 SAMPLE_COMM_VDA_OdStart(VDA_CHN VdaChn, HI_U32 u32Chn, SIZE_S *pstSize)
 {
     VDA_CHN_ATTR_S stVdaChnAttr;
     MPP_CHN_S stSrcChn, stDestChn;
@@ -421,14 +419,15 @@ HI_S32 SAMPLE_COMM_VDA_OdStart(VDA_CHN VdaChn, VI_CHN ViChn, SIZE_S *pstSize)
     }
 
     /********************************************
-     step 2 : bind vda channel to vi channel
+     step 2 : bind vda channel to vpss channel
     ********************************************/
-    stSrcChn.enModId = HI_ID_VIU;
-    stSrcChn.s32ChnId = ViChn;
-
-    stDestChn.enModId = HI_ID_VDA;
+    stSrcChn.enModId  = HI_ID_VPSS;
+    stSrcChn.s32ChnId = u32Chn;
+    stSrcChn.s32DevId = 0;
+    
+    stDestChn.enModId  = HI_ID_VDA;
     stDestChn.s32ChnId = VdaChn;
-	stDestChn.s32DevId = 0;
+    stDestChn.s32DevId = 0;
 
     s32Ret = HI_MPI_SYS_Bind(&stSrcChn, &stDestChn);
     if(s32Ret != HI_SUCCESS)
@@ -456,7 +455,7 @@ HI_S32 SAMPLE_COMM_VDA_OdStart(VDA_CHN VdaChn, VI_CHN ViChn, SIZE_S *pstSize)
 /******************************************************************************
 * funciton : stop vda, and stop vda thread -- MD
 ******************************************************************************/
-HI_VOID SAMPLE_COMM_VDA_MdStop(VDA_CHN VdaChn, VI_CHN ViChn)
+HI_VOID SAMPLE_COMM_VDA_MdStop(VDA_CHN VdaChn, HI_U32 u32Chn)
 {
     HI_S32 s32Ret = HI_SUCCESS;
     
@@ -478,8 +477,8 @@ HI_VOID SAMPLE_COMM_VDA_MdStop(VDA_CHN VdaChn, VI_CHN ViChn)
 
     /* unbind vda chn & vi chn */
 
-    stSrcChn.enModId = HI_ID_VIU;
-    stSrcChn.s32ChnId = ViChn;
+    stSrcChn.enModId = HI_ID_VPSS;
+    stSrcChn.s32ChnId = u32Chn;
     stSrcChn.s32DevId = 0;
     stDestChn.enModId = HI_ID_VDA;
     stDestChn.s32ChnId = VdaChn;
@@ -504,7 +503,7 @@ HI_VOID SAMPLE_COMM_VDA_MdStop(VDA_CHN VdaChn, VI_CHN ViChn)
 /******************************************************************************
 * funciton : stop vda, and stop vda thread -- OD
 ******************************************************************************/
-HI_VOID SAMPLE_COMM_VDA_OdStop(VDA_CHN VdaChn, VI_CHN ViChn)
+HI_VOID SAMPLE_COMM_VDA_OdStop(VDA_CHN VdaChn, HI_U32 u32Chn)
 {
     HI_S32 s32Ret = HI_SUCCESS;
     MPP_CHN_S stSrcChn, stDestChn;
@@ -524,8 +523,8 @@ HI_VOID SAMPLE_COMM_VDA_OdStop(VDA_CHN VdaChn, VI_CHN ViChn)
     }
 
     /* unbind vda chn & vi chn */
-    stSrcChn.enModId = HI_ID_VIU;
-    stSrcChn.s32ChnId = ViChn;
+    stSrcChn.enModId = HI_ID_VPSS;
+    stSrcChn.s32ChnId = u32Chn;
     stSrcChn.s32DevId = 0;
     stDestChn.enModId = HI_ID_VDA;
     stDestChn.s32ChnId = VdaChn;

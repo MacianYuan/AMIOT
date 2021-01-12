@@ -5,13 +5,6 @@
  ******************************************************************************
     Modification:  2011-2 Created
 ******************************************************************************/
-
-#ifdef __cplusplus
-#if __cplusplus
-extern "C"{
-#endif
-#endif /* End of #ifdef __cplusplus */
-
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -32,6 +25,9 @@ extern "C"{
 const HI_U8 g_SOI[2] = {0xFF, 0xD8};
 const HI_U8 g_EOI[2] = {0xFF, 0xD9};
 static pthread_t gs_VencPid;
+static pthread_t gs_VencJPEG;
+static SAMPLE_VENC_GETSTREAM_PARA_S gs_stParaJPEG;
+
 static SAMPLE_VENC_GETSTREAM_PARA_S gs_stPara;
 static HI_S32 gs_s32SnapCnt = 0;
 
@@ -45,35 +41,15 @@ HI_S32 SAMPLE_COMM_VENC_MemConfig(HI_VOID)
 
     HI_CHAR * pcMmzName;
     MPP_CHN_S stMppChnVENC;
-    MPP_CHN_S stMppChnGRP;
 
     /* group, venc max chn is 64*/
     for(i=0;i<64;i++)
     {
-        stMppChnGRP.enModId  = HI_ID_GROUP;
-        stMppChnGRP.s32DevId = i;
-        stMppChnGRP.s32ChnId = 0;
-
         stMppChnVENC.enModId = HI_ID_VENC;
         stMppChnVENC.s32DevId = 0;
         stMppChnVENC.s32ChnId = i;
 
-        if(0 == (i%2))
-        {
-            pcMmzName = NULL;  
-        }
-        else
-        {
-            pcMmzName = "ddr1";
-        }
-
-        /*grp*/
-        s32Ret = HI_MPI_SYS_SetMemConf(&stMppChnGRP,pcMmzName);
-        if (HI_SUCCESS != s32Ret)
-        {
-            SAMPLE_PRT("HI_MPI_SYS_SetMemConf failed with %#x!\n", s32Ret);
-            return HI_FAILURE;
-        } 
+        pcMmzName = NULL;  
 
         /*venc*/
         s32Ret = HI_MPI_SYS_SetMemConf(&stMppChnVENC,pcMmzName);
@@ -90,7 +66,7 @@ HI_S32 SAMPLE_COMM_VENC_MemConfig(HI_VOID)
 /******************************************************************************
 * function : venc bind vpss           
 ******************************************************************************/
-HI_S32 SAMPLE_COMM_VENC_BindVpss(VENC_GRP GrpChn,VPSS_GRP VpssGrp,VPSS_CHN VpssChn)
+HI_S32 SAMPLE_COMM_VENC_BindVpss(VENC_CHN VeChn,VPSS_GRP VpssGrp,VPSS_CHN VpssChn)
 {
     HI_S32 s32Ret = HI_SUCCESS;
     MPP_CHN_S stSrcChn;
@@ -100,9 +76,9 @@ HI_S32 SAMPLE_COMM_VENC_BindVpss(VENC_GRP GrpChn,VPSS_GRP VpssGrp,VPSS_CHN VpssC
     stSrcChn.s32DevId = VpssGrp;
     stSrcChn.s32ChnId = VpssChn;
 
-    stDestChn.enModId = HI_ID_GROUP;
-    stDestChn.s32DevId = GrpChn;
-    stDestChn.s32ChnId = 0;
+    stDestChn.enModId = HI_ID_VENC;
+    stDestChn.s32DevId = 0;
+    stDestChn.s32ChnId = VeChn;
 
     s32Ret = HI_MPI_SYS_Bind(&stSrcChn, &stDestChn);
     if (s32Ret != HI_SUCCESS)
@@ -117,7 +93,7 @@ HI_S32 SAMPLE_COMM_VENC_BindVpss(VENC_GRP GrpChn,VPSS_GRP VpssGrp,VPSS_CHN VpssC
 /******************************************************************************
 * function : venc unbind vpss           
 ******************************************************************************/
-HI_S32 SAMPLE_COMM_VENC_UnBindVpss(VENC_GRP GrpChn,VPSS_GRP VpssGrp,VPSS_CHN VpssChn)
+HI_S32 SAMPLE_COMM_VENC_UnBindVpss(VENC_CHN VeChn,VPSS_GRP VpssGrp,VPSS_CHN VpssChn)
 {
     HI_S32 s32Ret = HI_SUCCESS;
     MPP_CHN_S stSrcChn;
@@ -127,9 +103,9 @@ HI_S32 SAMPLE_COMM_VENC_UnBindVpss(VENC_GRP GrpChn,VPSS_GRP VpssGrp,VPSS_CHN Vps
     stSrcChn.s32DevId = VpssGrp;
     stSrcChn.s32ChnId = VpssChn;
 
-    stDestChn.enModId = HI_ID_GROUP;
-    stDestChn.s32DevId = GrpChn;
-    stDestChn.s32ChnId = 0;
+    stDestChn.enModId = HI_ID_VENC;
+    stDestChn.s32DevId = 0;
+    stDestChn.s32ChnId = VeChn;
 
     s32Ret = HI_MPI_SYS_UnBind(&stSrcChn, &stDestChn);
     if (s32Ret != HI_SUCCESS)
@@ -140,6 +116,118 @@ HI_S32 SAMPLE_COMM_VENC_UnBindVpss(VENC_GRP GrpChn,VPSS_GRP VpssGrp,VPSS_CHN Vps
 
     return s32Ret;
 }
+
+
+/******************************************************************************
+* function : venc bind vo           
+******************************************************************************/
+HI_S32 SAMPLE_COMM_VENC_BindVo(VO_DEV VoDev,VO_CHN VoChn,VENC_CHN VeChn)
+{
+    HI_S32 s32Ret = HI_SUCCESS;
+    MPP_CHN_S stSrcChn;
+    MPP_CHN_S stDestChn;
+
+    stSrcChn.enModId = HI_ID_VOU;
+    stSrcChn.s32DevId = VoDev;
+    stSrcChn.s32ChnId = VoChn;
+
+    stDestChn.enModId = HI_ID_VENC;
+    stDestChn.s32DevId = 0;
+    stDestChn.s32ChnId = VeChn;
+
+    s32Ret = HI_MPI_SYS_Bind(&stSrcChn, &stDestChn);
+    if (s32Ret != HI_SUCCESS)
+    {
+        SAMPLE_PRT("failed with %#x!\n", s32Ret);
+        return HI_FAILURE;
+    }
+
+    return s32Ret;
+}
+
+/******************************************************************************
+* function : venc unbind vo           
+******************************************************************************/
+HI_S32 SAMPLE_COMM_VENC_UnBindVo(VENC_CHN GrpChn,VO_DEV VoDev,VO_CHN VoChn)
+{
+    HI_S32 s32Ret = HI_SUCCESS;
+    MPP_CHN_S stSrcChn;
+    MPP_CHN_S stDestChn;
+
+    stSrcChn.enModId = HI_ID_VOU;
+    stSrcChn.s32DevId = VoDev;
+    stSrcChn.s32ChnId = VoChn;
+
+    stDestChn.enModId = HI_ID_VENC;
+    stDestChn.s32DevId = 0;
+    stDestChn.s32ChnId = GrpChn;
+
+    s32Ret = HI_MPI_SYS_UnBind(&stSrcChn, &stDestChn);
+    if (s32Ret != HI_SUCCESS)
+    {
+        SAMPLE_PRT("failed with %#x!\n", s32Ret);
+        return HI_FAILURE;
+    }
+
+    return s32Ret;
+}
+
+
+/******************************************************************************
+* function : vdec bind venc          
+******************************************************************************/
+HI_S32 SAMPLE_COMM_VDEC_BindVenc(VDEC_CHN VdChn,VENC_CHN VeChn)
+{
+    HI_S32 s32Ret = HI_SUCCESS;
+    MPP_CHN_S stSrcChn;
+    MPP_CHN_S stDestChn;
+
+    stSrcChn.enModId = HI_ID_VDEC;
+    stSrcChn.s32DevId = 0;
+    stSrcChn.s32ChnId = VdChn;
+
+    stDestChn.enModId = HI_ID_VENC;
+    stDestChn.s32DevId = 0;
+    stDestChn.s32ChnId = VeChn;
+
+    s32Ret = HI_MPI_SYS_Bind(&stSrcChn, &stDestChn);
+    if (s32Ret != HI_SUCCESS)
+    {
+        SAMPLE_PRT("failed with %#x!\n", s32Ret);
+        return HI_FAILURE;
+    }
+
+    return s32Ret;
+}
+
+/******************************************************************************
+* function : venc unbind vo           
+******************************************************************************/
+HI_S32 SAMPLE_COMM_VDEC_UnBindVenc(VDEC_CHN VdChn,VENC_CHN VeChn)
+{
+    HI_S32 s32Ret = HI_SUCCESS;
+    MPP_CHN_S stSrcChn;
+    MPP_CHN_S stDestChn;
+
+    stSrcChn.enModId = HI_ID_VDEC;
+    stSrcChn.s32DevId = 0;
+    stSrcChn.s32ChnId = VdChn;
+
+    stDestChn.enModId = HI_ID_VENC;
+    stDestChn.s32DevId = 0;
+    stDestChn.s32ChnId = VeChn;
+
+
+    s32Ret = HI_MPI_SYS_UnBind(&stSrcChn, &stDestChn);
+    if (s32Ret != HI_SUCCESS)
+    {
+        SAMPLE_PRT("failed with %#x!\n", s32Ret);
+        return HI_FAILURE;
+    }
+
+    return s32Ret;
+}
+
 
 /******************************************************************************
 * funciton : get file postfix according palyload_type.
@@ -172,7 +260,6 @@ HI_S32 SAMPLE_COMM_VENC_GetFilePostfix(PAYLOAD_TYPE_E enPayload, char *szFilePos
 
 /******************************************************************************
 * funciton : save mjpeg stream. 
-* WARNING: in Hi3531, user needn't write SOI & EOI.
 ******************************************************************************/
 HI_S32 SAMPLE_COMM_VENC_SaveMJpeg(FILE* fpJpegFile, VENC_STREAM_S *pstStream)
 {
@@ -184,11 +271,9 @@ HI_S32 SAMPLE_COMM_VENC_SaveMJpeg(FILE* fpJpegFile, VENC_STREAM_S *pstStream)
     for (i = 0; i < pstStream->u32PackCount; i++)
     {
         pstData = &pstStream->pstPack[i];
-        fwrite(pstData->pu8Addr[0], pstData->u32Len[0], 1, fpJpegFile);
-        fwrite(pstData->pu8Addr[1], pstData->u32Len[1], 1, fpJpegFile);
+        fwrite(pstData->pu8Addr+pstData->u32Offset, pstData->u32Len-pstData->u32Offset, 1, fpJpegFile);
+        fflush(fpJpegFile);
     }
-
-    //fwrite(g_EOI, 1, sizeof(g_EOI), fpJpegFile);//in Hi3531, user needn't write SOI!
 
     return HI_SUCCESS;
 }
@@ -200,21 +285,12 @@ HI_S32 SAMPLE_COMM_VENC_SaveH264(FILE* fpH264File, VENC_STREAM_S *pstStream)
 {
     HI_S32 i;
 
-    
     for (i = 0; i < pstStream->u32PackCount; i++)
     {
-        fwrite(pstStream->pstPack[i].pu8Addr[0],
-               pstStream->pstPack[i].u32Len[0], 1, fpH264File);
+        fwrite(pstStream->pstPack[i].pu8Addr+pstStream->pstPack[i].u32Offset,
+               pstStream->pstPack[i].u32Len-pstStream->pstPack[i].u32Offset, 1, fpH264File);
 
         fflush(fpH264File);
-
-        if (pstStream->pstPack[i].u32Len[1] > 0)
-        {
-            fwrite(pstStream->pstPack[i].pu8Addr[1],
-                   pstStream->pstPack[i].u32Len[1], 1, fpH264File);
-
-            fflush(fpH264File);
-        }
     }
     
 
@@ -232,8 +308,8 @@ HI_S32 SAMPLE_COMM_VENC_SaveJPEG(FILE *fpJpegFile, VENC_STREAM_S *pstStream)
     for (i = 0; i < pstStream->u32PackCount; i++)
     {
         pstData = &pstStream->pstPack[i];
-        fwrite(pstData->pu8Addr[0], pstData->u32Len[0], 1, fpJpegFile);
-        fwrite(pstData->pu8Addr[1], pstData->u32Len[1], 1, fpJpegFile);
+        fwrite(pstData->pu8Addr+pstData->u32Offset, pstData->u32Len-pstData->u32Offset, 1, fpJpegFile);
+        fflush(fpJpegFile);
     }
 
     return HI_SUCCESS;
@@ -274,7 +350,7 @@ HI_S32 SAMPLE_COMM_VENC_SaveStream(PAYLOAD_TYPE_E enType,FILE *pFd, VENC_STREAM_
 
     if (PT_H264 == enType)
     {
-        s32Ret = SAMPLE_COMM_VENC_SaveH264(pFd, pstStream);
+        s32Ret = SAMPLE_COMM_VENC_SaveH264(pFd, pstStream);  
     }
     else if (PT_MJPEG == enType)
     {
@@ -291,7 +367,7 @@ HI_S32 SAMPLE_COMM_VENC_SaveStream(PAYLOAD_TYPE_E enType,FILE *pFd, VENC_STREAM_
 * funciton : Start venc stream mode (h264, mjpeg)
 * note      : rate control parameter need adjust, according your case.
 ******************************************************************************/
-HI_S32 SAMPLE_COMM_VENC_Start(VENC_GRP VencGrp,VENC_CHN VencChn, PAYLOAD_TYPE_E enType, VIDEO_NORM_E enNorm, PIC_SIZE_E enSize, SAMPLE_RC_E enRcMode)
+HI_S32 SAMPLE_COMM_VENC_Start(VENC_CHN VencChn, PAYLOAD_TYPE_E enType, VIDEO_NORM_E enNorm, PIC_SIZE_E enSize, SAMPLE_RC_E enRcMode,HI_U32 u32Profile)
 {
     HI_S32 s32Ret;
     VENC_CHN_ATTR_S stVencChnAttr;
@@ -305,41 +381,27 @@ HI_S32 SAMPLE_COMM_VENC_Start(VENC_GRP VencGrp,VENC_CHN VencChn, PAYLOAD_TYPE_E 
     SIZE_S stPicSize;
 
     s32Ret = SAMPLE_COMM_SYS_GetPicSize(enNorm, enSize, &stPicSize);
-     if (HI_SUCCESS != s32Ret)
+    if (HI_SUCCESS != s32Ret)
     {
         SAMPLE_PRT("Get picture size failed!\n");
         return HI_FAILURE;
     }
-    /******************************************
-     step 1: Greate Venc Group
-    ******************************************/
-    s32Ret = HI_MPI_VENC_CreateGroup(VencGrp);
-    if (HI_SUCCESS != s32Ret)
-    {
-        SAMPLE_PRT("HI_MPI_VENC_CreateGroup[%d] failed with %#x!\n",\
-                 VencGrp, s32Ret);
-        return HI_FAILURE;
-    }
 
     /******************************************
-     step 2:  Create Venc Channel
+     step 1:  Create Venc Channel
     ******************************************/
     stVencChnAttr.stVeAttr.enType = enType;
     switch(enType)
     {
         case PT_H264:
         {
-            stH264Attr.u32MaxPicWidth = stPicSize.u32Width;
+            stH264Attr.u32MaxPicWidth  = stPicSize.u32Width;
             stH264Attr.u32MaxPicHeight = stPicSize.u32Height;
-            stH264Attr.u32PicWidth = stPicSize.u32Width;/*the picture width*/
-            stH264Attr.u32PicHeight = stPicSize.u32Height;/*the picture height*/
-            stH264Attr.u32BufSize  = stPicSize.u32Width * stPicSize.u32Height * 2;/*stream buffer size*/
-            stH264Attr.u32Profile  = 0;/*0: baseline; 1:MP; 2:HP   ? */
-            stH264Attr.bByFrame = HI_TRUE;/*get stream mode is slice mode or frame mode?*/
-            stH264Attr.bField = HI_FALSE;  /* surpport frame code only for hi3516, bfield = HI_FALSE */
-            stH264Attr.bMainStream = HI_TRUE; /* surpport main stream only for hi3516, bMainStream = HI_TRUE */
-            stH264Attr.u32Priority = 0; /*channels precedence level. invalidate for hi3516*/
-            stH264Attr.bVIField = HI_FALSE;/*the sign of the VI picture is field or frame. Invalidate for hi3516*/
+            stH264Attr.u32PicWidth     = stPicSize.u32Width;/*the picture width*/
+            stH264Attr.u32PicHeight    = stPicSize.u32Height;/*the picture height*/
+            stH264Attr.u32BufSize      = stPicSize.u32Width * stPicSize.u32Height * 2;/*stream buffer size*/
+            stH264Attr.u32Profile      = u32Profile;/*0: baseline; 1:MP; 2:HP 3:svc-t */
+            stH264Attr.bByFrame        = HI_TRUE;/*get stream mode is slice mode or frame mode?*/
             memcpy(&stVencChnAttr.stVeAttr.stAttrH264e, &stH264Attr, sizeof(VENC_ATTR_H264_S));
 
             if(SAMPLE_RC_CBR == enRcMode)
@@ -347,32 +409,30 @@ HI_S32 SAMPLE_COMM_VENC_Start(VENC_GRP VencGrp,VENC_CHN VencChn, PAYLOAD_TYPE_E 
                 stVencChnAttr.stRcAttr.enRcMode = VENC_RC_MODE_H264CBR;
                 stH264Cbr.u32Gop            = (VIDEO_ENCODING_MODE_PAL== enNorm)?25:30;
                 stH264Cbr.u32StatTime       = 1; /* stream rate statics time(s) */
-                stH264Cbr.u32ViFrmRate      = (VIDEO_ENCODING_MODE_PAL== enNorm)?25:30;/* input (vi) frame rate */
-                stH264Cbr.fr32TargetFrmRate = (VIDEO_ENCODING_MODE_PAL== enNorm)?25:30;/* target frame rate */
+                stH264Cbr.u32SrcFrmRate      = (VIDEO_ENCODING_MODE_PAL== enNorm)?25:30;/* input (vi) frame rate */
+                stH264Cbr.fr32DstFrmRate = (VIDEO_ENCODING_MODE_PAL== enNorm)?25:30;/* target frame rate */
                 switch (enSize)
                 {
                   case PIC_QCIF:
-                	   stH264Cbr.u32BitRate = 256; /* average bit rate */
-                	   break;
+                        stH264Cbr.u32BitRate = 256; /* average bit rate */
+                        break;
                   case PIC_QVGA:    /* 320 * 240 */
-                  case PIC_CIF:	
-
-                	   stH264Cbr.u32BitRate = 512;
-                       break;
-
+                  case PIC_CIF: 
+                        stH264Cbr.u32BitRate = 256;
+                        break;
                   case PIC_D1:
                   case PIC_VGA:	   /* 640 * 480 */
-                	   stH264Cbr.u32BitRate = 1024*2;
-                       break;
+                        stH264Cbr.u32BitRate = 1024*2;
+                        break;
                   case PIC_HD720:   /* 1280 * 720 */
                 	   stH264Cbr.u32BitRate = 1024*3;
                 	   break;
                   case PIC_HD1080:  /* 1920 * 1080 */
-                  	   stH264Cbr.u32BitRate = 1024*6;
+                  	   stH264Cbr.u32BitRate = 1024*1;
                 	   break;
                   default :
-                       stH264Cbr.u32BitRate = 1024*4;
-                       break;
+                        stH264Cbr.u32BitRate = 1024*4;
+                        break;
                 }
                 
                 stH264Cbr.u32FluctuateLevel = 0; /* average bit rate */
@@ -382,8 +442,8 @@ HI_S32 SAMPLE_COMM_VENC_Start(VENC_GRP VencGrp,VENC_CHN VencChn, PAYLOAD_TYPE_E 
             {
                 stVencChnAttr.stRcAttr.enRcMode = VENC_RC_MODE_H264FIXQP;
                 stH264FixQp.u32Gop = (VIDEO_ENCODING_MODE_PAL== enNorm)?25:30;
-                stH264FixQp.u32ViFrmRate = (VIDEO_ENCODING_MODE_PAL== enNorm)?25:30;
-                stH264FixQp.fr32TargetFrmRate = (VIDEO_ENCODING_MODE_PAL== enNorm)?25:30;
+                stH264FixQp.u32SrcFrmRate = (VIDEO_ENCODING_MODE_PAL== enNorm)?25:30;
+                stH264FixQp.fr32DstFrmRate = (VIDEO_ENCODING_MODE_PAL== enNorm)?25:30;
                 stH264FixQp.u32IQp = 20;
                 stH264FixQp.u32PQp = 23;
                 memcpy(&stVencChnAttr.stRcAttr.stAttrH264FixQp, &stH264FixQp,sizeof(VENC_ATTR_H264_FIXQP_S));
@@ -393,32 +453,32 @@ HI_S32 SAMPLE_COMM_VENC_Start(VENC_GRP VencGrp,VENC_CHN VencChn, PAYLOAD_TYPE_E 
                 stVencChnAttr.stRcAttr.enRcMode = VENC_RC_MODE_H264VBR;
                 stH264Vbr.u32Gop = (VIDEO_ENCODING_MODE_PAL== enNorm)?25:30;
                 stH264Vbr.u32StatTime = 1;
-                stH264Vbr.u32ViFrmRate = (VIDEO_ENCODING_MODE_PAL== enNorm)?25:30;
-                stH264Vbr.fr32TargetFrmRate = (VIDEO_ENCODING_MODE_PAL== enNorm)?25:30;
+                stH264Vbr.u32SrcFrmRate = (VIDEO_ENCODING_MODE_PAL== enNorm)?25:30;
+                stH264Vbr.fr32DstFrmRate = (VIDEO_ENCODING_MODE_PAL== enNorm)?25:30;
                 stH264Vbr.u32MinQp = 10;
                 stH264Vbr.u32MaxQp = 40;
                 switch (enSize)
                 {
-                  case PIC_QCIF:
+                    case PIC_QCIF:
                 	   stH264Vbr.u32MaxBitRate= 256*3; /* average bit rate */
                 	   break;
-                  case PIC_QVGA:    /* 320 * 240 */
-                  case PIC_CIF:
+                    case PIC_QVGA:    /* 320 * 240 */
+                    case PIC_CIF:
                 	   stH264Vbr.u32MaxBitRate = 512*3;
                        break;
-                  case PIC_D1:
-                  case PIC_VGA:	   /* 640 * 480 */
+                    case PIC_D1:
+                    case PIC_VGA:	   /* 640 * 480 */
                 	   stH264Vbr.u32MaxBitRate = 1024*2;
-                       break;
-                  case PIC_HD720:   /* 1280 * 720 */
+                        break;
+                    case PIC_HD720:   /* 1280 * 720 */
                 	   stH264Vbr.u32MaxBitRate = 1024*3;
                 	   break;
-                  case PIC_HD1080:  /* 1920 * 1080 */
+                    case PIC_HD1080:  /* 1920 * 1080 */
                   	   stH264Vbr.u32MaxBitRate = 1024*6;
                 	   break;
-                  default :
-                       stH264Vbr.u32MaxBitRate = 1024*4*3;
-                       break;
+                    default :
+                        stH264Vbr.u32MaxBitRate = 1024*4*3;
+                        break;
                 }
                 memcpy(&stVencChnAttr.stRcAttr.stAttrH264Vbr, &stH264Vbr, sizeof(VENC_ATTR_H264_VBR_S));
             }
@@ -437,17 +497,14 @@ HI_S32 SAMPLE_COMM_VENC_Start(VENC_GRP VencGrp,VENC_CHN VencChn, PAYLOAD_TYPE_E 
             stMjpegAttr.u32PicHeight = stPicSize.u32Height;
             stMjpegAttr.u32BufSize = stPicSize.u32Width * stPicSize.u32Height * 2;
             stMjpegAttr.bByFrame = HI_TRUE;  /*get stream mode is field mode  or frame mode*/
-            stMjpegAttr.bMainStream = HI_TRUE;  /*main stream or minor stream types?*/
-            stMjpegAttr.bVIField = HI_FALSE;  /*the sign of the VI picture is field or frame?*/
-            stMjpegAttr.u32Priority = 0;/*channels precedence level*/
             memcpy(&stVencChnAttr.stVeAttr.stAttrMjpeg, &stMjpegAttr, sizeof(VENC_ATTR_MJPEG_S));
 
             if(SAMPLE_RC_FIXQP == enRcMode)
             {
                 stVencChnAttr.stRcAttr.enRcMode = VENC_RC_MODE_MJPEGFIXQP;
                 stMjpegeFixQp.u32Qfactor        = 90;
-                stMjpegeFixQp.u32ViFrmRate      = (VIDEO_ENCODING_MODE_PAL== enNorm)?25:30;
-                stMjpegeFixQp.fr32TargetFrmRate = (VIDEO_ENCODING_MODE_PAL== enNorm)?25:30;
+                stMjpegeFixQp.u32SrcFrmRate      = (VIDEO_ENCODING_MODE_PAL== enNorm)?25:30;
+                stMjpegeFixQp.fr32DstFrmRate = (VIDEO_ENCODING_MODE_PAL== enNorm)?25:30;
                 memcpy(&stVencChnAttr.stRcAttr.stAttrMjpegeFixQp, &stMjpegeFixQp,
                        sizeof(VENC_ATTR_MJPEG_FIXQP_S));
             }
@@ -455,61 +512,61 @@ HI_S32 SAMPLE_COMM_VENC_Start(VENC_GRP VencGrp,VENC_CHN VencChn, PAYLOAD_TYPE_E 
             {
                 stVencChnAttr.stRcAttr.enRcMode = VENC_RC_MODE_MJPEGCBR;
                 stVencChnAttr.stRcAttr.stAttrMjpegeCbr.u32StatTime       = 1;
-                stVencChnAttr.stRcAttr.stAttrMjpegeCbr.u32ViFrmRate      = (VIDEO_ENCODING_MODE_PAL== enNorm)?25:30;
-                stVencChnAttr.stRcAttr.stAttrMjpegeCbr.fr32TargetFrmRate = (VIDEO_ENCODING_MODE_PAL== enNorm)?25:30;
+                stVencChnAttr.stRcAttr.stAttrMjpegeCbr.u32SrcFrmRate      = (VIDEO_ENCODING_MODE_PAL== enNorm)?25:30;
+                stVencChnAttr.stRcAttr.stAttrMjpegeCbr.fr32DstFrmRate = (VIDEO_ENCODING_MODE_PAL== enNorm)?25:30;
                 stVencChnAttr.stRcAttr.stAttrMjpegeCbr.u32FluctuateLevel = 0;
                 switch (enSize)
                 {
-                  case PIC_QCIF:
-                	   stVencChnAttr.stRcAttr.stAttrMjpegeCbr.u32BitRate = 384*3; /* average bit rate */
+                    case PIC_QCIF:
+                        stVencChnAttr.stRcAttr.stAttrMjpegeCbr.u32BitRate = 384*3; /* average bit rate */
                 	   break;
-                  case PIC_QVGA:    /* 320 * 240 */
-                  case PIC_CIF:
+                    case PIC_QVGA:    /* 320 * 240 */
+                    case PIC_CIF:
                 	   stVencChnAttr.stRcAttr.stAttrMjpegeCbr.u32BitRate = 768*3;
-                       break;
-                  case PIC_D1:
-                  case PIC_VGA:	   /* 640 * 480 */
+                        break;
+                    case PIC_D1:
+                    case PIC_VGA:	   /* 640 * 480 */
                 	   stVencChnAttr.stRcAttr.stAttrMjpegeCbr.u32BitRate = 1024*3*3;
-                       break;
-                  case PIC_HD720:   /* 1280 * 720 */
+                        break;
+                    case PIC_HD720:   /* 1280 * 720 */
                 	   stVencChnAttr.stRcAttr.stAttrMjpegeCbr.u32BitRate = 1024*5*3;
                 	   break;
-                  case PIC_HD1080:  /* 1920 * 1080 */
+                    case PIC_HD1080:  /* 1920 * 1080 */
                   	   stVencChnAttr.stRcAttr.stAttrMjpegeCbr.u32BitRate = 1024*10*3;
                 	   break;
-                  default :
-                       stVencChnAttr.stRcAttr.stAttrMjpegeCbr.u32BitRate = 1024*7*3;
-                       break;
+                    default :
+                        stVencChnAttr.stRcAttr.stAttrMjpegeCbr.u32BitRate = 1024*7*3;
+                        break;
                 }
             }
             else if (SAMPLE_RC_VBR == enRcMode) 
             {
                 stVencChnAttr.stRcAttr.enRcMode = VENC_RC_MODE_MJPEGVBR;
                 stVencChnAttr.stRcAttr.stAttrMjpegeVbr.u32StatTime = 1;
-                stVencChnAttr.stRcAttr.stAttrMjpegeVbr.u32ViFrmRate = (VIDEO_ENCODING_MODE_PAL == enNorm)?25:30;
-                stVencChnAttr.stRcAttr.stAttrMjpegeVbr.fr32TargetFrmRate = 5;
+                stVencChnAttr.stRcAttr.stAttrMjpegeVbr.u32SrcFrmRate = (VIDEO_ENCODING_MODE_PAL == enNorm)?25:30;
+                stVencChnAttr.stRcAttr.stAttrMjpegeVbr.fr32DstFrmRate = 5;
                 stVencChnAttr.stRcAttr.stAttrMjpegeVbr.u32MinQfactor = 50;
                 stVencChnAttr.stRcAttr.stAttrMjpegeVbr.u32MaxQfactor = 95;
                 switch (enSize)
                 {
-                  case PIC_QCIF:
-                	   stVencChnAttr.stRcAttr.stAttrMjpegeVbr.u32MaxBitRate= 256*3; /* average bit rate */
+                    case PIC_QCIF:
+                        stVencChnAttr.stRcAttr.stAttrMjpegeVbr.u32MaxBitRate= 256*3; /* average bit rate */
                 	   break;
-                  case PIC_QVGA:    /* 320 * 240 */
-                  case PIC_CIF:
+                    case PIC_QVGA:    /* 320 * 240 */
+                    case PIC_CIF:
                 	   stVencChnAttr.stRcAttr.stAttrMjpegeVbr.u32MaxBitRate = 512*3;
-                       break;
-                  case PIC_D1:
-                  case PIC_VGA:	   /* 640 * 480 */
+                        break;
+                    case PIC_D1:
+                    case PIC_VGA:	   /* 640 * 480 */
                 	   stVencChnAttr.stRcAttr.stAttrMjpegeVbr.u32MaxBitRate = 1024*2*3;
-                       break;
-                  case PIC_HD720:   /* 1280 * 720 */
+                        break;
+                    case PIC_HD720:   /* 1280 * 720 */
                 	   stVencChnAttr.stRcAttr.stAttrMjpegeVbr.u32MaxBitRate = 1024*3*3;
                 	   break;
-                  case PIC_HD1080:  /* 1920 * 1080 */
+                    case PIC_HD1080:  /* 1920 * 1080 */
                   	   stVencChnAttr.stRcAttr.stAttrMjpegeVbr.u32MaxBitRate = 1024*6*3;
                 	   break;
-                  default :
+                    default :
                        stVencChnAttr.stRcAttr.stAttrMjpegeVbr.u32MaxBitRate = 1024*4*3;
                        break;
                 }
@@ -517,7 +574,6 @@ HI_S32 SAMPLE_COMM_VENC_Start(VENC_GRP VencGrp,VENC_CHN VencChn, PAYLOAD_TYPE_E 
             else 
             {
                 SAMPLE_PRT("cann't support other mode in this version!\n");
-
                 return HI_FAILURE;
             }
         }
@@ -528,9 +584,8 @@ HI_S32 SAMPLE_COMM_VENC_Start(VENC_GRP VencGrp,VENC_CHN VencChn, PAYLOAD_TYPE_E 
             stJpegAttr.u32PicHeight = stPicSize.u32Height;
             stJpegAttr.u32BufSize = stPicSize.u32Width * stPicSize.u32Height * 2;
             stJpegAttr.bByFrame = HI_TRUE;/*get stream mode is field mode  or frame mode*/
-            stJpegAttr.bVIField = HI_FALSE;/*the sign of the VI picture is field or frame?*/
-            stJpegAttr.u32Priority = 0;/*channels precedence level*/
-            memcpy(&stVencChnAttr.stVeAttr.stAttrMjpeg, &stMjpegAttr, sizeof(VENC_ATTR_MJPEG_S));
+            stJpegAttr.bSupportDCF = HI_FALSE;
+            memcpy(&stVencChnAttr.stVeAttr.stAttrJpeg, &stJpegAttr, sizeof(stJpegAttr));
             break;
         default:
             return HI_ERR_VENC_NOT_SUPPORT;
@@ -545,17 +600,7 @@ HI_S32 SAMPLE_COMM_VENC_Start(VENC_GRP VencGrp,VENC_CHN VencChn, PAYLOAD_TYPE_E 
     }
 
     /******************************************
-     step 3:  Regist Venc Channel to VencGrp
-    ******************************************/
-    s32Ret = HI_MPI_VENC_RegisterChn(VencGrp, VencChn);
-    if (HI_SUCCESS != s32Ret)
-    {
-        SAMPLE_PRT("HI_MPI_VENC_RegisterChn faild with %#x!\n", s32Ret);
-        return HI_FAILURE;
-    }
-
-    /******************************************
-     step 4:  Start Recv Venc Pictures
+     step 2:  Start Recv Venc Pictures
     ******************************************/
     s32Ret = HI_MPI_VENC_StartRecvPic(VencChn);
     if (HI_SUCCESS != s32Ret)
@@ -571,7 +616,7 @@ HI_S32 SAMPLE_COMM_VENC_Start(VENC_GRP VencGrp,VENC_CHN VencChn, PAYLOAD_TYPE_E 
 /******************************************************************************
 * funciton : Stop venc ( stream mode -- H264, MJPEG )
 ******************************************************************************/
-HI_S32 SAMPLE_COMM_VENC_Stop(VENC_GRP VencGrp,VENC_CHN VencChn)
+HI_S32 SAMPLE_COMM_VENC_Stop(VENC_CHN VencChn)
 {
     HI_S32 s32Ret;
 
@@ -587,18 +632,7 @@ HI_S32 SAMPLE_COMM_VENC_Stop(VENC_GRP VencGrp,VENC_CHN VencChn)
     }
 
     /******************************************
-     step 2:  UnRegist Venc Channel
-    ******************************************/
-    s32Ret = HI_MPI_VENC_UnRegisterChn(VencChn);
-    if (HI_SUCCESS != s32Ret)
-    {
-        SAMPLE_PRT("HI_MPI_VENC_UnRegisterChn vechn[%d] failed with %#x!\n",\
-               VencChn, s32Ret);
-        return HI_FAILURE;
-    }
-
-    /******************************************
-     step 3:  Distroy Venc Channel
+     step 2:  Distroy Venc Channel
     ******************************************/
     s32Ret = HI_MPI_VENC_DestroyChn(VencChn);
     if (HI_SUCCESS != s32Ret)
@@ -608,42 +642,20 @@ HI_S32 SAMPLE_COMM_VENC_Stop(VENC_GRP VencGrp,VENC_CHN VencChn)
         return HI_FAILURE;
     }
 
-    /******************************************
-     step 4:  Distroy Venc Group
-    ******************************************/
-    s32Ret = HI_MPI_VENC_DestroyGroup(VencGrp);
-    if (HI_SUCCESS != s32Ret)
-    {
-        SAMPLE_PRT("HI_MPI_VENC_DestroyGroup group[%d] failed with %#x!\n",\
-               VencGrp, s32Ret);
-        return HI_FAILURE;
-    }
-
     return HI_SUCCESS;
 }
 
 /******************************************************************************
 * funciton : Start snap
 ******************************************************************************/
-HI_S32 SAMPLE_COMM_VENC_SnapStart(VENC_GRP VencGrp,VENC_CHN VencChn, SIZE_S *pstSize)
+HI_S32 SAMPLE_COMM_VENC_SnapStart(VENC_CHN VencChn, SIZE_S *pstSize)
 {
     HI_S32 s32Ret;
     VENC_CHN_ATTR_S stVencChnAttr;
     VENC_ATTR_JPEG_S stJpegAttr;
 
     /******************************************
-     step 1: Greate Venc Group
-    ******************************************/
-    s32Ret = HI_MPI_VENC_CreateGroup(VencGrp);
-    if (HI_SUCCESS != s32Ret)
-    {
-        SAMPLE_PRT("HI_MPI_VENC_CreateGroup[%d] failed with %#x!\n",\
-                 VencGrp, s32Ret);
-        return HI_FAILURE;
-    }
-
-    /******************************************
-     step 2:  Create Venc Channel
+     step 1:  Create Venc Channel
     ******************************************/
     stVencChnAttr.stVeAttr.enType = PT_JPEG;
     
@@ -653,8 +665,7 @@ HI_S32 SAMPLE_COMM_VENC_SnapStart(VENC_GRP VencGrp,VENC_CHN VencChn, SIZE_S *pst
     stJpegAttr.u32PicHeight = pstSize->u32Height;
     stJpegAttr.u32BufSize = pstSize->u32Width * pstSize->u32Height * 2;
     stJpegAttr.bByFrame = HI_TRUE;/*get stream mode is field mode  or frame mode*/
-    stJpegAttr.bVIField = HI_FALSE;/*the sign of the VI picture is field or frame?*/
-    stJpegAttr.u32Priority = 0;/*channels precedence level*/
+    stJpegAttr.bSupportDCF = HI_FALSE;
     memcpy(&stVencChnAttr.stVeAttr.stAttrJpeg, &stJpegAttr, sizeof(VENC_ATTR_JPEG_S));
 
     s32Ret = HI_MPI_VENC_CreateChn(VencChn, &stVencChnAttr);
@@ -670,9 +681,16 @@ HI_S32 SAMPLE_COMM_VENC_SnapStart(VENC_GRP VencGrp,VENC_CHN VencChn, SIZE_S *pst
 /******************************************************************************
 * funciton : Stop snap
 ******************************************************************************/
-HI_S32 SAMPLE_COMM_VENC_SnapStop(VENC_GRP VencGrp,VENC_CHN VencChn)
+HI_S32 SAMPLE_COMM_VENC_SnapStop(VENC_CHN VencChn)
 {
     HI_S32 s32Ret;
+
+    s32Ret = HI_MPI_VENC_StopRecvPic(VencChn);
+    if (HI_SUCCESS != s32Ret)
+    {
+        SAMPLE_PRT("HI_MPI_VENC_StopRecvPic vechn[%d] failed with %#x!\n", VencChn, s32Ret);
+        return HI_FAILURE;
+    }
     
     s32Ret = HI_MPI_VENC_DestroyChn(VencChn);
     if (HI_SUCCESS != s32Ret)
@@ -681,21 +699,13 @@ HI_S32 SAMPLE_COMM_VENC_SnapStop(VENC_GRP VencGrp,VENC_CHN VencChn)
         return HI_FAILURE;
     }
 
-    s32Ret = HI_MPI_VENC_DestroyGroup(VencGrp);
-    if (HI_SUCCESS != s32Ret)
-    {
-        SAMPLE_PRT("HI_MPI_VENC_DestroyGroup group[%d] failed with %#x!\n",\
-               VencGrp, s32Ret);
-        return HI_FAILURE;
-    }
-    
     return HI_SUCCESS;
 }
 
 /******************************************************************************
 * funciton : snap process
 ******************************************************************************/
-HI_S32 SAMPLE_COMM_VENC_SnapProcess(VENC_GRP VencGrp, VENC_CHN VencChn, VPSS_GRP VpssGrp, VPSS_CHN VpssChn)
+HI_S32 SAMPLE_COMM_VENC_SnapProcess(VENC_CHN VencChn, VPSS_GRP VpssGrp, VPSS_CHN VpssChn)
 {
     struct timeval TimeoutVal;
     fd_set read_fds;
@@ -703,47 +713,38 @@ HI_S32 SAMPLE_COMM_VENC_SnapProcess(VENC_GRP VencGrp, VENC_CHN VencChn, VPSS_GRP
     VENC_CHN_STAT_S stStat;
     VENC_STREAM_S stStream;
     HI_S32 s32Ret;
-
+	VENC_RECV_PIC_PARAM_S stRecvParam;
     printf("press any key to snap one pic\n");  
-	getchar();    
-    /******************************************
-     step 1:  Regist Venc Channel to VencGrp
-    ******************************************/
-    s32Ret = HI_MPI_VENC_RegisterChn(VencGrp, VencChn);
-    if (HI_SUCCESS != s32Ret)
-    {
-        SAMPLE_PRT("HI_MPI_VENC_RegisterChn faild with %#x!\n", s32Ret);
-        return HI_FAILURE;
-    }
+    getchar();
     
     /******************************************
-     step 2:  Venc Chn bind to Vpss Chn
+     step 1:  Venc Chn bind to Vpss Chn
     ******************************************/
-    s32Ret = SAMPLE_COMM_VENC_BindVpss(VencGrp, VpssGrp, VpssChn);
+    s32Ret = SAMPLE_COMM_VENC_BindVpss(VencChn, VpssGrp, VpssChn);
     if (HI_SUCCESS != s32Ret)
     {
         SAMPLE_PRT("SAMPLE_COMM_VENC_BindVpss failed!\n");
         return HI_FAILURE;
     }
     /******************************************
-     step 3:  Start Recv Venc Pictures
+     step 2:  Start Recv Venc Pictures
     ******************************************/
-    s32Ret = HI_MPI_VENC_StartRecvPic(VencChn);
+    stRecvParam.s32RecvPicNum = 1; 
+    s32Ret = HI_MPI_VENC_StartRecvPicEx(VencChn,&stRecvParam);
     if (HI_SUCCESS != s32Ret)
     {
         SAMPLE_PRT("HI_MPI_VENC_StartRecvPic faild with%#x!\n", s32Ret);
         return HI_FAILURE;
     }
     /******************************************
-     step 4:  recv picture
+     step 3:  recv picture
     ******************************************/
     s32VencFd = HI_MPI_VENC_GetFd(VencChn);
     if (s32VencFd < 0)
     {
-    	 SAMPLE_PRT("HI_MPI_VENC_GetFd faild with%#x!\n", s32VencFd);
+    	SAMPLE_PRT("HI_MPI_VENC_GetFd faild with%#x!\n", s32VencFd);
         return HI_FAILURE;
     }
-
 
     FD_ZERO(&read_fds);
     FD_SET(s32VencFd, &read_fds);
@@ -771,7 +772,20 @@ HI_S32 SAMPLE_COMM_VENC_SnapProcess(VENC_GRP VencGrp, VENC_CHN VencChn, VPSS_GRP
                 SAMPLE_PRT("HI_MPI_VENC_Query failed with %#x!\n", s32Ret);
                 return HI_FAILURE;
             }
-
+			
+			/*******************************************************
+			 suggest to check both u32CurPacks and u32LeftStreamFrames at the same time,for example:
+			 if(0 == stStat.u32CurPacks || 0 == stStat.u32LeftStreamFrames)
+			 {
+				SAMPLE_PRT("NOTE: Current  frame is NULL!\n");
+				return HI_SUCCESS;
+			 }
+			*******************************************************/
+			if(0 == stStat.u32CurPacks)
+			{
+				  SAMPLE_PRT("NOTE: Current  frame is NULL!\n");
+				  return HI_SUCCESS;
+			}
             stStream.pstPack = (VENC_PACK_S*)malloc(sizeof(VENC_PACK_S) * stStat.u32CurPacks);
             if (NULL == stStream.pstPack)
             {
@@ -780,7 +794,7 @@ HI_S32 SAMPLE_COMM_VENC_SnapProcess(VENC_GRP VencGrp, VENC_CHN VencChn, VPSS_GRP
             }
 
             stStream.u32PackCount = stStat.u32CurPacks;
-            s32Ret = HI_MPI_VENC_GetStream(VencChn, &stStream, HI_TRUE);
+            s32Ret = HI_MPI_VENC_GetStream(VencChn, &stStream, -1);
             if (HI_SUCCESS != s32Ret)
             {
                 SAMPLE_PRT("HI_MPI_VENC_GetStream failed with %#x!\n", s32Ret);
@@ -812,192 +826,180 @@ HI_S32 SAMPLE_COMM_VENC_SnapProcess(VENC_GRP VencGrp, VENC_CHN VencChn, VPSS_GRP
 	    }
     }
     /******************************************
-     step 5:  stop recv picture
+     step 4:  unbind
     ******************************************/
-    s32Ret = HI_MPI_VENC_StopRecvPic(VencChn);
-    if (s32Ret != HI_SUCCESS)
-    {
-        SAMPLE_PRT("HI_MPI_VENC_StopRecvPic failed with %#x!\n",  s32Ret);
-        return HI_FAILURE;
-    }
-    /******************************************
-     step 6:  unbind
-    ******************************************/
-    s32Ret = SAMPLE_COMM_VENC_UnBindVpss(VencGrp, VpssGrp, VpssChn);
+    s32Ret = SAMPLE_COMM_VENC_UnBindVpss(VencChn, VpssGrp, VpssChn);
     if (HI_SUCCESS != s32Ret)
     {
         SAMPLE_PRT("SAMPLE_COMM_VENC_UnBindVpss failed!\n");
-        return HI_FAILURE;
-    }
-    printf("press any key to continue\n");  
-	getchar(); 
-    
-    /******************************************
-     step 7:  UnRegister
-    ******************************************/
-    s32Ret = HI_MPI_VENC_UnRegisterChn(VencChn);
-    if (s32Ret != HI_SUCCESS)
-    {
-        SAMPLE_PRT("HI_MPI_VENC_UnRegisterChn failed with %#x!\n", s32Ret);
         return HI_FAILURE;
     }
 
     return HI_SUCCESS;
 }
 
-/******************************************************************************
-* funciton : snap process with HI_MPI_VENC_StartRecvPicEx
-******************************************************************************/
-HI_S32 SAMPLE_COMM_VENC_SnapProcessEx(VENC_GRP VencGrp, VENC_CHN VencChn, VPSS_GRP VpssGrp, VPSS_CHN VpssChn)
+HI_VOID *SAMPLE_COMM_VENC_GetVencJPEGProc(void *pData)
 {
+    HI_S32 i,j;
+    static HI_S32 k=0;
+    SAMPLE_VENC_GETSTREAM_PARA_S* pstGet;
+    HI_S32 maxfd = 0;
     struct timeval TimeoutVal;
     fd_set read_fds;
-    HI_S32 s32VencFd;
+    HI_S32 VencFd[VENC_MAX_CHN_NUM];
+    HI_CHAR aszFileName[VENC_MAX_CHN_NUM][64];
+    FILE *pFile[VENC_MAX_CHN_NUM];
     VENC_CHN_STAT_S stStat;
     VENC_STREAM_S stStream;
-    VENC_RECV_PIC_PARAM_S stRecvParam;
-    HI_S32 s32Ret;
-
-    printf("press any key to snap one pic\n");  
-	getchar();    
-    /******************************************
-     step 1:  Regist Venc Channel to VencGrp
-    ******************************************/
-    s32Ret = HI_MPI_VENC_RegisterChn(VencGrp, VencChn);
-    if (HI_SUCCESS != s32Ret)
+    HI_S32 s32ret;
+    HI_U32   u32PictureCnt = 0;
+    HI_U32   auChnPictureCnt[VENC_MAX_CHN_NUM] = {0};
+    pstGet = (SAMPLE_VENC_GETSTREAM_PARA_S*)pData;
+   
+    if(HI_NULL == pstGet)
     {
-        SAMPLE_PRT("HI_MPI_VENC_RegisterChn faild with %#x!\n", s32Ret);
-        return HI_FAILURE;
-    }
-    
-    /******************************************
-     step 2:  Venc Chn bind to Vpss Chn
-    ******************************************/
-    s32Ret = SAMPLE_COMM_VENC_BindVpss(VencGrp, VpssGrp, VpssChn);
-    if (HI_SUCCESS != s32Ret)
-    {
-        SAMPLE_PRT("SAMPLE_COMM_VENC_BindVpss failed!\n");
-        return HI_FAILURE;
-    }
-    /******************************************
-     step 3:  Start Recv Venc Pictures
-    ******************************************/
-    stRecvParam.s32RecvPicNum = 1;
-    s32Ret = HI_MPI_VENC_StartRecvPicEx(VencChn, &stRecvParam);
-    if (HI_SUCCESS != s32Ret)
-    {
-        SAMPLE_PRT("HI_MPI_VENC_StartRecvPic faild with%#x!\n", s32Ret);
-        return HI_FAILURE;
-    }
-    /******************************************
-     step 4:  recv picture
-    ******************************************/
-    s32VencFd = HI_MPI_VENC_GetFd(VencChn);
-    if (s32VencFd < 0)
-    {
-    	 SAMPLE_PRT("HI_MPI_VENC_GetFd faild with%#x!\n", s32VencFd);
-        return HI_FAILURE;
+        return HI_NULL;
     }
 
-
-    FD_ZERO(&read_fds);
-    FD_SET(s32VencFd, &read_fds);
-    
-    TimeoutVal.tv_sec  = 2;
-    TimeoutVal.tv_usec = 0;
-    s32Ret = select(s32VencFd+1, &read_fds, NULL, NULL, &TimeoutVal);
-    if (s32Ret < 0) 
+    for (i = 16; i < pstGet->s32Cnt+16; i++)
     {
-        SAMPLE_PRT("snap select failed!\n");
-        return HI_FAILURE;
-    }
-    else if (0 == s32Ret) 
-    {
-        SAMPLE_PRT("snap time out!\n");
-        return HI_FAILURE;
-    }
-    else
-    {
-        if (FD_ISSET(s32VencFd, &read_fds))
+        /* decide the stream file name, and open file to save stream */
+        VencFd[i] = HI_MPI_VENC_GetFd(i);
+        if (VencFd[i] <= 0)
         {
-            s32Ret = HI_MPI_VENC_Query(VencChn, &stStat);
-            if (s32Ret != HI_SUCCESS)
-            {
-                SAMPLE_PRT("HI_MPI_VENC_Query failed with %#x!\n", s32Ret);
-                return HI_FAILURE;
-            }
-
-            stStream.pstPack = (VENC_PACK_S*)malloc(sizeof(VENC_PACK_S) * stStat.u32CurPacks);
-            if (NULL == stStream.pstPack)
-            {
-                SAMPLE_PRT("malloc memory failed!\n");
-                return HI_FAILURE;
-            }
-
-            stStream.u32PackCount = stStat.u32CurPacks;
-            s32Ret = HI_MPI_VENC_GetStream(VencChn, &stStream, HI_TRUE);
-            if (HI_SUCCESS != s32Ret)
-            {
-                SAMPLE_PRT("HI_MPI_VENC_GetStream failed with %#x!\n", s32Ret);
-                free(stStream.pstPack);
-                stStream.pstPack = NULL;
-                return HI_FAILURE;
-            }
-
-            s32Ret = SAMPLE_COMM_VENC_SaveSnap(&stStream);
-            if (HI_SUCCESS != s32Ret)
-            {
-                SAMPLE_PRT("HI_MPI_VENC_GetStream failed with %#x!\n", s32Ret);
-                free(stStream.pstPack);
-                stStream.pstPack = NULL;
-                return HI_FAILURE;
-            }
-
-            s32Ret = HI_MPI_VENC_ReleaseStream(VencChn, &stStream);
-            if (s32Ret)
-            {
-                SAMPLE_PRT("HI_MPI_VENC_ReleaseStream failed with %#x!\n", s32Ret);
-                free(stStream.pstPack);
-                stStream.pstPack = NULL;
-                return HI_FAILURE;
-            }
-
-            free(stStream.pstPack);
-            stStream.pstPack = NULL;
+            printf("Chn %d fd err. \n", i);
+            
+            return NULL;
         }
-    }
-    /******************************************
-     step 5:  stop recv picture
-    ******************************************/
-    s32Ret = HI_MPI_VENC_StopRecvPic(VencChn);
-    if (s32Ret != HI_SUCCESS)
-    {
-        SAMPLE_PRT("HI_MPI_VENC_StopRecvPic failed with %#x!\n",  s32Ret);
-        return HI_FAILURE;
-    }
-    /******************************************
-     step 6:  unbind
-    ******************************************/
-    s32Ret = SAMPLE_COMM_VENC_UnBindVpss(VencGrp, VpssGrp, VpssChn);
-    if (HI_SUCCESS != s32Ret)
-    {
-        SAMPLE_PRT("SAMPLE_COMM_VENC_UnBindVpss failed!\n");
-        return HI_FAILURE;
-    }
-    printf("press any key to continue\n");  
-	getchar(); 
-    
-    /******************************************
-     step 7:  UnRegister
-    ******************************************/
-    s32Ret = HI_MPI_VENC_UnRegisterChn(VencChn);
-    if (s32Ret != HI_SUCCESS)
-    {
-        SAMPLE_PRT("HI_MPI_VENC_UnRegisterChn failed with %#x!\n", s32Ret);
-        return HI_FAILURE;
+
+        if (maxfd <= VencFd[i])
+        {
+            maxfd = VencFd[i];
+        }      
     }
 
-    return HI_SUCCESS;
+    /* Start to get streams of each channel. */
+    while (pstGet->bThreadStart)
+    {
+        FD_ZERO(&read_fds);
+        for (i = 16; i < pstGet->s32Cnt+16; i++)
+        {
+            FD_SET(VencFd[i], &read_fds);
+        }
+       
+        TimeoutVal.tv_sec  = 2;
+        TimeoutVal.tv_usec = 0;
+        s32ret = select(maxfd + 1, &read_fds, NULL, NULL, &TimeoutVal);
+        if (s32ret < 0)
+        {
+            printf("select err\n");
+            break;
+        }
+        else if (s32ret == 0)
+        {
+            printf("get venc stream time out. \n");
+            continue;
+        }
+        else
+        {
+            for (i = 16; i < pstGet->s32Cnt+16; i++)
+            {
+                if (FD_ISSET(VencFd[i], &read_fds))
+                {
+                    /* step 1: query how many packs in one-frame stream. */
+                    memset(&stStream, 0, sizeof(stStream));
+                    s32ret = HI_MPI_VENC_Query(i, &stStat);
+                    if (s32ret != HI_SUCCESS)
+                    {
+                        continue;
+                    }
+					/*******************************************************
+                     step 2 : suggest to check both u32CurPacks and u32LeftStreamFrames at the same time,for example:
+                     if(0 == stStat.u32CurPacks || 0 == stStat.u32LeftStreamFrames)
+					 {
+					 	printf("NOTE: Current  frame is NULL!\n");
+						continue;
+					 }
+                  	*******************************************************/
+					if(0 == stStat.u32CurPacks)
+					{
+						printf("NOTE: Current  frame is NULL!\n");
+						continue;
+					}
+
+                    /* step 3: malloc corresponding number of pack nodes. */                   
+                
+                    stStream.pstPack = (VENC_PACK_S*)malloc(sizeof(VENC_PACK_S) * stStat.u32CurPacks);
+					//printf("stStat.u32CurPacks ====  %d\n",stStat.u32CurPacks);
+					if (NULL == stStream.pstPack)
+                    {
+                        printf("malloc stream pack err!\n");
+                        pstGet->bThreadStart = HI_FALSE;
+                        return NULL;
+                    }
+
+                    sprintf(aszFileName[i], "chn_%d_num_%d.jpeg",i,u32PictureCnt);
+                    pFile[i] = fopen(aszFileName[i], "wb");
+                  
+                    /* step 4: call mpi to get one-frame stream. */
+                    stStream.u32PackCount = stStat.u32CurPacks;
+                    s32ret = HI_MPI_VENC_GetStream(i, &stStream, -1);
+                    if (s32ret != HI_SUCCESS)
+                    {
+                        free(stStream.pstPack);
+                        stStream.pstPack = NULL;
+                        printf("HI_MPI_VENC_GetStream err 0x%x\n", s32ret);
+                        continue;
+                    }                   
+                   
+                    if (!pFile[i])
+                    {
+                        printf("open file err! line: %d\n", __LINE__);
+                        return NULL;
+                    }
+                                         
+                    /* step 5: save stream. */
+                    #if 1
+                    if (NULL != pFile[i])
+                    {
+                        
+                        for (j=0; j< stStream.u32PackCount; j++)
+                        {
+
+                            fwrite(stStream.pstPack[j].pu8Addr+stStream.pstPack[j].u32Offset, stStream.pstPack[j].u32Len-stStream.pstPack[j].u32Offset, sizeof(HI_U8), pFile[i]);
+							
+							fflush( pFile[i]);
+                        }
+                        k++;
+                    }
+                    #endif
+               //     SampleSaveVencStream(pstGet->enPayload, pFile[i], &stStream);
+                    /* step 5: release these stream */                     
+                    s32ret = HI_MPI_VENC_ReleaseStream(i, &stStream);
+                    if (s32ret != HI_SUCCESS)
+                    {
+                        free(stStream.pstPack);
+                        stStream.pstPack = NULL;
+                 //       fclose(pFile[i]);
+                //        togo = HI_FALSE;
+                //        return NULL;
+                        printf("Release stream err!\n");
+                        continue;
+                    }
+
+                    auChnPictureCnt[i]++;
+                    /* step 6: free pack nodes */
+                    free(stStream.pstPack);
+                    stStream.pstPack = NULL;
+                    fclose(pFile[i]);                               
+                }
+            }
+        }
+
+        u32PictureCnt++;
+    }
+    
+   return NULL;
 }
 
 
@@ -1117,9 +1119,23 @@ HI_VOID* SAMPLE_COMM_VENC_GetVencStreamProc(HI_VOID *p)
                         SAMPLE_PRT("HI_MPI_VENC_Query chn[%d] failed with %#x!\n", i, s32Ret);
                         break;
                     }
-
+					
+					/*******************************************************
+						step 2.2 : suggest to check both u32CurPacks and u32LeftStreamFrames at the same time,for example:
+					   if(0 == stStat.u32CurPacks || 0 == stStat.u32LeftStreamFrames)
+						{
+							  SAMPLE_PRT("NOTE: Current  frame is NULL!\n");
+							  continue;
+						}
+					*******************************************************/
+					  if(0 == stStat.u32CurPacks)
+					  {
+					  	
+						  SAMPLE_PRT("NOTE: Current  frame is NULL!\n");
+						  continue;
+					  }
                     /*******************************************************
-                     step 2.2 : malloc corresponding number of pack nodes.
+                     step 2.3 : malloc corresponding number of pack nodes.
                     *******************************************************/
                     stStream.pstPack = (VENC_PACK_S*)malloc(sizeof(VENC_PACK_S) * stStat.u32CurPacks);
                     if (NULL == stStream.pstPack)
@@ -1129,7 +1145,7 @@ HI_VOID* SAMPLE_COMM_VENC_GetVencStreamProc(HI_VOID *p)
                     }
                     
                     /*******************************************************
-                     step 2.3 : call mpi to get one-frame stream
+                     step 2.4 : call mpi to get one-frame stream
                     *******************************************************/
                     stStream.u32PackCount = stStat.u32CurPacks;
                     s32Ret = HI_MPI_VENC_GetStream(i, &stStream, HI_TRUE);
@@ -1141,9 +1157,8 @@ HI_VOID* SAMPLE_COMM_VENC_GetVencStreamProc(HI_VOID *p)
                                s32Ret);
                         break;
                     }
-
-                    /*******************************************************
-                     step 2.4 : save frame to file
+					/*******************************************************
+                     step 2.5 : save frame to file
                     *******************************************************/
                     s32Ret = SAMPLE_COMM_VENC_SaveStream(enPayLoadType[i], pFile[i], &stStream);
                     if (HI_SUCCESS != s32Ret)
@@ -1154,7 +1169,7 @@ HI_VOID* SAMPLE_COMM_VENC_GetVencStreamProc(HI_VOID *p)
                         break;
                     }
                     /*******************************************************
-                     step 2.5 : release stream
+                     step 2.6 : release stream
                     *******************************************************/
                     s32Ret = HI_MPI_VENC_ReleaseStream(i, &stStream);
                     if (HI_SUCCESS != s32Ret)
@@ -1164,7 +1179,7 @@ HI_VOID* SAMPLE_COMM_VENC_GetVencStreamProc(HI_VOID *p)
                         break;
                     }
                     /*******************************************************
-                     step 2.6 : free pack nodes
+                     step 2.7 : free pack nodes
                     *******************************************************/
                     free(stStream.pstPack);
                     stStream.pstPack = NULL;
@@ -1195,6 +1210,15 @@ HI_S32 SAMPLE_COMM_VENC_StartGetStream(HI_S32 s32Cnt)
     return pthread_create(&gs_VencPid, 0, SAMPLE_COMM_VENC_GetVencStreamProc, (HI_VOID*)&gs_stPara);
 }
 
+HI_S32 SAMPLE_COMM_VENC_StartGetJPEG(HI_S32 s32Cnt)
+{
+    gs_stParaJPEG.bThreadStart = HI_TRUE;
+    gs_stParaJPEG.s32Cnt = s32Cnt;
+
+    return pthread_create(&gs_VencJPEG, 0, SAMPLE_COMM_VENC_GetVencJPEGProc, (HI_VOID*)&gs_stParaJPEG);
+}
+
+
 /******************************************************************************
 * funciton : stop get venc stream process.
 ******************************************************************************/
@@ -1209,14 +1233,26 @@ HI_S32 SAMPLE_COMM_VENC_StopGetStream()
 }
 
 
+/******************************************************************************
+* funciton : stop get venc stream process.
+******************************************************************************/
+HI_S32 SAMPLE_COMM_VENC_StopGetJPEG()
+{
+    if (HI_TRUE == gs_stParaJPEG.bThreadStart)
+    {
+        gs_stParaJPEG.bThreadStart = HI_FALSE;
+        pthread_join(gs_VencJPEG, 0);
+    }
+    return HI_SUCCESS;
+}
+
+
 HI_VOID SAMPLE_COMM_VENC_ReadOneFrame( FILE * fp, HI_U8 * pY, HI_U8 * pU, HI_U8 * pV,
                                               HI_U32 width, HI_U32 height, HI_U32 stride, HI_U32 stride2)
 {
     HI_U8 * pDst;
-
     HI_U32 u32Row;
     
-
     pDst = pY;
     for ( u32Row = 0; u32Row < height; u32Row++ )
     {
@@ -1255,7 +1291,12 @@ HI_S32 SAMPLE_COMM_VENC_PlanToSemi(HI_U8 *pY, HI_S32 yStride,
         
     pTmpU = malloc( s32Size ); ptu = pTmpU;
     pTmpV = malloc( s32Size ); ptv = pTmpV;
-    
+    if((pTmpU==HI_NULL)||(pTmpV==HI_NULL))
+    {
+        printf("malloc buf failed\n");
+        return HI_FAILURE;
+    }
+
     memcpy(pTmpU,pU,s32Size);
     memcpy(pTmpV,pV,s32Size);
     
@@ -1278,8 +1319,3 @@ HI_S32 SAMPLE_COMM_VENC_PlanToSemi(HI_U8 *pY, HI_S32 yStride,
 }
 
 
-#ifdef __cplusplus
-#if __cplusplus
-}
-#endif
-#endif /* End of #ifdef __cplusplus */

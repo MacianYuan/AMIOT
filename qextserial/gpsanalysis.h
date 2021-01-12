@@ -4,7 +4,7 @@
 #include <QObject>
 #include <QStringList>
 #include "qextserial/qextserialport.h"
-#include "public/device_public.h"
+#include "device_public.h"
 #include <QDebug>
 #include <QTimer>
 

@@ -46,6 +46,9 @@ struct list_head {
 
 #define LIST_HEAD_INIT(name) { &(name), &(name) }
 
+#define LIST_HEAD(name) \
+	struct list_head name = LIST_HEAD_INIT(name)
+
 #define INIT_LIST_HEAD(ptr) do { (ptr)->next = (ptr); (ptr)->prev = (ptr); } while (0)
 
 static HPT_INLINE void __list_add(struct list_head * _new, struct list_head * prev, struct list_head * next)

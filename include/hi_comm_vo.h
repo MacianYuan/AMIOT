@@ -88,6 +88,14 @@ typedef enum hiEN_VOU_ERR_CODE_E
 
     ERR_VO_CHN_AREA_OVERLAP       = 0x6b,
 
+    EN_ERR_INVALID_WBCID          = 0x6c,
+    EN_ERR_INVALID_LAYERID        = 0x6d,
+    EN_ERR_VO_VIDEO_HAS_BINDED    = 0x6e,
+    EN_ERR_VO_VIDEO_NOT_BINDED    = 0x6f,
+    ERR_VO_WBC_HAS_BIND           = 0x70,
+    ERR_VO_WBC_HAS_CONFIG         = 0x71, 
+    ERR_VO_WBC_NOT_BIND           = 0x72,
+
     /* new added */
     ERR_VO_BUTT
 
@@ -103,6 +111,9 @@ typedef enum hiEN_VOU_ERR_CODE_E
 #define HI_ERR_VO_ILLEGAL_PARAM         HI_DEF_ERR(HI_ID_VOU, EN_ERR_LEVEL_ERROR, EN_ERR_ILLEGAL_PARAM)
 #define HI_ERR_VO_NOT_SUPPORT          HI_DEF_ERR(HI_ID_VOU, EN_ERR_LEVEL_ERROR, EN_ERR_NOT_SUPPORT)
 #define HI_ERR_VO_NOT_PERMIT            HI_DEF_ERR(HI_ID_VOU, EN_ERR_LEVEL_ERROR, EN_ERR_NOT_PERM)
+#define HI_ERR_VO_INVALID_WBCID         HI_DEF_ERR(HI_ID_VOU, EN_ERR_LEVEL_ERROR, EN_ERR_INVALID_WBCID)
+#define HI_ERR_VO_INVALID_LAYERID        HI_DEF_ERR(HI_ID_VOU, EN_ERR_LEVEL_ERROR, EN_ERR_INVALID_LAYERID)
+
 
 /* device relative error code */
 #define HI_ERR_VO_DEV_NOT_CONFIG        HI_DEF_ERR(HI_ID_VOU, EN_ERR_LEVEL_ERROR, EN_ERR_VO_DEV_NOT_CONFIG)
@@ -115,11 +126,15 @@ typedef enum hiEN_VOU_ERR_CODE_E
 #define HI_ERR_VO_VIDEO_NOT_ENABLE      HI_DEF_ERR(HI_ID_VOU, EN_ERR_LEVEL_ERROR, ERR_VO_NOT_ENABLE)
 #define HI_ERR_VO_VIDEO_NOT_DISABLE     HI_DEF_ERR(HI_ID_VOU, EN_ERR_LEVEL_ERROR, ERR_VO_NOT_DISABLE)
 #define HI_ERR_VO_VIDEO_NOT_CONFIG      HI_DEF_ERR(HI_ID_VOU, EN_ERR_LEVEL_ERROR, ERR_VO_NOT_CONFIG)
+#define HI_ERR_VO_VIDEO_HAS_BINDED      HI_DEF_ERR(HI_ID_VOU, EN_ERR_LEVEL_ERROR, EN_ERR_VO_VIDEO_HAS_BINDED)
+#define HI_ERR_VO_VIDEO_NOT_BINDED      HI_DEF_ERR(HI_ID_VOU, EN_ERR_LEVEL_ERROR, EN_ERR_VO_VIDEO_NOT_BINDED)
 
 /*wbc error code*/
 #define HI_ERR_VO_WBC_NOT_DISABLE     HI_DEF_ERR(HI_ID_VOU, EN_ERR_LEVEL_ERROR, ERR_VO_WBC_NOT_DISABLE)
 #define HI_ERR_VO_WBC_NOT_CONFIG      HI_DEF_ERR(HI_ID_VOU, EN_ERR_LEVEL_ERROR, ERR_VO_WBC_NOT_CONFIG)
-
+#define HI_ERR_VO_WBC_HAS_CONFIG      HI_DEF_ERR(HI_ID_VOU, EN_ERR_LEVEL_ERROR, ERR_VO_WBC_HAS_CONFIG)
+#define HI_ERR_VO_WBC_NOT_BIND        HI_DEF_ERR(HI_ID_VOU, EN_ERR_LEVEL_ERROR, ERR_VO_WBC_NOT_BIND)
+#define HI_ERR_VO_WBC_HAS_BIND        HI_DEF_ERR(HI_ID_VOU, EN_ERR_LEVEL_ERROR, ERR_VO_WBC_HAS_BIND)
 
 /* channel relative error code */
 #define HI_ERR_VO_CHN_NOT_DISABLE       HI_DEF_ERR(HI_ID_VOU, EN_ERR_LEVEL_ERROR, ERR_VO_CHN_NOT_DISABLE)
@@ -189,12 +204,14 @@ typedef enum hiEN_VOU_ERR_CODE_E
  *****************************************************************************/
 typedef HI_S32 VO_INTF_TYPE_E;
 
-typedef HI_S32 VO_WBC_CHN;
+//typedef HI_S32 VO_WBC_CHN;
 
 typedef enum hiVO_INTF_SYNC_E
 {
     VO_OUTPUT_PAL = 0,
     VO_OUTPUT_NTSC,
+    VO_OUTPUT_960H_PAL,              /* ITU-R BT.1302 960 x 576 at 50 Hz (interlaced)*/
+    VO_OUTPUT_960H_NTSC,             /* ITU-R BT.1302 960 x 480 at 60 Hz (interlaced)*/
     
     VO_OUTPUT_1080P24,
     VO_OUTPUT_1080P25,
@@ -210,48 +227,28 @@ typedef enum hiVO_INTF_SYNC_E
     VO_OUTPUT_576P50,
     VO_OUTPUT_480P60,
 
+    VO_OUTPUT_640x480_60,            /* VESA 640 x 480 at 60 Hz (non-interlaced) CVT */
     VO_OUTPUT_800x600_60,            /* VESA 800 x 600 at 60 Hz (non-interlaced) */
     VO_OUTPUT_1024x768_60,           /* VESA 1024 x 768 at 60 Hz (non-interlaced) */
     VO_OUTPUT_1280x1024_60,          /* VESA 1280 x 1024 at 60 Hz (non-interlaced) */
     VO_OUTPUT_1366x768_60,           /* VESA 1366 x 768 at 60 Hz (non-interlaced) */
     VO_OUTPUT_1440x900_60,           /* VESA 1440 x 900 at 60 Hz (non-interlaced) CVT Compliant */
-    VO_OUTPUT_1280x800_60,           /* 1280*800@60Hz VGA@60Hz*/
-    VO_OUTPUT_1600x1200_60,          /* VESA 1600 x 1200 at 60 Hz (non-interlaced) */
+    VO_OUTPUT_1280x800_60,           /* 1280*800@60Hz VGA@60Hz*/    
     VO_OUTPUT_1680x1050_60,          /* VESA 1680 x 1050 at 60 Hz (non-interlaced) */
-    VO_OUTPUT_1920x1200_60,          /* VESA 1920 x 1600 at 60 Hz (non-interlaced) CVT (Reduced Blanking)*/
-    VO_OUTPUT_640x480_60,            /* VESA 640 x 480 at 60 Hz (non-interlaced) CVT */
     VO_OUTPUT_1920x2160_30,          /* 1920x2160_30 */
+    VO_OUTPUT_1600x1200_60,          /* VESA 1600 x 1200 at 60 Hz (non-interlaced) */
+    VO_OUTPUT_1920x1200_60,          /* VESA 1920 x 1600 at 60 Hz (non-interlaced) CVT (Reduced Blanking)*/ 
     VO_OUTPUT_2560x1440_30,          /* 2560x1440_30 */
+    VO_OUTPUT_2560x1440_60,          /* 2560x1440_60 */
+    VO_OUTPUT_2560x1600_60,          /* 2560x1600_60 */
+    VO_OUTPUT_3840x2160_25,          /* 3840x2160_25 */
+    VO_OUTPUT_3840x2160_30,          /* 3840x2160_30 */
+    VO_OUTPUT_3840x2160_50,          /* 3840x2160_50 */
+    VO_OUTPUT_3840x2160_60,          /* 3840x2160_60 */
     VO_OUTPUT_USER,
     VO_OUTPUT_BUTT
 
 } VO_INTF_SYNC_E;
-
-typedef enum hiVO_SCREEN_HFILTER_E
-{
-	VO_SCREEN_HFILTER_DEF	= 0,
-	VO_SCREEN_HFILTER_8M,
-	VO_SCREEN_HFILTER_6M,
-	VO_SCREEN_HFILTER_5M,
-	VO_SCREEN_HFILTER_4M,
-	VO_SCREEN_HFILTER_3M,
-	VO_SCREEN_HFILTER_2M,
-	VO_SCREEN_HFILTER_BUTT
-    
-} VO_SCREEN_HFILTER_E;
-
-typedef enum hiVO_SCREEN_VFILTER_E
-{
-	VO_SCREEN_VFILTER_DEF	= 0,
-	VO_SCREEN_VFILTER_8M,
-	VO_SCREEN_VFILTER_6M,
-	VO_SCREEN_VFILTER_5M,
-	VO_SCREEN_VFILTER_4M,
-	VO_SCREEN_VFILTER_3M,
-	VO_SCREEN_VFILTER_2M,	
-	VO_SCREEN_VFILTER_BUTT
-    
-} VO_SCREEN_VFILTER_E;
 
 typedef enum hiVO_DISPLAY_FIELD_E
 {
@@ -260,13 +257,6 @@ typedef enum hiVO_DISPLAY_FIELD_E
   VO_FIELD_BOTH,                /* top and bottom field*/
   VO_FIELD_BUTT
 } VO_DISPLAY_FIELD_E;
-
-typedef enum hiVOU_LAYER_DDR_E
-{
-    VOU_LAYER_DDR0 = 0,
-    VOU_LAYER_DDR1 = 1,
-    VOU_LAYER_DDR_BUTT
-}VOU_LAYER_DDR_E;
 
 typedef enum hiVOU_ZOOM_IN_E
 {
@@ -277,43 +267,42 @@ typedef enum hiVOU_ZOOM_IN_E
 
 typedef enum hiVO_CSC_MATRIX_E
 {
-    VO_CSC_MATRIX_IDENTITY = 0,
+    VO_CSC_MATRIX_IDENTITY = 0,         /* do not change color space */
     
-    VO_CSC_MATRIX_BT601_TO_BT709,
-    VO_CSC_MATRIX_BT709_TO_BT601,
+    VO_CSC_MATRIX_BT601_TO_BT709,       /* change color space from BT.601 to BT.709 */
+    VO_CSC_MATRIX_BT709_TO_BT601,       /* change color space from BT.709 to BT.601 */
 
-    VO_CSC_MATRIX_BT601_TO_RGB_PC,
-    VO_CSC_MATRIX_BT709_TO_RGB_PC,
+    VO_CSC_MATRIX_BT601_TO_RGB_PC,      /* change color space from BT.601 to RGB */
+    VO_CSC_MATRIX_BT709_TO_RGB_PC,      /* change color space from BT.709 to RGB */
 
-    VO_CSC_MATRIX_RGB_TO_BT601_PC,
-    VO_CSC_MATRIX_RGB_TO_BT709_PC,
+    VO_CSC_MATRIX_RGB_TO_BT601_PC,      /* change color space from RGB to BT.601 */
+    VO_CSC_MATRIX_RGB_TO_BT709_PC,      /* change color space from RGB to BT.709 */
 
     VO_CSC_MATRIX_BUTT
 } VO_CSC_MATRIX_E;
 
 typedef struct hiVO_CHN_ATTR_S
 {
-    HI_U32  u32Priority;                /* video out overlay pri */
+    HI_U32  u32Priority;                /* video out overlay pri sd */
     RECT_S  stRect;                     /* rect of video out chn */
-    HI_BOOL bDeflicker;                 /* deflicker or not */
+    HI_BOOL bDeflicker;                 /* deflicker or not sd */
 }VO_CHN_ATTR_S;
+
+typedef struct hiVO_CHN_PARAM_S
+{
+    ASPECT_RATIO_S stAspectRatio;       /* aspect ratio */
+}VO_CHN_PARAM_S;
+
+typedef struct hiVO_BORDER_S
+{    
+    HI_BOOL bBorderEn;                   /*do Frame or not*/  
+    BORDER_S stBorder;
+}VO_BORDER_S;
 
 typedef struct hiVO_QUERY_STATUS_S
 {
     HI_U32 u32ChnBufUsed;       /* channel buffer that been occupied */
 } VO_QUERY_STATUS_S;
-
-typedef struct hiVO_SRC_ATTR_S
-{
-    HI_BOOL bInterlaced;        /* interlaced source */
-} VO_SRC_ATTR_S;
-
-typedef struct hiVO_SCALE_FILTER_S
-{
-    VO_SCREEN_HFILTER_E enHFilter;
-    VO_SCREEN_VFILTER_E enVFilter;
-    
-} VO_SCREEN_FILTER_S;
 
 typedef struct tagVO_SYNC_INFO_S
 {
@@ -349,23 +338,13 @@ typedef struct hiVO_PUB_ATTR_S
     VO_INTF_TYPE_E           enIntfType;          /* Type of a VO interface */
     VO_INTF_SYNC_E           enIntfSync;          /* Type of a VO interface timing */
     VO_SYNC_INFO_S           stSyncInfo;          /* Information about VO interface timings */
-    HI_BOOL                  bDoubleFrame;        /* Whether to double frames */  
 } VO_PUB_ATTR_S;
-
-typedef enum hiVO_WBC_DATASOURCE_E
-{
-    VO_WBC_DATASOURCE_MIXER = 0,            /* WBC data source is a mixer of layer and graphics*/
-    VO_WBC_DATASOURCE_VIDEO,                /* WBC data source only from layer*/
-    VO_WBC_DATASOURCE_BUTT,
-} VO_WBC_DATASOURCE_E;
-
 
 typedef struct hiVO_WBC_ATTR_S
 {
     SIZE_S              stTargetSize;        /* WBC Zoom target size */ 
     PIXEL_FORMAT_E      enPixelFormat;       /* the pixel format of WBC output */
-    HI_U32              u32FrameRate;        /* frame rate control */
-    VO_WBC_DATASOURCE_E enDataSource;        /* WBC data source*/
+    HI_U32              u32FrameRate;        /* frame rate control */    
 } VO_WBC_ATTR_S;
 
 typedef enum hiVO_WBC_MODE_E
@@ -380,47 +359,63 @@ typedef enum hiVO_WBC_MODE_E
     VO_WBC_MODE_BUTT,
 } VO_WBC_MODE_E;
 
+
+typedef enum hiVO_WBC_SOURCE_TYPE_E
+{
+    VO_WBC_SOURCE_DEV      = 0x0,          /* WBC source is device */
+    VO_WBC_SOURCE_VIDEO    = 0x1,          /* WBC source is video layer */
+    VO_WBC_SOURCE_GRAPHIC  = 0x2,          /* WBC source is graphic layer, not support */
+    
+    VO_WBC_SOURCE_BUTT
+} VO_WBC_SOURCE_TYPE_E;
+
+typedef struct hiVO_WBC_SOURCE_S
+{
+    VO_WBC_SOURCE_TYPE_E enSourceType;    /* the type of WBC source */
+    HI_U32 u32SourceId;                   /* the device, video layer or graphic layer */
+} VO_WBC_SOURCE_S;
+
 typedef enum hiVO_CAS_MODE_E
 {
-    VO_CAS_MODE_SINGLE = 0,
-    VO_CAS_MODE_DUAL,
+    VO_CAS_MODE_SINGLE = 0,        /* cascade mode is single */
+    VO_CAS_MODE_DUAL,              /* cascade mode is dual */
     VO_CAS_MODE_BUTT,
 } VO_CAS_MODE_E;
 
+typedef enum hiVO_CAS_DATA_TRAN_MODE_E
+{
+    VO_CAS_DATA_SINGLE_TRAN_MODE = 0, /* single transition,clock rising edge or clock falling edge tigger transition */
+    VO_CAS_DATA_DOUBLE_TRAN_MODE,     /* double transition,clock rising edge and clock falling edge tigger transition */
+    VO_CAS_DATA_MODE_BUTT,
+} VO_CAS_DATA_TRAN_MODE_E;
+
 typedef enum hiVO_CAS_RGN_E
 {
-    VO_CAS_64_RGN = 0,
-    VO_CAS_32_RGN,
+    VO_CAS_64_RGN = 0,        
+    VO_CAS_32_RGN,            
     VO_CAS_RGN_BUTT,
-} VO_CAS_RGN_E;
+} VO_CAS_RGN_E;            /* cascade region number */
 
 typedef struct hiVO_CAS_ATTR_S
 {
-    HI_BOOL         bSlave;
-    VO_CAS_RGN_E    enCasRgn;
-    VO_CAS_MODE_E   enCasMode;
+    HI_BOOL         bSlave;                         /* HI_TRUE: slave mode, HI_FALSE: master mode */
+    VO_CAS_RGN_E    enCasRgn;                       /* cascade region number */
+    VO_CAS_MODE_E   enCasMode;                      /* cascade mode */
+    VO_CAS_DATA_TRAN_MODE_E enCasDataTranMode;      /* cascade data transition mode  */
 } VO_CAS_ATTR_S;
 
-typedef struct hiVO_WBC_ATTR_S_1
+typedef enum hiVO_PART_MODE_E
 {
-    VO_DEV              VoSourceDev;         /* WBC source is from which Dev */
-    SIZE_S              stTargetSize;        /* WBC Zoom target size */ 
-    PIXEL_FORMAT_E     enPixelFormat;       /* the pixel format of WBC output */
-} VO_WBC_ATTR_S_1;
+    VO_PART_MODE_SINGLE	= 0,		/* single partition, which use software to make multi-picture in one hardware cell */
+	VO_PART_MODE_MULTI	= 1,		/* muliti partition, each partition is a hardware cell */
+	VO_PART_MODE_BUTT
+	
+} VO_PART_MODE_E;
 
-
-typedef struct hiVO_WBC_ATTR_S_2
+typedef struct hiVO_COMPRESS_ATTR_S
 {
-    VO_CHN              VoWbcChn;            /* Wbc Channel id */
-    SIZE_S              stTargetSize;        /* WBC Zoom target size */ 
-    PIXEL_FORMAT_E      enPixelFormat;       /* the pixel format of WBC output */
-} VO_WBC_ATTR_S_2;
-
-typedef struct hiVO_WBC_ATTR_S_3
-{
-    SIZE_S              stTargetSize;        /* WBC Zoom target size */
-    PIXEL_FORMAT_E     enPixelFormat;       /* the pixel format of WBC output */
-} VO_WBC_ATTR_TEMP_S_3;
+    HI_BOOL bSupportCompress;          /* Whether to support compress */
+}VO_COMPRESS_ATTR_S;
 
 typedef struct hiVO_VIDEO_LAYER_ATTR_S
 {
@@ -428,7 +423,23 @@ typedef struct hiVO_VIDEO_LAYER_ATTR_S
     SIZE_S stImageSize;                 /* Canvas size of the video layer */
     HI_U32 u32DispFrmRt;                /* Display frame rate */
     PIXEL_FORMAT_E enPixFormat;         /* Pixel format of the video layer */
+    HI_BOOL bDoubleFrame;               /* Whether to double frames */  
+    HI_BOOL bClusterMode;               /* Whether to take Cluster way to use memory*/
 } VO_VIDEO_LAYER_ATTR_S;
+
+typedef enum hiVOU_LAYER_DDR_E
+{
+    VOU_LAYER_DDR0 = 0,
+    VOU_LAYER_DDR1 = 1,
+    VOU_LAYER_DDR_BUTT
+}VOU_LAYER_DDR_E;
+
+typedef enum hiVO_DEVINTF_STATUS_E
+{
+    VO_DEV_STATUS_NOPLUG = 0,
+	VO_DEV_STATUS_PLUG,
+	VO_DEV_STATUS_BUTT
+}VO_DEVINTF_STATUS_E;
 
 typedef struct hiVO_ZOOM_RATIO_S
 {
@@ -451,37 +462,34 @@ typedef struct hiVO_ZOOM_ATTR_S
 typedef struct hiVO_CSC_S
 {
     VO_CSC_MATRIX_E enCscMatrix;
-    HI_U32 u32Luma;                     /* luminance:   0 ~ 100 */
-    HI_U32 u32Contrast;                 /* contrast :   0 ~ 100 */
-    HI_U32 u32Hue;                      /* hue      :   0 ~ 100 */
-    HI_U32 u32Satuature;                /* satuature:   0 ~ 100 */
+    HI_U32 u32Luma;                     /* luminance:   0 ~ 100 default: 50 */
+    HI_U32 u32Contrast;                 /* contrast :   0 ~ 100 default: 50 */
+    HI_U32 u32Hue;                      /* hue      :   0 ~ 100 default: 50 */
+    HI_U32 u32Saturation;               /* saturation:  0 ~ 100 default: 50 */
 } VO_CSC_S;
 
 typedef struct hiVO_VGA_PARAM_S
 {
-    VO_CSC_MATRIX_E enCscMatrix;
-    HI_U32 u32Luma;                     /* luminance:   0 ~ 100 */
-    HI_U32 u32Contrast;                 /* contrast :   0 ~ 100 */
-    HI_U32 u32Hue;                      /* hue      :   0 ~ 100 */
-    HI_U32 u32Satuature;                /* satuature:   0 ~ 100 */
-    HI_U32 u32Gain;                     /* current gain of VGA signals. [0, 64). */
+    VO_CSC_S stCSC;                     /* color space */
+    HI_U32 u32Gain;                     /* current gain of VGA signals. [0, 64). default:0x30 */
+    HI_S32 s32SharpenStrength;          /* current sharpen strength of VGA signals. [0, 255]. default:0x80 */
 } VO_VGA_PARAM_S;
 
-typedef struct hiVO_USR_SEND_TIMEOUT_S
+typedef struct hiVO_HDMI_PARAM_S
 {
-    VIDEO_FRAME_INFO_S  stVFrame;
-    HI_U32              u32MilliSec;
-} VO_USR_SEND_TIMEOUT_S;
+    VO_CSC_S stCSC;                    /* color space */
+} VO_HDMI_PARAM_S;
 
-typedef enum hiVOU_GFX_BIND_LAYER_E
+typedef struct hiVO_REGION_INFO_S
 {
-    GRAPHICS_LAYER_G4 = 0,
-    GRAPHICS_LAYER_HC0,	
-    GRAPHICS_LAYER_HC1,	
-    GRAPHICS_LAYER_BUTT
-}VOU_GFX_BIND_LAYER_E;
+    RECT_S *pstRegion;         /*region attribute*/
+    HI_U32 u32RegionNum;       /*count of the region*/
+}VO_REGION_INFO_S;
 
-
+typedef struct hiVO_DEVINTF_STATUS_S
+{
+    VO_DEVINTF_STATUS_E enPlugStatus;        
+}VO_DEVINTF_STATUS_S;
 
 #ifdef __cplusplus
 #if __cplusplus

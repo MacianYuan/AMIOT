@@ -13,10 +13,8 @@
     Author      : p00123320
     Modification: Created file    
 ******************************************************************************/
-
-
-#ifndef _MPI_AENC_H__
-#define _MPI_AENC_H__
+#ifndef __MPI_AENC_H__
+#define __MPI_AENC_H__
 
 #include "hi_common.h"
 #include "hi_comm_aio.h"
@@ -34,19 +32,18 @@ extern "C"
 HI_S32 HI_MPI_AENC_CreateChn(AENC_CHN AeChn, const AENC_CHN_ATTR_S *pstAttr);
 HI_S32 HI_MPI_AENC_DestroyChn(AENC_CHN AeChn);
 
-HI_S32 HI_MPI_AENC_SendFrame(AENC_CHN AeChn,
-    const AUDIO_FRAME_S *pstFrm, const AEC_FRAME_S *pstAecFrm);
+HI_S32 HI_MPI_AENC_SendFrame(AENC_CHN AeChn, const AUDIO_FRAME_S *pstFrm, const AEC_FRAME_S *pstAecFrm);
 
-HI_S32 HI_MPI_AENC_GetStream(AENC_CHN AeChn, AUDIO_STREAM_S *pstStream, HI_BOOL bBlock); 
+HI_S32 HI_MPI_AENC_GetStream(AENC_CHN AeChn, AUDIO_STREAM_S *pstStream, HI_S32 s32MilliSec); 
 HI_S32 HI_MPI_AENC_ReleaseStream(AENC_CHN AeChn, const AUDIO_STREAM_S *pstStream);
 
 HI_S32 HI_MPI_AENC_GetFd(AENC_CHN AeChn);
 
-HI_S32 HI_MPI_AENC_Save_File(AENC_CHN AeChn, AUDIO_SAVE_FILE_INFO_S *pstSaveFileInfo);
-
 HI_S32 HI_MPI_AENC_RegeisterEncoder(HI_S32 *ps32Handle, AENC_ENCODER_S *pstEncoder);
 HI_S32 HI_MPI_AENC_UnRegisterEncoder(HI_S32 s32Handle);
 
+HI_S32 HI_MPI_AENC_SaveFile(AENC_CHN AeChn, AUDIO_SAVE_FILE_INFO_S *pstSaveFileInfo);
+HI_S32 HI_MPI_AENC_QueryFileStatus(AENC_CHN AeChn, AUDIO_FILE_STATUS_S* pstFileStatus);
 
 #ifdef __cplusplus
 #if __cplusplus
@@ -54,5 +51,5 @@ HI_S32 HI_MPI_AENC_UnRegisterEncoder(HI_S32 s32Handle);
 #endif
 #endif /* __cplusplus */
 
-#endif
+#endif /* __MPI_AENC_H__ */
 

@@ -37,8 +37,8 @@ HI_S32 SAMPLE_COMM_VPSS_MemConfig()
     MPP_CHN_S stMppChnVpss;
     HI_S32 s32Ret, i;
 
-    /*vpss group max is 64, not need config vpss chn.*/
-    for(i=0;i<64;i++)
+    /*vpss group max is VPSS_MAX_GRP_NUM, not need config vpss chn.*/
+    for(i=0;i<VPSS_MAX_GRP_NUM;i++)
     {
         stMppChnVpss.enModId  = HI_ID_VPSS;
         stMppChnVpss.s32DevId = i;
@@ -71,11 +71,12 @@ HI_S32 SAMPLE_COMM_VPSS_Start(HI_S32 s32GrpCnt, SIZE_S *pstSize, HI_S32 s32ChnCn
 {
     VPSS_GRP VpssGrp;
     VPSS_CHN VpssChn;
-    VPSS_GRP_ATTR_S stGrpAttr;
-    VPSS_CHN_ATTR_S stChnAttr;
-    VPSS_GRP_PARAM_S stVpssParam;
+    VPSS_GRP_ATTR_S stGrpAttr = {0};
+    VPSS_CHN_ATTR_S stChnAttr = {0};
+    VPSS_GRP_PARAM_S stVpssParam = {0};
     HI_S32 s32Ret;
     HI_S32 i, j;
+    VPSS_CHN_MODE_S stVpssMode = {0};
 
     /*** Set Vpss Grp Attr ***/
 
@@ -83,13 +84,14 @@ HI_S32 SAMPLE_COMM_VPSS_Start(HI_S32 s32GrpCnt, SIZE_S *pstSize, HI_S32 s32ChnCn
     {
         stGrpAttr.u32MaxW = pstSize->u32Width;
         stGrpAttr.u32MaxH = pstSize->u32Height;
-        stGrpAttr.bDrEn = HI_FALSE;
-        stGrpAttr.bDbEn = HI_FALSE;
-        stGrpAttr.bIeEn = HI_TRUE;
-        stGrpAttr.bNrEn = HI_TRUE;
-        stGrpAttr.bHistEn = HI_FALSE;
-        stGrpAttr.enDieMode = VPSS_DIE_MODE_AUTO;
         stGrpAttr.enPixFmt = SAMPLE_PIXEL_FORMAT;
+        
+        stGrpAttr.bIeEn = HI_FALSE;
+        stGrpAttr.bNrEn = HI_TRUE;
+        stGrpAttr.bDciEn = HI_FALSE;
+        stGrpAttr.bHistEn = HI_FALSE;
+        stGrpAttr.bEsEn = HI_FALSE;
+        stGrpAttr.enDieMode = VPSS_DIE_MODE_NODIE;
     }
     else
     {
@@ -116,8 +118,7 @@ HI_S32 SAMPLE_COMM_VPSS_Start(HI_S32 s32GrpCnt, SIZE_S *pstSize, HI_S32 s32ChnCn
             return HI_FAILURE;
         }
         
-        stVpssParam.u32MotionThresh = 0;
-        
+        stVpssParam.u32IeStrength = 0;
         s32Ret = HI_MPI_VPSS_SetGrpParam(VpssGrp, &stVpssParam);
         if (s32Ret != HI_SUCCESS)
         {
@@ -131,20 +132,29 @@ HI_S32 SAMPLE_COMM_VPSS_Start(HI_S32 s32GrpCnt, SIZE_S *pstSize, HI_S32 s32ChnCn
             VpssChn = j;
             /* Set Vpss Chn attr */
             stChnAttr.bSpEn = HI_FALSE;
-            stChnAttr.bFrameEn = HI_TRUE;
-            stChnAttr.stFrame.u32Color[VPSS_FRAME_WORK_LEFT] = 0xff00;
-            stChnAttr.stFrame.u32Color[VPSS_FRAME_WORK_RIGHT] = 0xff00;
-            stChnAttr.stFrame.u32Color[VPSS_FRAME_WORK_BOTTOM] = 0xff00;
-            stChnAttr.stFrame.u32Color[VPSS_FRAME_WORK_TOP] = 0xff00;
-            stChnAttr.stFrame.u32Width[VPSS_FRAME_WORK_LEFT] = 2;
-            stChnAttr.stFrame.u32Width[VPSS_FRAME_WORK_RIGHT] = 2;
-            stChnAttr.stFrame.u32Width[VPSS_FRAME_WORK_TOP] = 2;
-            stChnAttr.stFrame.u32Width[VPSS_FRAME_WORK_BOTTOM] = 2;
+            stChnAttr.bUVInvert = HI_FALSE;
+            stChnAttr.bBorderEn = HI_TRUE;
+            stChnAttr.stBorder.u32Color = 0xff00;
+            stChnAttr.stBorder.u32LeftWidth = 2;
+            stChnAttr.stBorder.u32RightWidth = 2;
+            stChnAttr.stBorder.u32TopWidth = 2;
+            stChnAttr.stBorder.u32BottomWidth = 2;
             
             s32Ret = HI_MPI_VPSS_SetChnAttr(VpssGrp, VpssChn, &stChnAttr);
             if (s32Ret != HI_SUCCESS)
             {
                 SAMPLE_PRT("HI_MPI_VPSS_SetChnAttr failed with %#x\n", s32Ret);
+                return HI_FAILURE;
+            }
+
+            stVpssMode.enChnMode = VPSS_CHN_MODE_USER;
+            stVpssMode.u32Width  = 720/3;
+            stVpssMode.u32Height = 480/3;
+            stVpssMode.enPixelFormat = PIXEL_FORMAT_YUV_SEMIPLANAR_420;
+            s32Ret = HI_MPI_VPSS_SetChnMode(VpssGrp, VPSS_CHN3, &stVpssMode);
+            if (s32Ret != HI_SUCCESS)
+            {
+                SAMPLE_PRT("HI_MPI_VPSS_SetChnMode failed with %#x\n", s32Ret);
                 return HI_FAILURE;
             }
     
@@ -155,7 +165,7 @@ HI_S32 SAMPLE_COMM_VPSS_Start(HI_S32 s32GrpCnt, SIZE_S *pstSize, HI_S32 s32ChnCn
                 return HI_FAILURE;
             }
         }
-
+        
         /*** start vpss group ***/
         s32Ret = HI_MPI_VPSS_StartGrp(VpssGrp);
         if (s32Ret != HI_SUCCESS)
@@ -214,7 +224,6 @@ HI_S32 SAMPLE_COMM_DisableVpssPreScale(VPSS_GRP VpssGrp,SIZE_S stSize)
     VPSS_PRESCALE_INFO_S stPreScaleInfo;
         
     stPreScaleInfo.bPreScale = HI_FALSE;
-    stPreScaleInfo.enCapSel = VPSS_CAPSEL_BOTH;
     stPreScaleInfo.stDestSize.u32Width = stSize.u32Width;
     stPreScaleInfo.stDestSize.u32Height = stSize.u32Height;
     s32Ret = HI_MPI_VPSS_SetPreScale(VpssGrp, &stPreScaleInfo);
@@ -232,7 +241,6 @@ HI_S32 SAMPLE_COMM_EnableVpssPreScale(VPSS_GRP VpssGrp,SIZE_S stSize)
     VPSS_PRESCALE_INFO_S stPreScaleInfo;
         
     stPreScaleInfo.bPreScale = HI_TRUE;
-    stPreScaleInfo.enCapSel = VPSS_CAPSEL_BOTH;
     stPreScaleInfo.stDestSize.u32Width = stSize.u32Width;
     stPreScaleInfo.stDestSize.u32Height = stSize.u32Height;
     s32Ret = HI_MPI_VPSS_SetPreScale(VpssGrp, &stPreScaleInfo);

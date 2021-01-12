@@ -135,10 +135,14 @@ HI_U32 SAMPLE_COMM_SYS_CalcHistVbBlkSize(VIDEO_NORM_E enNorm, PIC_SIZE_E enPicSi
 /******************************************************************************
 * function : calculate VB Block size of picture.
 ******************************************************************************/
-HI_U32 SAMPLE_COMM_SYS_CalcPicVbBlkSize(VIDEO_NORM_E enNorm, PIC_SIZE_E enPicSize, PIXEL_FORMAT_E enPixFmt, HI_U32 u32AlignWidth)
+HI_U32 SAMPLE_COMM_SYS_CalcPicVbBlkSize(VIDEO_NORM_E enNorm, PIC_SIZE_E enPicSize, PIXEL_FORMAT_E enPixFmt, HI_U32 u32AlignWidth,COMPRESS_MODE_E enCompFmt)
 {
-    HI_S32 s32Ret = HI_FAILURE;
+    HI_S32 s32Ret      		= HI_FAILURE;
     SIZE_S stSize;
+    HI_U32 u32Width 		= 0;
+    HI_U32 u32Height 		= 0;
+    HI_U32 u32BlkSize 		= 0;
+	HI_U32 u32HeaderSize 	= 0;
 
     s32Ret = SAMPLE_COMM_SYS_GetPicSize(enNorm, enPicSize, &stSize);
     if (HI_SUCCESS != s32Ret)
@@ -162,12 +166,30 @@ HI_U32 SAMPLE_COMM_SYS_CalcPicVbBlkSize(VIDEO_NORM_E enNorm, PIC_SIZE_E enPicSiz
     if (704 == stSize.u32Width)
     {
         stSize.u32Width = 720;
-    }
+    }    
+    //SAMPLE_PRT("w:%d, u32AlignWidth:%d\n", CEILING_2_POWER(stSize.u32Width,u32AlignWidth), u32AlignWidth);
+
+    u32Width  = CEILING_2_POWER(stSize.u32Width, u32AlignWidth);
+    u32Height = CEILING_2_POWER(stSize.u32Height,u32AlignWidth);
     
-    SAMPLE_PRT("w:%d, u32AlignWidth:%d\n", CEILING_2_POWER(stSize.u32Width,u32AlignWidth), u32AlignWidth);
-    return (CEILING_2_POWER(stSize.u32Width, u32AlignWidth) * \
-            CEILING_2_POWER(stSize.u32Height,u32AlignWidth) * \
-           ((PIXEL_FORMAT_YUV_SEMIPLANAR_422 == enPixFmt)?2:1.5));
+    if (PIXEL_FORMAT_YUV_SEMIPLANAR_422 == enPixFmt)
+    {
+        u32BlkSize = u32Width * u32Height * 2;
+    }
+    else
+    {
+        u32BlkSize = u32Width * u32Height * 3 / 2;
+    }
+
+
+	if(COMPRESS_MODE_SEG == enCompFmt)
+	{
+		VB_PIC_HEADER_SIZE(u32Width,u32Height,enPixFmt,u32HeaderSize);
+	}
+
+	u32BlkSize += u32HeaderSize;
+	
+    return u32BlkSize;
 }
 
 /******************************************************************************
@@ -178,42 +200,18 @@ HI_S32 SAMPLE_COMM_SYS_MemConfig(HI_VOID)
     HI_S32 i = 0;
     HI_S32 s32Ret = HI_SUCCESS;
 
-    HI_CHAR * pcMmzName;
-    MPP_CHN_S stMppChnVI;
+    HI_CHAR * pcMmzName = NULL;
     MPP_CHN_S stMppChnVO;
     MPP_CHN_S stMppChnVPSS;
-    MPP_CHN_S stMppChnGRP;
     MPP_CHN_S stMppChnVENC;
-    MPP_CHN_S stMppChnRGN;
     MPP_CHN_S stMppChnVDEC;
 
-    /*VI,VDEC最大通道数为32*/
-    for(i=0;i<32;i++)
-    {
-        stMppChnVI.enModId = HI_ID_VIU;
-        stMppChnVI.s32DevId = 0;
-        stMppChnVI.s32ChnId = i;
-        
+    /* vdec chn config to mmz 'null' */
+    for(i=0; i<VDEC_MAX_CHN_NUM; i++)
+    {        
         stMppChnVDEC.enModId = HI_ID_VDEC;
         stMppChnVDEC.s32DevId = 0;
         stMppChnVDEC.s32ChnId = i;
-        
-        if(0 == (i%2))
-        {
-            pcMmzName = NULL;  
-        }
-        else
-        {
-            pcMmzName = "ddr1";
-        }
-
-        /*vi*/
-        s32Ret = HI_MPI_SYS_SetMemConf(&stMppChnVI,pcMmzName);
-        if (s32Ret)
-        {
-            SAMPLE_PRT("HI_MPI_SYS_SetMemConf ERR !\n");
-            return HI_FAILURE;
-        }
 
         /*vdec*/
         s32Ret = HI_MPI_SYS_SetMemConf(&stMppChnVDEC,pcMmzName);
@@ -222,48 +220,31 @@ HI_S32 SAMPLE_COMM_SYS_MemConfig(HI_VOID)
             SAMPLE_PRT("HI_MPI_SYS_SetMemConf ERR !\n");
             return HI_FAILURE;
         }
-
     }  
 
-    /*vpss,grp,venc最大通道为64*/
-    for(i=0;i<64;i++)
+    /* vpss group config to mmz 'null' */
+    for(i=0;i<VPSS_MAX_GRP_NUM;i++)
     {
         stMppChnVPSS.enModId  = HI_ID_VPSS;
         stMppChnVPSS.s32DevId = i;
         stMppChnVPSS.s32ChnId = 0;
 
-        stMppChnGRP.enModId  = HI_ID_GROUP;
-        stMppChnGRP.s32DevId = i;
-        stMppChnGRP.s32ChnId = 0;
 
+        /*vpss*/
+        s32Ret = HI_MPI_SYS_SetMemConf(&stMppChnVPSS, pcMmzName);
+        if (s32Ret)
+        {
+            SAMPLE_PRT("HI_MPI_SYS_SetMemConf ERR !\n");
+            return HI_FAILURE;
+        }
+    }
+
+    /* venc chn config to mmz 'null' */
+    for (i = 0;i < VENC_MAX_CHN_NUM; i++)
+    {
         stMppChnVENC.enModId = HI_ID_VENC;
         stMppChnVENC.s32DevId = 0;
         stMppChnVENC.s32ChnId = i;
-
-        if(0 == (i%2))
-        {
-            pcMmzName = NULL;  
-        }
-        else
-        {
-            pcMmzName = "ddr1";
-        }
-
-        /*vpss*/
-        s32Ret = HI_MPI_SYS_SetMemConf(&stMppChnVPSS,pcMmzName);
-        if (s32Ret)
-        {
-            SAMPLE_PRT("HI_MPI_SYS_SetMemConf ERR !\n");
-            return HI_FAILURE;
-        }
-
-        /*grp*/
-        s32Ret = HI_MPI_SYS_SetMemConf(&stMppChnGRP,pcMmzName);
-        if (s32Ret)
-        {
-            SAMPLE_PRT("HI_MPI_SYS_SetMemConf ERR !\n");
-            return HI_FAILURE;
-        } 
 
         /*venc*/
         s32Ret = HI_MPI_SYS_SetMemConf(&stMppChnVENC,pcMmzName);
@@ -274,16 +255,12 @@ HI_S32 SAMPLE_COMM_SYS_MemConfig(HI_VOID)
         }
 
     }
-    
-    stMppChnRGN.enModId  = HI_ID_RGN;
-    stMppChnRGN.s32DevId = 0;
-    stMppChnRGN.s32ChnId = 0;
-        
-    /*配置VO内存*/
+            
+    /* vo config to mmz 'null' */
     stMppChnVO.enModId  = HI_ID_VOU;
     stMppChnVO.s32DevId = 0;
     stMppChnVO.s32ChnId = 0;
-    s32Ret = HI_MPI_SYS_SetMemConf(&stMppChnVO,"ddr1");
+    s32Ret = HI_MPI_SYS_SetMemConf(&stMppChnVO, pcMmzName);
     if (s32Ret)
     {
         SAMPLE_PRT("HI_MPI_SYS_SetMemConf ERR !\n");
@@ -300,8 +277,18 @@ HI_S32 SAMPLE_COMM_SYS_Init(VB_CONF_S *pstVbConf)
 {
     MPP_SYS_CONF_S stSysConf = {0};
     HI_S32 s32Ret = HI_FAILURE;
+    HI_S32 i;
 
     HI_MPI_SYS_Exit();
+    
+    for(i=0;i<VB_MAX_USER;i++)
+    {
+         HI_MPI_VB_ExitModCommPool(i);
+    }
+    for(i=0; i<VB_MAX_POOLS; i++)
+    {
+         HI_MPI_VB_DestroyPool(i);
+    }
     HI_MPI_VB_Exit();
 
     if (NULL == pstVbConf)
@@ -372,7 +359,18 @@ HI_S32 SAMPLE_COMM_SYS_Payload2FilePostfix(PAYLOAD_TYPE_E enPayload, HI_CHAR* sz
 ******************************************************************************/
 HI_VOID SAMPLE_COMM_SYS_Exit(void)
 {
+
+    HI_S32 i;
+
     HI_MPI_SYS_Exit();
+    for(i=0;i<VB_MAX_USER;i++)
+    {
+         HI_MPI_VB_ExitModCommPool(i);
+    }
+    for(i=0; i<VB_MAX_POOLS; i++)
+    {
+         HI_MPI_VB_DestroyPool(i);
+    }	
     HI_MPI_VB_Exit();
     return;
 }

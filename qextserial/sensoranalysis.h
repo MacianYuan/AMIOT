@@ -5,12 +5,11 @@
 #include <QMutex>
 #include <QStringList>
 #include "qextserial/qextserialport.h"
-#include "public/device_public.h"
+#include "device_public.h"
 #include <QDebug>
 #include <QTimer>
 #include <QElapsedTimer>
-#include <public/IniParse.h>
-#include "public/version.h"
+#include "version.h"
 #include <QThread>
 
 #define GET_DEVICE_NUMBER_TIMES 3       //获取机具号3次失败，不再获取

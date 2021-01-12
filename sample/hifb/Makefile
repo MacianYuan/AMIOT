@@ -1,10 +1,6 @@
-# Hisilicon Hi3516 sample Makefile
+# Hisilicon mpp sample Makefile
 
 include ../Makefile.param
-#ifeq ($(SAMPLE_PARAM_FILE), )
-#     SAMPLE_PARAM_FILE:=../Makefile.param
-#     include $(SAMPLE_PARAM_FILE)
-#endif
 
 # target source
 SRC  := $(wildcard *.c) 

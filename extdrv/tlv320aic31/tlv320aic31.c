@@ -38,7 +38,9 @@
 #include <mach/hardware.h>
 #include <asm/io.h>
 #include <asm/system.h>
+#ifndef CONFIG_HISI_SNAPSHOT_BOOT
 #include <linux/miscdevice.h>
+#endif
 #include <linux/delay.h>
 
 #include <linux/proc_fs.h>
@@ -52,21 +54,21 @@
 #include <linux/moduleparam.h>
 #include <linux/ioport.h>
 #include <linux/interrupt.h>
+#include <linux/reboot.h>
+#include <linux/notifier.h>
+//#define HI_GPIO_I2C
 
-#ifndef HI_GPIO_I2C
-#define HI_GPIO_I2C
-#endif
+#include <linux/i2c.h>
+#include <linux/i2c-dev.h>
 
-#ifdef HI_GPIO_I2C
-#include "gpio_i2c.h"
-#else
-#include "i2c.h"
-#endif
 
 
 #include "tlv320aic31.h"
 #include "tlv320aic31_def.h"
 
+#ifdef CONFIG_HISI_SNAPSHOT_BOOT
+#include "himedia.h"
+#endif
 
 #define CHIP_NUM 1
 #define DEV_NAME "tlv320aic31"
@@ -77,24 +79,45 @@
 
 unsigned int IIC_device_addr[CHIP_NUM] = {0x30};
 
-static unsigned int  open_cnt = 0;	
-
-
-void tlv320aic31_write(unsigned char chip_addr,unsigned char reg_addr,unsigned char value)
+static struct i2c_board_info hi_info =
 {
-#ifdef HI_GPIO_I2C
-    gpio_i2c_write(chip_addr,reg_addr,value);
-#else
-    i2c_write(chip_addr,reg_addr,value);
+    I2C_BOARD_INFO("tlv320aic31", 0x30),
+};
+static struct i2c_client* tlv_client;
+static unsigned int  open_cnt = 0;	
+static int chip_count = 1;
+
+#ifdef CONFIG_HISI_SNAPSHOT_BOOT
+static struct himedia_device s_stTlv320aic31Device;
 #endif
+
+static int tlv320aic31_device_init(unsigned int num);
+int tlv320aic31_write(unsigned char chip_addr, unsigned char reg_addr, unsigned char value)
+{
+    int ret;
+    unsigned char buf[2];
+    struct i2c_client* client = tlv_client;
+
+    buf[0] = reg_addr;
+    buf[1] = value;
+
+    ret = i2c_master_send(client, buf, 2);
+    return ret;
 }
 int tlv320aic31_read(unsigned char chip_addr,unsigned char reg_addr)
 {
-#ifdef HI_GPIO_I2C
-    return gpio_i2c_read(chip_addr,reg_addr);
-#else    
-    return i2c_read(chip_addr,reg_addr);
-#endif
+    int ret_data = 0xFF;
+    int ret;
+    struct i2c_client* client = tlv_client;
+    unsigned char buf[2];
+
+    buf[0] = reg_addr;
+    ret = i2c_master_recv(client, buf, 1);
+    if (ret >= 0)
+    {
+        ret_data = buf[0];
+    }
+    return ret_data;
 }
 void tlv320aic31_reg_dump(unsigned int reg_num)
 {
@@ -112,7 +135,7 @@ void soft_reset(unsigned int chip_num)
 {
        /*soft reset*/ 
         tlv320aic31_write(IIC_device_addr[chip_num],0x1,0x80);
-        mdelay(10);
+        msleep(10);
         
         /*CLKDIV_IN uses MCLK*/
     	tlv320aic31_write(IIC_device_addr[chip_num], 102, 0x32);
@@ -182,11 +205,11 @@ void soft_reset(unsigned int chip_num)
         tlv320aic31_write(IIC_device_addr[chip_num], 47, 0x80); 
             	
         /*HPLOUT is not muted*/	
-        //tlv320aic31_write(IIC_device_addr[chip_num], 51, 0x9f);
+        //tlv320aic31_write(IIC_device_addr[chip_num], 51, 0x9f); 
 
         tlv320aic31_write(IIC_device_addr[chip_num], 64, 0x80); 
         /*HPROUT is not muted*/	
-        //tlv320aic31_write(IIC_device_addr[chip_num], 65, 0x9f);
+        //tlv320aic31_write(IIC_device_addr[chip_num], 65, 0x9f); 
                 
         /*out short circuit protection*/	
         tlv320aic31_write(IIC_device_addr[chip_num], 38, 0x3e);  
@@ -280,7 +303,7 @@ static long tlv320aic31_ioctl(struct file *file, unsigned int cmd, unsigned long
             line_hpcom_out_ctrl.b8 =  tlv320aic31_read(IIC_device_addr[chip_num],51); 
             line_hpcom_out_ctrl.bit.if_mute = audio_ctrl->if_mute_route;
             line_hpcom_out_ctrl.bit.output_level = audio_ctrl->input_level;
-            line_hpcom_out_ctrl.bit.power_status = audio_ctrl->if_powerup;
+			line_hpcom_out_ctrl.bit.power_status = audio_ctrl->if_powerup;
             tlv320aic31_write(IIC_device_addr[chip_num],51,line_hpcom_out_ctrl.b8);
             break; 
         case PGAL_2_HPLCOM_VOL_CTRL:
@@ -316,8 +339,8 @@ static long tlv320aic31_ioctl(struct file *file, unsigned int cmd, unsigned long
         case HPROUT_OUTPUT_LEVEL_CTRL:
            line_hpcom_out_ctrl.b8 =  tlv320aic31_read(IIC_device_addr[chip_num],65); 
            line_hpcom_out_ctrl.bit.if_mute = audio_ctrl->if_mute_route;
-            line_hpcom_out_ctrl.bit.output_level = audio_ctrl->input_level;
-            line_hpcom_out_ctrl.bit.power_status = audio_ctrl->if_powerup;
+           line_hpcom_out_ctrl.bit.output_level = audio_ctrl->input_level;
+		   line_hpcom_out_ctrl.bit.power_status = audio_ctrl->if_powerup;
            tlv320aic31_write(IIC_device_addr[chip_num],65,line_hpcom_out_ctrl.b8);
            break;
         case PGAR_2_HPRCOM_VOL_CTRL: 
@@ -405,7 +428,7 @@ static long tlv320aic31_ioctl(struct file *file, unsigned int cmd, unsigned long
                 ctrl_mode.bit.work_clock_dic_ctrl =  audio_ctrl->ctrl_mode;
                 ctrl_mode.bit.bit_work_dri_ctrl =  audio_ctrl->ctrl_mode;
                 tlv320aic31_write(IIC_device_addr[chip_num],8,ctrl_mode.b8);
-
+#if 0
                 /* 设置时钟 */
                 if (1 == audio_ctrl->ctrl_mode 
                     || (AC31_SET_48K_SAMPLERATE != audio_ctrl->sample && AC31_SET_44_1K_SAMPLERATE != audio_ctrl->sample))
@@ -438,7 +461,7 @@ static long tlv320aic31_ioctl(struct file *file, unsigned int cmd, unsigned long
                         tlv320aic31_write(IIC_device_addr[chip_num],11,0x1);    /* R=1 */
                         tlv320aic31_write(IIC_device_addr[chip_num],101,0x0);
                         tlv320aic31_write(IIC_device_addr[chip_num],102,0xc2);
-                    }
+                    }
                 }
                 else
                 {
@@ -462,6 +485,69 @@ static long tlv320aic31_ioctl(struct file *file, unsigned int cmd, unsigned long
                     tlv320aic31_write(IIC_device_addr[chip_num],101,0x0);   /* CODEC_CLKIN uses PLLDIV_OUT */
                     tlv320aic31_write(IIC_device_addr[chip_num],11,0x2);    /* R = 2 */
                 }
+#else
+ 				/* 设置时钟 */
+               /* aic31,由aiao提供mclk */             
+          		switch(audio_ctrl->sampleRate)
+            	{
+            		case 8000:
+            		case 16000:
+            		case 32000:
+            			{
+            			    /*　如果为32KHZ系列的采样样 */
+	                        tlv320aic31_write(IIC_device_addr[chip_num],3,0x81);    /* P=1 */ 
+	                        tlv320aic31_write(IIC_device_addr[chip_num],4,0x30);    /* J=12 */
+	                        tlv320aic31_write(IIC_device_addr[chip_num],5,0x0);     /* reg 5 and 6 set D=0000*/
+	                        tlv320aic31_write(IIC_device_addr[chip_num],6,0x0);
+	                        codec_datapath_setup_ctrl.b8 = tlv320aic31_read(IIC_device_addr[chip_num],7);
+	                        codec_datapath_setup_ctrl.b8 &= 0x7f;   /* FSref = 48 kHz */
+	                        tlv320aic31_write(IIC_device_addr[chip_num],7,codec_datapath_setup_ctrl.b8);
+	                        tlv320aic31_write(IIC_device_addr[chip_num],11,0x1);    /* R=1 */
+	                        tlv320aic31_write(IIC_device_addr[chip_num],101,0x0);
+	                        tlv320aic31_write(IIC_device_addr[chip_num],102,0xc2);
+            			}
+            			break;
+            		case 12000:
+            		case 24000:
+            		case 48000:                		
+            		    {
+            		        /*　如果为48KHZ系列的采样样 */
+	                        tlv320aic31_write(IIC_device_addr[chip_num],3,0x81);    /* P=1 */ 
+	                        tlv320aic31_write(IIC_device_addr[chip_num],4,0x20);    /* J=8 */
+	                        tlv320aic31_write(IIC_device_addr[chip_num],5,0x0);     /* reg 5 and 6 set D=0000*/
+	                        tlv320aic31_write(IIC_device_addr[chip_num],6,0x0);
+	                        codec_datapath_setup_ctrl.b8 = tlv320aic31_read(IIC_device_addr[chip_num],7);
+	                        codec_datapath_setup_ctrl.b8 &= 0x7f;   /* FSref = 48 kHz */
+	                        tlv320aic31_write(IIC_device_addr[chip_num],7,codec_datapath_setup_ctrl.b8);
+	                        tlv320aic31_write(IIC_device_addr[chip_num],11,0x1);    /* R=1 */
+	                        tlv320aic31_write(IIC_device_addr[chip_num],101,0x0);
+	                        tlv320aic31_write(IIC_device_addr[chip_num],102,0xc2);
+                        }
+            			break;
+            		case 11025:
+            		case 22050:
+            		case 44100:
+            		    {
+                		    /*　如果为44.1KHZ系列的采样样 */
+	                        tlv320aic31_write(IIC_device_addr[chip_num],3,0x81);    /* P=1 */ 
+	                        tlv320aic31_write(IIC_device_addr[chip_num],4,0x20);    /* J=7 */
+	                        tlv320aic31_write(IIC_device_addr[chip_num],5,0x00);    /* reg 5 and 6 set D=0000*/
+	                        tlv320aic31_write(IIC_device_addr[chip_num],6,0x00);
+	                        codec_datapath_setup_ctrl.b8 = tlv320aic31_read(IIC_device_addr[chip_num],7);
+	                        codec_datapath_setup_ctrl.b8 |= 0x80;   /* FSref = 44.1 kHz */
+	                        tlv320aic31_write(IIC_device_addr[chip_num],7,codec_datapath_setup_ctrl.b8);
+	                        tlv320aic31_write(IIC_device_addr[chip_num],11,0x1);    /* R=1 */
+	                        tlv320aic31_write(IIC_device_addr[chip_num],101,0x0);
+	                        tlv320aic31_write(IIC_device_addr[chip_num],102,0xc2);
+            		    }
+            			break;               			
+                
+                default:
+                	printk("aic31 unsupport sampleRate %d\n", audio_ctrl->sampleRate);
+                	return -1;
+            	}	
+               
+#endif
                 break;
         case LEFT_DAC_VOL_CTRL:
                 adc_pga_dac_gain_ctrl.b8 = tlv320aic31_read(IIC_device_addr[chip_num],43);
@@ -527,6 +613,27 @@ static long tlv320aic31_ioctl(struct file *file, unsigned int cmd, unsigned long
     return 0;
 }
 
+#ifdef CONFIG_HISI_SNAPSHOT_BOOT
+static int tlv320aic31_freeze(struct himedia_device* pdev)
+{
+    printk(KERN_ALERT "%s  %d\n", __FUNCTION__, __LINE__);
+    return 0;
+}
+static int tlv320aic31_restore(struct himedia_device* pdev)
+{
+    int i;
+    for (i = 0; i < chip_count; i++)
+    {
+        if (tlv320aic31_device_init(i) < 0)
+        {
+            printk(KERN_ALERT "%s  %d, tlv320aic31 device init fail!\n", __FUNCTION__, __LINE__);
+            return -1;
+        }
+    }
+    printk(KERN_ALERT "%s  %d\n", __FUNCTION__, __LINE__);
+    return 0;
+}
+#endif
 /*
  *  The various file operations we support.
  */
@@ -538,15 +645,64 @@ static struct file_operations tlv320aic31_fops = {
 	.release	= tlv320aic31_close
 };
 
-static struct miscdevice tlv320aic31_dev = {
+#ifdef CONFIG_HISI_SNAPSHOT_BOOT
+struct himedia_ops stTlv320aic31DrvOps =
+{
+    .pm_freeze = tlv320aic31_freeze,
+    .pm_restore  = tlv320aic31_restore
+};
+#else
+static struct miscdevice tlv320aic31_dev =
+{
 	MISC_DYNAMIC_MINOR,
 	DEV_NAME,
 	&tlv320aic31_fops,
 };
+#endif
 
+static int set_chip_count(const char* val, const struct kernel_param* kp)
+{
+    int ret;
+    int chip_count;
+    ret = kstrtoint(val, 10, &chip_count);
+    if (ret < 0)
+    {
+        return -EINVAL;
+    }
+    if (chip_count < 0 || chip_count > CHIP_NUM)
+    {
+        printk("chip_count%d err. \n", chip_count);
+        return -EINVAL;
+    }
+    return 0;
+}
+static struct kernel_param_ops alv320_para_ops =
+{
+    .set = set_chip_count,
+};
+#if 0
+module_param(chip_count, int, 0);
+#else
+module_param_cb(chip_count, &alv320_para_ops, &chip_count, 0644);
+#endif
+MODULE_PARM_DESC(chip_count, "the num we device uses the tlv320aic31,default 1");
+static int tlv320aic31_reboot(struct notifier_block* self, unsigned long data, void* pdata)
+{
+    unsigned int i;
+    for (i = 0; i < chip_count; i++)
+    {
+        tlv320aic31_write(IIC_device_addr[i], 51, 0x04);
+        tlv320aic31_write(IIC_device_addr[i], 65, 0x04);
+    }
+    printk("Func:%s, line:%d######\n", __FUNCTION__, __LINE__);
+    return 0;
+}
+static struct notifier_block tlv320aic31_reboot_notifier =
+{
+    .notifier_call = tlv320aic31_reboot,
+};
 static int tlv320aic31_device_init(unsigned int num)
 {
-#if 1    
         /* inite codec configs.*/
         unsigned char temp = 0;
         temp = tlv320aic31_read(IIC_device_addr[num],0x2);
@@ -557,30 +713,65 @@ static int tlv320aic31_device_init(unsigned int num)
             return -1;
         }
         tlv320aic31_write(IIC_device_addr[num],0x2,temp);
-#endif        
+
         soft_reset(num);
-#if 0
-        for (temp = 0;temp < 30;temp ++)
+
+    /* 注册reboot通知处理 */
+    register_reboot_notifier(&tlv320aic31_reboot_notifier);
+    return 0;
+}
+static int tlv320aic31_device_exit(unsigned int num)
         {
-            printk("0x%x, 0x%x\n",temp,tlv320aic31_read(IIC_device_addr[num],temp));
-        }
-#endif        
+    tlv320aic31_write(IIC_device_addr[num], 51, 0x04);
+
+    tlv320aic31_write(IIC_device_addr[num], 65, 0x04);
+
     	return 0;
-}   	
-static int chip_count = 1;
-module_param(chip_count,int,0);
-MODULE_PARM_DESC(chip_count,"the num we device uses the tlv320aic31,default 1");
+}  
+
+static int i2c_client_init(void)
+{
+    struct i2c_adapter* i2c_adap;
+
+    // use i2c2
+    i2c_adap = i2c_get_adapter(0);
+    tlv_client = i2c_new_device(i2c_adap, &hi_info);
+
+    i2c_put_adapter(i2c_adap);
+
+	return 0;
+}
+
+static void i2c_client_exit(void)
+{
+    i2c_unregister_device(tlv_client);
+}
 
 static int __init tlv320aic31_init(void)
 {
     	unsigned int i,ret;
 
+#ifdef CONFIG_HISI_SNAPSHOT_BOOT
+    snprintf(s_stTlv320aic31Device.devfs_name, sizeof(s_stTlv320aic31Device.devfs_name), DEV_NAME);
+    s_stTlv320aic31Device.minor  = HIMEDIA_DYNAMIC_MINOR;
+    s_stTlv320aic31Device.fops   = &tlv320aic31_fops;
+    s_stTlv320aic31Device.drvops = &stTlv320aic31DrvOps;
+    s_stTlv320aic31Device.owner  = THIS_MODULE;
+    ret = himedia_register(&s_stTlv320aic31Device);
+    if (ret)
+    {
+        DPRINTK(0, "could not register tlv320aic31 device");
+        return -1;
+    }
+#else
     	ret = misc_register(&tlv320aic31_dev);
     	if(ret)
     	{
     		DPRINTK(0,"could not register tlv320aic31 device");
     		return -1;
     	}
+#endif
+        i2c_client_init();
         for(i = 0;i< chip_count;i++)
         {
             if(tlv320aic31_device_init(i) < 0)
@@ -589,29 +780,35 @@ static int __init tlv320aic31_init(void)
             }
         }
     	DPRINTK(1,"tlv320aic31 driver init successful!");
+    printk("load tlv320aic31.ko  ok!\n");
     	return ret;
 init_fail:
+#ifdef CONFIG_HISI_SNAPSHOT_BOOT
+    himedia_unregister(&s_stTlv320aic31Device);
+#else
         misc_deregister(&tlv320aic31_dev);
+#endif
         DPRINTK(0,"tlv320aic31 device init fail,deregister it!");
         return -1;
 }     
 
 static void __exit tlv320aic31_exit(void)
 {
-	unsigned int i;
-
-	for(i = 0;i< chip_count;i++)
+    unsigned int i;
+    for (i = 0; i < chip_count; i++)
     {
-    	/* HPLOUT is mute */
-	   	tlv320aic31_write(IIC_device_addr[i], 51, 0x04);
-
-        /* HPROUT is mute */
-  		tlv320aic31_write(IIC_device_addr[i], 65, 0x04);
+        tlv320aic31_device_exit(i);
     }
-
+    unregister_reboot_notifier(&tlv320aic31_reboot_notifier);
+#ifdef CONFIG_HISI_SNAPSHOT_BOOT
+    himedia_unregister(&s_stTlv320aic31Device);
+#else
     misc_deregister(&tlv320aic31_dev);
+#endif
 
+    i2c_client_exit();
     DPRINTK(1,"deregister tlv320aic31");
+    printk("rmmod tlv320aic31.ko  ok!\n");
 }
 
 module_init(tlv320aic31_init);

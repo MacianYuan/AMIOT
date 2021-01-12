@@ -44,7 +44,7 @@ extern "C"{
 typedef unsigned char           HI_U8;
 typedef unsigned short          HI_U16;
 typedef unsigned int            HI_U32;
-
+typedef double                  HI_DOUBLE;
 typedef signed char             HI_S8;
 typedef short                   HI_S16;
 typedef int                     HI_S32;

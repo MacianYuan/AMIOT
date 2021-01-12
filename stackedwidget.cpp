@@ -33,12 +33,12 @@ stackedwidget::stackedwidget(QWidget *parent) :
     timer->start(1000);
 
     //在线地图
-    onlineMapScene = new QGraphicsScene();
-    onlineMapWebView = new QWebView();
-    connect(onlineMapWebView->page()->mainFrame(),SIGNAL(javaScriptWindowObjectCleared()),this,SLOT(mapSlotPopulateJavaScriptWindowObject()));
-    onlineMapWebView->setUrl(QUrl("qrc:/Tmap/map.html"));
-    onlineMapWebView->setContentsMargins(0,0,0,0);
-    onlineMapWebView->setTextSizeMultiplier(1);//设置网页字体大小
+//    onlineMapScene = new QGraphicsScene();
+//    onlineMapWebView = new QWebView();
+//    connect(onlineMapWebView->page()->mainFrame(),SIGNAL(javaScriptWindowObjectCleared()),this,SLOT(mapSlotPopulateJavaScriptWindowObject()));
+//    onlineMapWebView->setUrl(QUrl("qrc:/Tmap/map.html"));
+//    onlineMapWebView->setContentsMargins(0,0,0,0);
+//    onlineMapWebView->setTextSizeMultiplier(1);//设置网页字体大小
 
     //单singleShot，只会触发一次，发出一次信号，然后来执行 初始化地图信息 槽函数
     QTimer::singleShot(60, this, SLOT(mapInitialization()));
@@ -239,7 +239,7 @@ bool stackedwidget::get_disk_space()
 //向地图传递类信息
 void stackedwidget::mapSlotPopulateJavaScriptWindowObject()
 {
-    onlineMapWebView->page()->mainFrame()->addToJavaScriptWindowObject(QString("TMap"),this);
+//    onlineMapWebView->page()->mainFrame()->addToJavaScriptWindowObject(QString("TMap"),this);
 }
 
 //卫星图与矢量图切换
@@ -247,20 +247,20 @@ void stackedwidget::on_hybridButton_clicked()
 {
     qDebug() << "1";
     QString cmd;
-    QWebFrame *webFrame = onlineMapWebView->page()->mainFrame();
-    if(ui->hybridButton->isChecked()){
-        cmd = QString("hybrid()");
-        qDebug() << "2";
-        ui->hybridButton->setChecked(true);
-        //ui->hybridButton->setStyleSheet("image: url(:/image/image/1_03.png);");
-    }
-    else{
-        cmd = QString("vector()");
-        qDebug() << "3";
-        ui->hybridButton->setChecked(false);
-        //ui->hybridButton->setStyleSheet("image: url(:/image/image/1_03.png);");
-    }
-    webFrame->evaluateJavaScript(cmd);
+//    QWebFrame *webFrame = onlineMapWebView->page()->mainFrame();
+//    if(ui->hybridButton->isChecked()){
+//        cmd = QString("hybrid()");
+//        qDebug() << "2";
+//        ui->hybridButton->setChecked(true);
+//        //ui->hybridButton->setStyleSheet("image: url(:/image/image/1_03.png);");
+//    }
+//    else{
+//        cmd = QString("vector()");
+//        qDebug() << "3";
+//        ui->hybridButton->setChecked(false);
+//        //ui->hybridButton->setStyleSheet("image: url(:/image/image/1_03.png);");
+//    }
+//    webFrame->evaluateJavaScript(cmd);
 }
 
 ////摄像头页面 定时器触发后标题隐藏
@@ -272,21 +272,21 @@ void stackedwidget::on_hybridButton_clicked()
 //初始化地图信息
 void stackedwidget::mapInitialization()
 {
-    onlineMapWebView->setGeometry(0,0,ui->graphicsView->width(),ui->graphicsView->height());
-    onlineMapWebView->page()->mainFrame()->setScrollBarPolicy(Qt::Horizontal,Qt::ScrollBarAlwaysOff);
-    onlineMapWebView->page()->mainFrame()->setScrollBarPolicy(Qt::Vertical,Qt::ScrollBarAlwaysOff);
-    onlineMapScene->addWidget(onlineMapWebView);
-    ui->graphicsView->setScene(onlineMapScene);
+//    onlineMapWebView->setGeometry(0,0,ui->graphicsView->width(),ui->graphicsView->height());
+//    onlineMapWebView->page()->mainFrame()->setScrollBarPolicy(Qt::Horizontal,Qt::ScrollBarAlwaysOff);
+//    onlineMapWebView->page()->mainFrame()->setScrollBarPolicy(Qt::Vertical,Qt::ScrollBarAlwaysOff);
+//    onlineMapScene->addWidget(onlineMapWebView);
+//    ui->graphicsView->setScene(onlineMapScene);
 }
 
 
 //设置GPS mark 经纬度
 void stackedwidget::mapSetCoordinate(QString lon,QString lat)
 {
-    //qDebug()<< lon << lat;
-    QWebFrame *webFrame = onlineMapWebView->page()->mainFrame();
-    QString cmd = QString("showAddress(\"%1\",\"%2\")").arg(lon).arg(lat);
-    webFrame->evaluateJavaScript(cmd);
+//    //qDebug()<< lon << lat;
+//    QWebFrame *webFrame = onlineMapWebView->page()->mainFrame();
+//    QString cmd = QString("showAddress(\"%1\",\"%2\")").arg(lon).arg(lat);
+//    webFrame->evaluateJavaScript(cmd);
 }
 
 stackedwidget::~stackedwidget()

@@ -1,4 +1,4 @@
-# Hisilicon Hi3516 sample Makefile
+# Hisilicon Hi3521A sample Makefile
 
 include ../Makefile.param
 #ifeq ($(SAMPLE_PARAM_FILE), )

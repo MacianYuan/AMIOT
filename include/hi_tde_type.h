@@ -1,4 +1,4 @@
-    /******************************************************************************
+/******************************************************************************
 
   Copyright (C), 2001-2011, Huawei Tech. Co., Ltd.
 
@@ -37,9 +37,6 @@ typedef HI_S32 TDE_HANDLE;
 /** TDE callback */
 typedef HI_VOID (* TDE_FUNC_CB) (HI_VOID *pParaml, HI_VOID *pParamr);
 
-typedef HI_U32 (* TDE_CB_MALLOC) (HI_U32 size, HI_U32* pu32PrvData);
-
-typedef HI_VOID (* TDE_CB_FREE) (HI_U32 phyAddr,HI_U32 u32PrvData);
 
 /* color format */
 typedef enum hiTDE2_COLOR_FMT_E
@@ -68,16 +65,17 @@ typedef enum hiTDE2_COLOR_FMT_E
     TDE2_COLOR_FMT_ABGR8888,            /**< ABGR8888 format */
     TDE2_COLOR_FMT_RGBA8888,            /**< RGBA8888 format */
     TDE2_COLOR_FMT_BGRA8888,            /**< BGRA8888 format */
+    TDE2_COLOR_FMT_RABG8888,            /**<RABG8888 format*/
     TDE2_COLOR_FMT_CLUT1,               /**CLUT1 */
     TDE2_COLOR_FMT_CLUT2,               /**CLUT2 */
     TDE2_COLOR_FMT_CLUT4,               /**CLUT4 */
     TDE2_COLOR_FMT_CLUT8,               /**CLUT8 */
     TDE2_COLOR_FMT_ACLUT44,             /**CLUT44 */
     TDE2_COLOR_FMT_ACLUT88,             /**CLUT88 */
-    TDE2_COLOR_FMT_A1,                  /**<alpha format£¬1bit */
-    TDE2_COLOR_FMT_A8,                  /**<alpha format£¬8bit */
-    TDE2_COLOR_FMT_YCbCr888,            /**<YUV packet format£¬no alpha*/
-    TDE2_COLOR_FMT_AYCbCr8888,          /**<YUV packet format£¬with alpha*/
+    TDE2_COLOR_FMT_A1,                  /**<alpha format??1bit */
+    TDE2_COLOR_FMT_A8,                  /**<alpha format??8bit */
+    TDE2_COLOR_FMT_YCbCr888,            /**<YUV packet format??no alpha*/
+    TDE2_COLOR_FMT_AYCbCr8888,          /**<YUV packet format??with alpha*/
     TDE2_COLOR_FMT_YCbCr422,            /**<YUV packet422 format */
     TDE2_COLOR_FMT_byte,                /**<byte*/
     TDE2_COLOR_FMT_halfword,            /**<halfword*/
@@ -105,33 +103,6 @@ typedef enum hiTDE2_MB_COLORFMT_E
     TDE2_MB_COLOR_FMT_JPG_YCbCr444MBP,    /**<Macroblock 444 in the JPEG encoding format */
     TDE2_MB_COLOR_FMT_BUTT
 } TDE2_MB_COLOR_FMT_E;
-
-
-typedef enum hiTDE2_COLORSPACE_CONV_MODE_E
-{
-    TDE2_ITU_R_BT601_IMAGE = 0,
-    TDE2_ITU_R_BT709_IMAGE,
-    TDE2_ITU_R_BT601_VIDEO,
-    TDE2_ITU_R_BT709_VIDEO
-}TDE2_COLORSPACE_CONV_MODE_E;
-
-typedef enum
-{
-    TDE2_MBFILL_YC = 0, /* both Y and C will be filled */
-    TDE2_MBFILL_Y,      /* just fill Y */
-    TDE2_MBFILL_C,      /* just fill C */
-}TDE2_MBFILL_E;
-
-/* field mode */
-typedef enum hiTDE_PIC_MODE_E
-{
-    TDE_FRAME_PIC_MODE = 0,     /* frame */
-    TDE_BOTTOM_FIELD_PIC_MODE,  /* bottom field */
-    TDE_TOP_FIELD_PIC_MODE,     /* top field */
-    TDE_TB_FIELD_PIC_MODE,      /* top & bottom field */
-    TDE_PIC_MODE_BUTT
-} TDE_PIC_MODE_E;
-
 
 /* raster picture information */
 typedef struct hiTDE2_SURFACE_S
@@ -179,7 +150,6 @@ typedef struct hiTDE2_MB_S
     HI_U32              u32YStride;
     HI_U32              u32CbCrPhyAddr;
     HI_U32              u32CbCrStride;
-    TDE_PIC_MODE_E      enPicMode;    
 } TDE2_MB_S;
 
 typedef struct hiTDE2_RECT_S
@@ -248,7 +218,6 @@ typedef enum hiTDE2_MBRESIZE_E
     TDE2_MBRESIZE_QUALITY_LOW,      
     TDE2_MBRESIZE_QUALITY_MIDDLE,   
     TDE2_MBRESIZE_QUALITY_HIGH,    
-    TDE2_MBRESIZE_WBC,
     TDE2_MBRESIZE_BUTT
 } TDE2_MBRESIZE_E;
 
@@ -322,99 +291,9 @@ typedef enum hiTDE2_FILTER_MODE_E
     TDE2_FILTER_MODE_COLOR = 0, /**< Filters the color */
     TDE2_FILTER_MODE_ALPHA,     /**< Filters the alpha */
     TDE2_FILTER_MODE_BOTH,      /* both color and alpha will be filter */
+    TDE2_FILTER_MODE_NONE,      /**<No filter *//**<CNcomment:$)A2;=xPPBK2( */
     TDE2_FILTER_MODE_BUTT
 } TDE2_FILTER_MODE_E;
-
-/*horizontal scale filter coefficient of dsu
-which affect image quality of encoding and preview.
-
-normally the filter can be set be DSU_HSCALE_FILTER_DEFAULT
-which means sdk will choose filter automatically.Otherwise,
-you can choose other filter
-
-Notes:65M means 6.5*/
-typedef enum hiTDE2_HFILT_COEF_E
-{
-	TDE2_HFILT_COEF_Default = 0,    /** use default group, which table depend by the hstep */
-	TDE2_HFILT_COEF_C_65M,	        /** use user assigned group, table 0 */
-	TDE2_HFILT_COEF_CG_56M,         /** use user assigned group, table 1 */
-	TDE2_HFILT_COEF_LC_45M,         /** use user assigned group, table 2 */
-	TDE2_HFILT_COEF_CG_3M,          /** use user assigned group, table 3 */
-	TDE2_HFILT_COEF_CG_2M,          /** use user assigned group, table 4 */
-	TDE2_HFILT_COEF_CG_1M,          /** use user assigned group, table 5 */
-	TDE2_HFILT_COEF_BUTT
-}TDE2_HFILT_COEF_E;
-
-/*vertical scale filter coefficient of dsu
-which affect image quality of encoding and preview.
-
-normally the filter can be set be DSU_VSCALE_FILTER_DEFAULT
-which means sdk will choose filter automatically.Otherwise,
-you can choose other filter
-
-Notes:38M means 3.8*/
-typedef enum hiTDE2_VFILT_COEF_E
-{
-	TDE2_VFILT_COEF_Default = 0,    /** use default group, which table depend by the vstep */
-	TDE2_VFILT_COEF_S_6M,           /** use user assigned group, table 0 */
-	TDE2_VFILT_COEF_S_5M,           /** use user assigned group, table 1 */
-	TDE2_VFILT_COEF_S_4M,		    /** use user assigned group, table 2 */
-	TDE2_VFILT_COEF_S_38M,	        /** use user assigned group, table 3 */
-	TDE2_VFILT_COEF_S_37M,	        /** use user assigned group, table 4 */
-	TDE2_VFILT_COEF_S_36M,	        /** use user assigned group, table 5 */
-	TDE2_VFILT_COEF_S_25M,	        /** use user assigned group, table 6 */
-	TDE2_VFILT_COEF_S_2M,		    /** use user assigned group, table 7 */
-	TDE2_VFILT_COEF_S_15M,	        /** use user assigned group, table 8 */
-	TDE2_VFILT_COEF_S_12M,	        /** use user assigned group, table 9 */
-	TDE2_VFILT_COEF_S_11M,	        /** use user assigned group, table 10 */
-	TDE2_VFILT_COEF_S_1M,	        /** use user assigned group, table 11 */
-	TDE2_VFILT_COEF_BUTT
-}TDE2_VFILT_COEF_E;
-
-/* Filter coefficient type */
-typedef enum hiTDE2_FILT_COEF_TYPE_E
-{
-    /* common filter coefficient */
-	TDE2_FILT_COEF_TYPE_NORM = 0, 
-	
-    /* extended type1: from the convolution of VI filter coefficient 
-    and normal filter coefficient*/    
-	TDE2_FILT_COEF_TYPE_EX,	
-
-    /* extended type2 */
-	TDE2_FILT_COEF_TYPE_EX2,	
-
-    /* user defined type 1 */
-	TDE2_FILT_COEF_TYPE_USER1,     
-
-    /* user defined type 2 */
-	TDE2_FILT_COEF_TYPE_USER2,   
-	TDE2_FILT_COEF_TYPE_4THORDER, /* 4 */
-	TDE2_FILT_COEF_TYPE_BUTT
-}TDE2_FILT_COEF_TYPE_E;
-
-typedef struct hiTDE2_FILT_COEF_S
-{
-	TDE2_FILT_COEF_TYPE_E enFilterType; /*Filtering coefficient type*/
-	TDE2_HFILT_COEF_E enHFilterL;       /*Horizontal filtering coefficient for luminance*/
-	TDE2_HFILT_COEF_E enHFilterC;	    /*Horizontal filtering coefficient for chrominance*/
-	TDE2_VFILT_COEF_E enVFilterL;       /*Vertical filtering coefficient for luminance*/
-	TDE2_VFILT_COEF_E enVFilterC;       /*Vertical filtering coefficient for chrominance*/
-}TDE2_FILT_COEF_S;
-
-typedef struct hiTDE2_FILTER_PARAM_S
-{
-    TDE2_FILT_COEF_TYPE_E enFiltType;
-    HI_U8 *pu8HParamTable;
-    HI_U8 *pu8VParamTable;
-}TDE2_FILTER_PARAM_S;
-
-/* the extended attributes for filter */
-typedef struct hiTDE2_FILT_ATTR_EX_S
-{
-	HI_BOOL bForceHFilt;		/* if do horizon filter */
-	HI_BOOL bForceVFilt;		/* if do vertical filter */
-}TDE2_FILT_ATTR_EX_S;
 
 /* the anti-flicker configuration of a channel */
 typedef enum hiTDE2_DEFLICKER_MODE_E
@@ -560,12 +439,6 @@ typedef struct hiTDE2_MBOPT_S
     /* Whether the alpha value of the output result bitmap is specified by users */
     HI_BOOL bSetOutAlpha;
     HI_U8   u8OutAlpha;
-
-	/* Filter coefficient */
-	TDE2_FILT_COEF_S stFiltCoef;
-
-	HI_BOOL bForceHFilt;  	/*Whether to forcibly perform horizontal filtering during 1:1 transfer*/
-	HI_BOOL bForceVFilt;	/*Whether to forcibly perform vertical filtering during 1:1 transfer*/
 } TDE2_MBOPT_S;
 
 /**  the information about pattern filling */
@@ -599,14 +472,7 @@ typedef struct hiTDE2_PATTERN_FILL_OPT_S
     
 }TDE2_PATTERN_FILL_OPT_S;
 
-/** rotate angle */
-typedef enum hiTDE_ROTATE_ANGLE_E
-{
-    TDE_ROTATE_CLOCKWISE_90 = 0,    
-    TDE_ROTATE_CLOCKWISE_180,   
-    TDE_ROTATE_CLOCKWISE_270,   
-    TDE_ROTATE_BUTT
-} TDE_ROTATE_ANGLE_E;
+
 
 /** the anti-flicker level */
 typedef enum hiTDE_DEFLICKER_LEVEL_E
@@ -618,33 +484,22 @@ typedef enum hiTDE_DEFLICKER_LEVEL_E
     TDE_DEFLICKER_BUTT
 }TDE_DEFLICKER_LEVEL_E;
 
-/*the mode of tde temp buffer allocation */
-typedef enum hiTDE_TEMPBUFF_ALLOC_TYPE
+/* composed surface info */
+typedef struct hiTDE_COMPOSOR_S
 {
-	TEMPBUFF_ALLOC_AUTO = 0,      
-	TEMPBUFF_ALLOC_BYUSER,		  
-	TEMPBUFF_ALLOC_BUTT
-}TDE_TEMPBUFF_ALLOC_TYPE;
+    TDE2_SURFACE_S stSrcSurface;
+    TDE2_RECT_S stInRect;
+    TDE2_RECT_S stOutRect;
+    TDE2_OPT_S stOpt;
+}TDE_COMPOSOR_S;
 
-/*beginJob attributes*/
-typedef struct hiTDE_JOB_ATTR
+/* composed surface list */
+typedef struct hiTDE_SURFACE_LIST_S
 {
-	HI_BOOL bUseTpl;			 /* whether to use template */
-	TDE_TEMPBUFF_ALLOC_TYPE enTempBuffType; /* the mode of tde temp buffer allocation */
-	HI_U32 u32TempBuffSize;      /*the size of tde temp buffer */
-}TDE_JOB_ATTR;
-
-typedef enum 
-{
-    TDE2_MBRESIZE_HIGH = 0,  /* only when the format of target pictrue is raster bitmap it needs temp buffer */
-    TDE2_MBRESIZE_MIDDLE,    /* only when the format of target pictrue is raster bitmap it needs temp buffer */
-    TDE2_OSD2MB_OUT42X,  
-    TDE2_MASK_ROP,
-    TDE2_MASK_BLEND,
-    TDE2_CMD_BUTT
-}TDE2_CMD_E;
-
-
+	HI_U32 u32SurfaceNum;
+	TDE2_SURFACE_S *pDstSurface;
+	TDE_COMPOSOR_S *pstComposor;
+}TDE_SURFACE_LIST_S;
 #ifdef __cplusplus
 #if __cplusplus
 }

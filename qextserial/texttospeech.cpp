@@ -1,5 +1,6 @@
 #include "texttospeech.h"
 #include <QDebug>
+
 TextToSpeech::TextToSpeech(QObject *parent):
     QObject(parent)
 {
@@ -93,7 +94,7 @@ int TextToSpeech::WriteCom(QString str)
         //QMessageBox::information(0,tr("错误"),tr("通讯中断"),QMessageBox::Ok);
         Device_public::tts_port->close();
     }
-    sleep(3);
+ //   sleep(3);
     return 0;
 }
 

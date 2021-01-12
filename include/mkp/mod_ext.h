@@ -30,6 +30,8 @@
 #include <linux/module.h>
 #include <linux/kernel.h>
 #include <linux/init.h>
+#include <linux/types.h>
+#include <linux/list.h>
 
 #include "hi_type.h"
 #include "hi_errno.h"
@@ -40,13 +42,9 @@
 
 #define MAX_MPP_MODULES HI_ID_BUTT
 
-#define VERSION_MAGIC	20150213
+#define VERSION_MAGIC	20150804
 
-typedef struct hiMOD_NAME_S
-{
-    MOD_ID_E enModId;
-    HI_CHAR aModName[16];
-}MOD_NAME_S;
+#define MAX_MOD_NAME    16
 
 typedef enum hiMOD_NOTICE_ID_E
 {
@@ -67,14 +65,19 @@ typedef HI_U32 FN_MOD_VerChecker(HI_VOID);
 
 typedef struct hiMPP_MODULE_S
 {
+    struct list_head list;
     struct module *pstOwner;
+    
+    HI_CHAR aModName[MAX_MOD_NAME];
     MOD_ID_E enModId;
+    
+    FN_MOD_Init         *pfnInit;
+    FN_MOD_Exit         *pfnExit;
+    FN_MOD_QueryState   *pfnQueryState;
+    FN_MOD_Notify       *pfnNotify;
+    FN_MOD_VerChecker   *pfnVerChecker;
 
-    FN_MOD_Init *pfnInit;
-    FN_MOD_Exit *pfnExit;
-    FN_MOD_QueryState *pfnQueryState;
-    FN_MOD_Notify *pfnNotify;
-    FN_MOD_VerChecker *pfnVerChecker;
+    HI_BOOL  bInited;
         
     HI_VOID *pstExportFuncs;    
     HI_VOID *pData;
@@ -82,20 +85,22 @@ typedef struct hiMPP_MODULE_S
     HI_CHAR *pVersion;
 }UMAP_MODULE_S;
 
-extern UMAP_MODULE_S g_astModules[MAX_MPP_MODULES];
-extern MOD_NAME_S g_aModName[MAX_MPP_MODULES];
-    
+
+extern HI_CHAR *CMPI_GetModuleName(MOD_ID_E enModId);
+extern UMAP_MODULE_S *CMPI_GetModuleById(MOD_ID_E enModId);
+extern HI_VOID *CMPI_GetModuleFuncById(MOD_ID_E enModId);
+
 extern HI_VOID CMPI_StopModules(HI_VOID);
-extern HI_S32 CMPI_QueryModules(HI_VOID);
-extern HI_S32 CMPI_InitModules(HI_VOID);
+extern HI_S32  CMPI_QueryModules(HI_VOID);
+extern HI_S32  CMPI_InitModules(HI_VOID);
 extern HI_VOID CMPI_ExitModules(HI_VOID);
-extern HI_S32 CMPI_RegisterMod(UMAP_MODULE_S *pstModules);
-extern HI_VOID CMPI_UnRegisterMod(MOD_ID_E enModId);
+extern HI_S32  CMPI_RegisterModule(UMAP_MODULE_S *pstModules);
+extern HI_VOID CMPI_UnRegisterModule(MOD_ID_E enModId);
 
+#define FUNC_ENTRY(type,id)  ((type*)CMPI_GetModuleFuncById(id))
+#define CHECK_FUNC_ENTRY(id) (CMPI_GetModuleFuncById(id) != NULL)
+#define FUNC_ENTRY_NULL(id)  (!CHECK_FUNC_ENTRY(id))
 
-
-#define CHECK_FUNC_ENTRY(id) (NULL != (g_astModules[id].pstExportFuncs))
-#define FUNC_ENTRY(type,id) ((type*)(g_astModules[id].pstExportFuncs))
 
 #endif /*  __MOD_EXT_H__ */
 

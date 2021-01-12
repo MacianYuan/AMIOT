@@ -35,6 +35,7 @@ typedef HI_S32 PCIV_CHN;
 
 #define PCIV_MAX_BUF_NUM 16   /* pciv channel max buffer number */
 #define PCIV_MAX_CHIPNUM 32   /* max pciv device number which can join in the system */
+#define PCIV_TIMER_EXPIRES 10
 
 #define MAKE_DWORD(high,low) (((low)&0x0000ffff)|((high)<<16))
 #define HIGH_WORD(x) (((x)&0xffff0000)>>16)
@@ -67,6 +68,12 @@ typedef struct hiPCIV_VPSSDEVICE_S
     VPSS_CHN vpssChn; /* vpss channel number */
 } PCIV_VPSSDEVICE_S;
 
+/* venc object struct */
+typedef struct hiPCIV_VENCDEVICE_S
+{
+    VENC_CHN vencChn; /* venc channel number */
+} PCIV_VENCDEVICE_S;
+
 /* bind type for pciv */
 typedef enum hiPCIV_BIND_TYPE_E
 {
@@ -74,12 +81,14 @@ typedef enum hiPCIV_BIND_TYPE_E
     PCIV_BIND_VO    = 1,
     PCIV_BIND_VDEC  = 2,
     PCIV_BIND_VPSS  = 3,
+    PCIV_BIND_VENC  = 4,
     PCIV_BIND_BUTT
 } PCIV_BIND_TYPE_E;
 
 /* bind object struct for pciv */
 typedef struct hiPCI_BIND_OBJ_S
 {
+    HI_BOOL          bVpssSend;
     PCIV_BIND_TYPE_E enType;  /* bind type for pciv */
     union
     {
@@ -87,6 +96,7 @@ typedef struct hiPCI_BIND_OBJ_S
         PCIV_VODEVICE_S   voDevice;
         PCIV_VDECDEVICE_S vdecDevice;
         PCIV_VPSSDEVICE_S vpssDevice;
+		PCIV_VENCDEVICE_S vencDevice;
     } unAttachObj;
 } PCIV_BIND_OBJ_S;
 
@@ -200,9 +210,6 @@ typedef struct hiPCIV_PREPROC_CFG_S
 {    
     PCIV_PIC_FIELD_E        enFieldSel;     /* pictrue field select */
     PCIV_FILTER_TYPE_E      enFilterType;   /* filter group type */
-    DSU_HSCALE_FILTER_E     enHFilter;      /* horizontal filter */
-    DSU_VSCALE_FILTER_E     enVFilterL;     /* vertical filter of luminance */
-    DSU_VSCALE_FILTER_E     enVFilterC;     /* vertical filter of chroma */
 } PCIV_PREPROC_CFG_S;
 
 

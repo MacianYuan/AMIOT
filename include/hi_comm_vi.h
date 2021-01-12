@@ -76,15 +76,6 @@ typedef enum hiEN_VIU_ERR_CODE_E
 #define HI_ERR_VI_FAILED_NOTBIND        HI_DEF_ERR(HI_ID_VIU, EN_ERR_LEVEL_ERROR, ERR_VI_FAILED_NOTBIND)/* 0xA0108047*/
 #define HI_ERR_VI_FAILED_BINDED         HI_DEF_ERR(HI_ID_VIU, EN_ERR_LEVEL_ERROR, ERR_VI_FAILED_BINDED)/* 0xA0108048*/
 
-
-/*get the subchn index by main chn */
-#define  SUBCHN(ViChn)   (ViChn + 16)
-
-/* define cascade chn */
-#define VI_CAS_CHN_1   32
-#define VI_CAS_CHN_2   33
-
-
 /* interface mode of video input */
 typedef enum hiVI_INTF_MODE_E
 {
@@ -114,6 +105,7 @@ typedef enum hiVI_WORK_MODE_E
     VI_WORK_MODE_1Multiplex = 0,    /* 1 Multiplex mode */
     VI_WORK_MODE_2Multiplex,        /* 2 Multiplex mode */
     VI_WORK_MODE_4Multiplex,        /* 4 Multiplex mode */
+    
 
     VI_WORK_MODE_BUTT
 } VI_WORK_MODE_E;
@@ -148,7 +140,7 @@ typedef enum hiVI_CLK_EDGE_E
 {
     VI_CLK_EDGE_SINGLE_UP = 0,         /* single-edge mode and in rising edge */
     VI_CLK_EDGE_SINGLE_DOWN,           /* single-edge mode and in falling edge */
-    //VI_CLK_EDGE_DOUBLE ,                 /* Double edge mode */
+    VI_CLK_EDGE_DOUBLE ,                 /* Double edge mode */
 
     VI_CLK_EDGE_BUTT
 } VI_CLK_EDGE_E;
@@ -281,6 +273,19 @@ typedef struct hiVI_VBI_ATTR_S
     HI_U32 u32Len;          /* length of VBI data, by word(4 Bytes) */
 } VI_VBI_ATTR_S;
 
+typedef struct hiVI_VBI_ARG_S
+{
+    VI_VBI_ATTR_S stVbiAttr[2];
+}VI_VBI_ARG_S;
+
+typedef enum hiVI_VBI_MODE_E
+{
+    VI_VBI_MODE_8BIT  = 0,
+    VI_VBI_MODE_6BIT ,
+    
+    VI_VBI_MODE_BUTT
+} VI_VBI_MODE_E;
+
 typedef enum hiVI_DATA_TYPE_E
 {
     VI_DATA_TYPE_YUV = 0,
@@ -307,8 +312,7 @@ typedef struct hiVI_DEV_ATTR_EX_S
     VI_CLK_EDGE_E       enClkEdge;          /* Clock edge mode (sampling on the rising or falling edge) */
 
     HI_U32              au32CompMask[2];    /* Component mask */
-
-    VI_SCAN_MODE_E      enScanMode;         /* Input scanning mode (progressive or interlaced) */
+    
     HI_S32              s32AdChnId[4];      /* AD channel ID. Typically, the default value -1 is recommended */
 
     VI_DATA_YUV_SEQ_E   enDataSeq;          /* Input data sequence (only the YUV format is supported) */
@@ -329,7 +333,8 @@ typedef struct hiVI_DEV_ATTR_S
     VI_WORK_MODE_E      enWorkMode;         /*1-, 2-, or 4-channel multiplexed work mode */
 
     HI_U32              au32CompMask[2];    /* Component mask */
-    VI_SCAN_MODE_E      enScanMode;         /* Input scanning mode (progressive or interlaced) */
+    
+	VI_CLK_EDGE_E       enClkEdge;          /* Clock edge mode (sampling on the rising or falling,double edge) */
     HI_S32              s32AdChnId[4];      /* AD channel ID. Typically, the default value -1 is recommended */
 
     /* The below members must be configured in BT.601 mode or DC mode and are invalid in other modes */
@@ -349,13 +354,11 @@ typedef struct hiVI_CHN_BIND_ATTR_S
     VI_WAY ViWay;
 } VI_CHN_BIND_ATTR_S;
 
-
 /* the attributes of a VI way */
 typedef struct hiVI_WAY_ATTR_S
 {
    HI_S32 s32AdChnId;
 } VI_WAY_ATTR_S;
-
 
 /* captrue selection of video input */
 typedef enum hiVI_CAPSEL_E
@@ -365,7 +368,6 @@ typedef enum hiVI_CAPSEL_E
     VI_CAPSEL_BOTH,                     /* top and bottom field */
     VI_CAPSEL_BUTT
 } VI_CAPSEL_E;
-
 
 /* the attributes of a VI channel */
 typedef struct hiVI_CHN_ATTR_S
@@ -383,15 +385,13 @@ typedef struct hiVI_CHN_ATTR_S
 
     VI_CAPSEL_E     enCapSel;           /* Frame/field select. It is used only in interlaced mode.
                                                 For primary channels, enCapSel is a static attribute */
-
+    VI_SCAN_MODE_E  enScanMode;         /* Input scanning mode (progressive or interlaced) */
     PIXEL_FORMAT_E  enPixFormat;        /* Pixel storage format. Only the formats semi-planar420 and semi-planar422 are supported */
     HI_BOOL         bMirror;            /* Whether to mirror */
-    HI_BOOL         bFlip;              /* Whether to flip */
-    HI_BOOL         bChromaResample;    /* Whether to perform chrominance resampling. It is valid only for primary channels */
+    HI_BOOL         bFlip;              /* Whether to flip */      
     HI_S32          s32SrcFrameRate;    /* Source frame rate. The value -1 indicates that the frame rate is not controlled */
-    HI_S32          s32FrameRate;       /* Target frame rate. The value -1 indicates that the frame rate is not controlled */
+    HI_S32          s32DstFrameRate;    /* Target frame rate. The value -1 indicates that the frame rate is not controlled */
 } VI_CHN_ATTR_S;
-
 
 typedef struct hiVI_CHN_STAT_S
 {
@@ -430,27 +430,9 @@ typedef struct hiVI_USERPIC_ATTR_S
 
 typedef struct hiVI_USR_GET_FRM_TIMEOUT_S
 {
-    VIDEO_FRAME_INFO_S *pstVFrame;
-    HI_U32              u32MilliSec;
+    VIDEO_FRAME_INFO_S  stVFrame;
+    HI_S32              s32MilliSec;
 } VI_USR_GET_FRM_TIMEOUT_S;
-
-
-typedef enum hiVI_FLASH_MODE_E
-{
-    VI_FLASH_ONCE = 0,		            /* Flash one time */
-    VI_FLASH_FREQ = 1,                  /* Flash frequently */
-    VI_FLASH_MODE_BUTT
-}VI_FLASH_MODE_E;
-
-typedef struct hiVI_FlASH_CONFIG_S
-{
-    VI_FLASH_MODE_E enFlashMode;	    /* Flash one time, flash frequently*/
-
-    HI_U32 u32StartTime;	            /* Flash start time£¬unit: sensor pix clk.*/
-    HI_U32 u32Duration;                 /* Flash high duration, unit: sensor pix clk.*/
-    HI_U32 u32CapFrmIndex;              /* Set which vframe will be bFlashed after flashing, default is 0. */
-    HI_U32 u32Interval;                 /* Flash frequently interval, unit: frame*/
-}VI_FLASH_CONFIG_S;
 
 typedef struct hiVI_EXT_CHN_ATTR_S
 {
@@ -458,16 +440,9 @@ typedef struct hiVI_EXT_CHN_ATTR_S
     SIZE_S    stDestSize;		        /* Target size*/
 
     HI_S32    s32SrcFrameRate;          /* Source frame rate. The value -1 indicates that the frame rate is not controlled */
-    HI_S32    s32FrameRate;             /* Target frame rate. The value -1 indicates that the frame rate is not controlled */
+    HI_S32    s32DstFrameRate;             /* Target frame rate. The value -1 indicates that the frame rate is not controlled */
     PIXEL_FORMAT_E  enPixFormat;        /* Pixel storage format. Only the formats semi-planar420 and semi-planar422 are supported */
 }VI_EXT_CHN_ATTR_S;
-
-
-typedef struct hiVI_LDC_ATTR_S
-{
-    HI_BOOL bEnable;                    /* Whether LDC is enbale */
-    LDC_ATTR_S stAttr;                  /* LDC Attribute */
-}VI_LDC_ATTR_S;
 
 typedef struct hiVI_CHN_LUM_S
 {
@@ -475,28 +450,26 @@ typedef struct hiVI_CHN_LUM_S
     HI_U64 u64Pts;                      /* PTS of current frame */
 } VI_CHN_LUM_S;
 
-typedef enum hiVI_CSC_TYPE_E
+typedef enum hiVI_SKIP_MODE_E		
 {
-    VI_CSC_TYPE_601 = 0,                /* CSC Type: 601 */
-    VI_CSC_TYPE_709,                    /* CSC Type: 709 */
-    VI_CSC_TYPE_BUTT,
-} VI_CSC_TYPE_E;
+    VI_SKIP_NONE = 0,  /*default mode, no skip*/
+	VI_SKIP_YES,       /*default skip mode,1/2 skip or 3/4 skip*/
+	VI_SKIP_4TO2,      /*2/4 skip mode*/
+    VI_SKIP_BUTT,
+}VI_SKIP_MODE_E;
 
-typedef struct hiVI_CSC_ATTR_S
+typedef struct hiVI_SKIP_MODE_EX_S
 {
-    VI_CSC_TYPE_E enViCscType;          /* 601 or 709 */
-    HI_U32 u32LumaVal;                  /* Luminance: [0 ~ 100] */
-    HI_U32 u32ContrVal;                 /* Contrast: [0 ~ 100] */
-    HI_U32 u32HueVal;                   /* Hue: [0 ~ 100] */
-    HI_U32 u32SatuVal;                  /* Satuature: [0 ~ 100] */
-} VI_CSC_ATTR_S;
+    HI_BOOL bEnable;
+    HI_U32  u32YMask;  /*ymask,0000-1111 in binary*/
+	HI_U32  u32CMask;  /*cmask,0000-1111 in binary*/
+}VI_SKIP_MODE_EX_S;
 
-typedef enum hiVI_PORTMODE_E
+typedef struct hiVI_MOD_PARAM_S
 {
-    VI_PORTMODE_D1 = 0,                /* D1/960H mode */
-    VI_PORTMODE_720P,                  /* 720P mode */
-    VI_PORTMODE_BUTT,
-} VI_PORTMODE_E;
+    HI_S32  detect_err_frame;
+    HI_U32  u32ViVbSource;
+} VI_MOD_PARAM_S;
 
 
 #ifdef __cplusplus

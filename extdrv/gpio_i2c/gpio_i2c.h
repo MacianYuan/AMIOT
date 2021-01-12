@@ -28,7 +28,9 @@ typedef struct _cx25838_regs_data
 
 
 unsigned char gpio_i2c_read(unsigned char devaddress, unsigned char address);
+unsigned char gpio_i2c_read_sp(unsigned char devaddress, unsigned char address);
 void          gpio_i2c_write(unsigned char devaddress, unsigned char address, unsigned char value);
+void          gpio_i2c_write_sp(unsigned char devaddress, unsigned char address, unsigned char value);
 unsigned int  gpio_i2c2_read(unsigned char devaddress, unsigned short address, int num_bytes);
 void          gpio_i2c2_write(unsigned char devaddress, unsigned short address, unsigned int data, int num_bytes);
 

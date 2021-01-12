@@ -30,8 +30,7 @@ HI_S32 HI_MPI_HDMI_Init(HI_HDMI_INIT_PARA_S *pstHdmiPara);
 HI_S32 HI_MPI_HDMI_DeInit(void);
 HI_S32 HI_MPI_HDMI_Open(HI_HDMI_ID_E enHdmi);
 HI_S32 HI_MPI_HDMI_Close(HI_HDMI_ID_E enHdmi);
-HI_S32 HI_MPI_HDMI_GetSinkCapability(HI_HDMI_ID_E enHdmi,
-HI_HDMI_SINK_CAPABILITY_S *pstSinkCap);
+HI_S32 HI_MPI_HDMI_GetSinkCapability(HI_HDMI_ID_E enHdmi,HI_HDMI_SINK_CAPABILITY_S *pstSinkCap);
 HI_S32 HI_MPI_HDMI_SetAttr(HI_HDMI_ID_E enHdmi, HI_HDMI_ATTR_S *pstAttr);
 HI_S32 HI_MPI_HDMI_GetAttr(HI_HDMI_ID_E enHdmi, HI_HDMI_ATTR_S *pstAttr);
 HI_S32 HI_MPI_HDMI_Start(HI_HDMI_ID_E enHdmi);
@@ -43,12 +42,8 @@ HI_S32 HI_MPI_HDMI_Force_GetEDID(HI_HDMI_ID_E enHdmi, HI_HDMI_EDID_S *pstEdidDat
 HI_S32 HI_MPI_HDMI_SetDeepColor(HI_HDMI_ID_E enHdmi, HI_HDMI_DEEP_COLOR_E enDeepColor);
 HI_S32 HI_MPI_HDMI_GetDeepColor(HI_HDMI_ID_E enHdmi, HI_HDMI_DEEP_COLOR_E *penDeepColor);
 
-HI_S32 HI_MPI_HDMI_SetCsc(HI_HDMI_ID_E enHdmi, HI_HDMI_CSC_S *pstCsc);
-HI_S32 HI_MPI_HDMI_GetCsc(HI_HDMI_ID_E enHdmi, HI_HDMI_CSC_S *pstCsc);
-
 HI_S32 HI_MPI_HDMI_SetInfoFrame(HI_HDMI_ID_E enHdmi, HI_HDMI_INFOFRAME_S *pstInfoFrame);
-HI_S32 HI_MPI_HDMI_GetInfoFrame(HI_HDMI_ID_E enHdmi,
-    HI_HDMI_INFOFRAME_TYPE_E enInfoFrameType, HI_HDMI_INFOFRAME_S *pstInfoFrame);
+HI_S32 HI_MPI_HDMI_GetInfoFrame(HI_HDMI_ID_E enHdmi, HI_HDMI_INFOFRAME_TYPE_E enInfoFrameType, HI_HDMI_INFOFRAME_S *pstInfoFrame);
 
 #ifdef __cplusplus
 #if __cplusplus

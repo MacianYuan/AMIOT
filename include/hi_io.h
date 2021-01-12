@@ -42,6 +42,52 @@ HI_U32 ISP_GetExtRegAddr(void);
 #define IOWR_8DIRECT(BASE,  OFFSET, DATA) 	IO_WRITE8(__IO_CALC_ADDRESS_DYNAMIC ((BASE), (OFFSET)), (DATA))
 
 
+inline static void HI_RegSetBit(unsigned long value, unsigned long offset,
+    unsigned long addr)
+{
+	unsigned long t, mask;
+
+	mask = 1 << offset;
+	t = readl((const volatile void *)addr);
+	t &= ~mask;
+	t |= (value << offset) & mask;
+	writel(t, (volatile void *)addr);
+}
+
+inline static void HI_RegWrite32(unsigned long value, unsigned long mask,
+    unsigned long addr)
+{
+	unsigned long t;
+
+	t = readl((const volatile void *)addr);
+	t &= ~mask;
+	t |= value & mask;
+	writel(t, (volatile void *)addr);
+}
+
+inline static void HI_RegRead(unsigned long *pvalue, unsigned long addr)
+{
+	*pvalue = readl((const volatile void *)addr);
+}
+
+inline static void HI_RegSetBitEx(unsigned long value, unsigned long offset, 
+    unsigned long bitwidth, unsigned long addr)
+{
+	unsigned long t, mask=0;
+    int i = 0;
+
+    while (i < bitwidth)
+    {
+        mask |= (1<<i);
+        i++;
+    };
+	mask = (mask << offset);
+	t = readl((const volatile void *)addr);
+	t &= ~mask;
+	t |= (value << offset) & mask;
+	writel(t, (volatile void *)addr);    
+}
+
 #ifdef __cplusplus
 }
 #endif

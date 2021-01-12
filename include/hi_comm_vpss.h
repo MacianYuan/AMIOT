@@ -1,4 +1,3 @@
-
 /******************************************************************************
 
   Copyright (C), 2001-2011, Hisilicon Tech. Co., Ltd.
@@ -12,8 +11,8 @@
   Description   : common struct definition for vpss
   Function List :
   History       :
-  1.Date        : 2011/6/16
-    Author      : h105449/l183122/w63830
+  1.Date        : 20130508
+    Author      : l00183122
     Modification: Create
   
  
@@ -46,12 +45,14 @@ extern "C"{
 #define HI_ERR_VPSS_NOBUF           HI_DEF_ERR(HI_ID_VPSS, EN_ERR_LEVEL_ERROR, EN_ERR_NOBUF)
 #define HI_ERR_VPSS_ILLEGAL_PARAM   HI_DEF_ERR(HI_ID_VPSS, EN_ERR_LEVEL_ERROR, EN_ERR_ILLEGAL_PARAM)
 #define HI_ERR_VPSS_BUSY            HI_DEF_ERR(HI_ID_VPSS, EN_ERR_LEVEL_ERROR, EN_ERR_BUSY)
-    
-typedef   HI_S32 VPSS_GRP;
-typedef   HI_S32 VPSS_CHN;
+#define HI_ERR_VPSS_BUF_EMPTY       HI_DEF_ERR(HI_ID_VPSS, EN_ERR_LEVEL_ERROR, EN_ERR_BUF_EMPTY)
+
+
+typedef   HI_S32 VPSS_GRP;  /* [0, 128] */
+typedef   HI_S32 VPSS_CHN;  /* [0, 3] */
 
 /*Define 4 video frame*/
-typedef enum HI_VPSS_FRAME_WORK_E
+typedef enum hiVPSS_FRAME_WORK_E
 {
     VPSS_FRAME_WORK_LEFT     =  0,
     VPSS_FRAME_WORK_RIGHT    =  1,
@@ -61,87 +62,47 @@ typedef enum HI_VPSS_FRAME_WORK_E
 }VPSS_FRAME_WORK_E;
 
 /*Define de-interlace mode*/    
-typedef enum  HI_VPSS_DIE_MODE_E
+typedef enum  hiVPSS_DIE_MODE_E
 {
-    VPSS_DIE_MODE_AUTO      = 0,
-    VPSS_DIE_MODE_NODIE     = 1,
+    VPSS_DIE_MODE_NODIE     = 0,
+    VPSS_DIE_MODE_AUTO      = 1,
     VPSS_DIE_MODE_DIE       = 2,
     VPSS_DIE_MODE_BUTT
 }VPSS_DIE_MODE_E;
 
-/*Define size of space filter window */
-typedef enum  HI_VPSS_SF_WINDOW_E
-{
-    VPSS_SF_WINDOW_3X3      = 0,
-    VPSS_SF_WINDOW_5X5      = 1,
-    VPSS_SF_WINDOW_7X7      = 2,
-    VPSS_SF_WINDOW_9X9      = 3,
-    VPSS_SF_WINDOW_BUTT
-}VPSS_SF_WINDOW_E;
-
-/*Define display mode*/
-typedef enum  HI_VPSS_DISPLAY_MODE_E
-{
-    VPSS_DISPLAY_MODE_TV    = 0,
-    VPSS_DISPLAY_MODE_PC    = 1,
-    VPSS_DISPLAY_MODE
-}VPSS_DISPLAY_MODE_E;
-
-/*Define attributes of video frame*/
-typedef struct HI_VPSS_FRAME_S
-{
-    HI_U32  u32Width[VPSS_FRAME_WORK_BUTT]; /*Width of 4 frames,0:L,1:R,2:B,3:T*/
-    HI_U32  u32Color[VPSS_FRAME_WORK_BUTT]; /*Color of 4 frames,R/G/B*/
-}VPSS_FRAME_S;
-
 /*Define attributes of vpss channel*/
-typedef struct HI_VPSS_CHN_ATTR_S
+typedef struct hiVPSS_CHN_ATTR_S
 {
-    HI_BOOL bSpEn;                 
-    HI_BOOL bFrameEn;
-    VPSS_FRAME_S  stFrame;     
+    HI_BOOL bSpEn;    /*Sharpen enable*/
+    HI_BOOL bUVInvert;  /* UV Invert enable*/
+    HI_BOOL bBorderEn; /*Frame enable*/
+    BORDER_S  stBorder;
 }VPSS_CHN_ATTR_S;
 
-/*Defined detailed image quality debug param*/
-typedef struct HI_VPSS_IMG_QUALITY_PARAM_S
+typedef struct hiVPSS_GRP_PARAM_S
 {
-    HI_U32 u32SfStrength0;
-    HI_U32 u32SfStrength1;
-    HI_U32 u32SfStrength2;
-    HI_U32 u32TfStrength;
-    HI_U32 u32SfPostFlag;
-    HI_U32 u32TfyProfile;
-    HI_U32 u32CStrength;
-    HI_U32 u32CMADSlope;
-    HI_U32 u32CMADThresh;
-    HI_U32 u32Reserved[6];
-}VPSS_IMG_QUALITY_PARAM_S;
-
-/*Defined private image quality debug config struct*/
-typedef struct HI_VPSS_IMG_QUALITY_CFG_S
-{
-    HI_BOOL bEnable;
-    VPSS_IMG_QUALITY_PARAM_S  stImageQualityParam;
-}VPSS_IMG_QUALITY_CFG_S;
-
-/*Define detailed params for group image process*/
-typedef struct HI_VPSS_GRP_PARAM_S
-{
-    HI_U32 u32Luminance;    /*Luminance*/
-    HI_U32 u32Contrast;     /*Contrast*/
-    HI_U32 u32DarkEnhance;  /*Dark region enhancement*/
-    HI_U32 u32BrightEnhance;/*Light region enhancement*/
-    HI_U32 u32IeStrength;   /*IE strength*/
-    HI_U32 u32IeSharp;      /*IE sharpness*/
-    HI_U32 u32SfStrength;   /*Strength of space filter*/
-    HI_U32 u32TfStrength;   /*Strength of space filter*/
-    HI_U32 u32MotionThresh; /*Motion judgment threshold*/
-    HI_U32 u32DiStrength;   /*de-interlace strength*/
-    HI_U32 u32ChromaRange;  /*Chrominance amplitude*/
-    HI_U32 u32NrWforTsr;    /*Time filtering weight*/
-    VPSS_SF_WINDOW_E enSfWindow;  /*Size of the space filter window*/
-    VPSS_DISPLAY_MODE_E enDisMode;/*Display mode*/
+    HI_U32 u32Contrast;          /*strength of dymanic contrast improve*/
+	HI_U32 u32DieStrength;       /*strength of de-interlace,not used now*/
+    HI_U32 u32IeStrength;        /*strength of image enhance*/
+    HI_U32 u32SfStrength;        /*strength of y space filter*/
+    HI_U32 u32TfStrength;        /*strength of y time filter*/
+    HI_U32 u32CfStrength;        /*strength of c space filter*/
+	HI_U32 u32CTfStrength;       /*strength of c time filter*/
+	HI_U32 u32CvbsStrength;      /*strength of cvbs*/
+    HI_U32 u32DeMotionBlurring;  /*strength of de motion blurring,not used now*/
 }VPSS_GRP_PARAM_S;
+
+/*Define detailed NR params for grp image process*/
+typedef struct hiVPSS_NR_ADVANCED_PARAM_S
+{
+	HI_U32 u32Mdz;
+    HI_U32 u32HTfRelaStrength;   /*relation strength of hard NR chn */
+
+	/*only for weak nr chn*/
+	HI_U32 u32Edz;
+	HI_U32 u32WTfRelaStrength;   /*relation strength of weak NR chn */
+}VPSS_NR_ADVANCED_PARAM_S;
+
 
 /* Define image feild select mode */
 typedef enum hiVPSS_CAPSEL_E
@@ -152,119 +113,93 @@ typedef enum hiVPSS_CAPSEL_E
     
     VPSS_CAPSEL_BUTT
 } VPSS_CAPSEL_E;
+
 /*Define coordinate mode*/
-typedef enum HI_VPSS_CROP_COORDINATE_E   
+typedef enum hiVPSS_CROP_COORDINATE_E   
 {
-    VPSS_CROP_RITIO_COOR = 0,   /*Ratio coordinate*/
+    VPSS_CROP_RATIO_COOR = 0,   /*Ratio coordinate*/
     VPSS_CROP_ABS_COOR          /*Absolute coordinate*/
 }VPSS_CROP_COORDINATE_E;
 
 /*Define attributes of CLIP function*/
-typedef struct HI_VPSS_CROP_INFO_S
+typedef struct hiVPSS_CROP_INFO_S
 {
     HI_BOOL bEnable;        /*CROP enable*/
-    VPSS_CROP_COORDINATE_E  enCropCoordinate;   /*Coordinate mode of the crop start point*/
-    RECT_S  stCropRect;     /*CROP rectangular*/
-    VPSS_CAPSEL_E   enCapSel;                   /*field select*/
+    VPSS_CROP_COORDINATE_E  enCropCoordinate;   /*Coordinate mode of the crop start point*/ 
+    RECT_S  stCropRect;     /*CROP rectangular*/   
 }VPSS_CROP_INFO_S;
 
 /*Define attributes of vpss GROUP*/
-typedef struct HI_VPSS_GRP_ATTR_S
+typedef struct hiVPSS_GRP_ATTR_S
 {
     /*statistic attributes*/
-    HI_U32  u32MaxW;                     
-    HI_U32  u32MaxH;
-    PIXEL_FORMAT_E enPixFmt; 
+    HI_U32  u32MaxW;  /*MAX width of the group*/
+    HI_U32  u32MaxH;  /*MAX height of the group*/
+    PIXEL_FORMAT_E enPixFmt; /*Pixel format*/
     
-    /*dynamic attributes*/
-    HI_BOOL bDrEn;
-    HI_BOOL bDbEn;
-    HI_BOOL bIeEn;
-    HI_BOOL bNrEn;
-    HI_BOOL bHistEn;
-    VPSS_DIE_MODE_E enDieMode;
+    HI_BOOL bIeEn;    /*Image enhance enable*/
+    HI_BOOL bDciEn;   /*Dynamic contrast Improve enable*/
+    HI_BOOL bNrEn;    /*Noise reduce enable*/ 
+    HI_BOOL bHistEn;  /*Hist enable*/
+    HI_BOOL bEsEn;      /*Edge smooth enable*/
+    VPSS_DIE_MODE_E enDieMode; /*De-interlace enable*/
 }VPSS_GRP_ATTR_S;
 
+/*Define vpss frame control info*/
+typedef struct hiVPSS_FRAME_RATE_S
+{
+    HI_S32  s32SrcFrmRate;        /* Input frame rate of a  group*/
+    HI_S32  s32DstFrmRate;        /* Output frame rate of a channel group */
+} VPSS_FRAME_RATE_S;
+
 /*Define vpss channel's work mode*/
-typedef enum HI_VPSS_CHN_MODE_E   
+typedef enum hiVPSS_CHN_MODE_E   
 {
     VPSS_CHN_MODE_AUTO = 0, /*Auto mode*/
     VPSS_CHN_MODE_USER  /*User mode*/
 }VPSS_CHN_MODE_E;
 
 /*Define attributes of vpss channel's work mode*/
-typedef struct HI_VPSS_CHN_MODE_S
+typedef struct hiVPSS_CHN_MODE_S
 {
     VPSS_CHN_MODE_E  enChnMode;   /*Vpss channel's work mode*/
     HI_U32 u32Width;              /*Width of target image*/
     HI_U32 u32Height;             /*Height of target image*/
-    HI_BOOL bDouble;              /*Field-frame transfer£¬only valid for VPSS_PRE0_CHN*/
+    HI_BOOL bDouble;              /*Field-frame transfer, only valid for VPSS_CHN2*/
+    VPSS_FRAME_RATE_S stFrameRate;
+    ASPECT_RATIO_S stAspectRatio;
     PIXEL_FORMAT_E  enPixelFormat;/*Pixel format of target image*/
+    COMPRESS_MODE_E enCompressMode;   /*Compression mode of the output*/
 }VPSS_CHN_MODE_S;
 
-typedef struct HI_VPSS_FRAME_TIMEOUT_S
-{
-    VIDEO_FRAME_INFO_S stVideoFrame;
-    HI_U32 u32MilliSec;
-}VPSS_FRAME_TIMEOUT_S;
-
-typedef struct HI_VPSS_GET_GRP_FRAME_S
-{
-    HI_U32 u32FrameIndex;
-    VIDEO_FRAME_INFO_S *pstVideoFrame;
-}VPSS_GET_GRP_FRAME_S;
-
-/*********************************************************************************************/
-
-/*Define detailed NR params for channel image process*/
-typedef struct
-{
-    HI_U32 u32SfStrength;   /*Strength of space filter*/
-    HI_U32 u32TfStrength;   /*Strength of space filter*/
-    HI_U32 u32MotionThresh; /*Motion judgment threshold*/
-    HI_U32 u32ChromaRange;  /*Chrominance amplitude*/
-    HI_U32 u32NrWforTsr;    /*Time filtering weight*/   
-}VPSS_CHN_NR_PARAM_S;
-
-/*Define detailed SP params for channel image process*/
-typedef struct
-{
-  HI_U32 u32LumaGain;           /*Luma gain of sharp function*/   
-}VPSS_CHN_SP_PARAM_S;
 
 /*Define detailed params for channel image process*/
-typedef struct
+typedef struct hiVPSS_CHN_PARAM_S
 {
-  VPSS_CHN_SP_PARAM_S  stVpssChnSpParam;           /*Luma gain of sharp function*/  
-  VPSS_CHN_NR_PARAM_S  stVpssChnNrParam;
+    HI_U32 u32SpStrength;
+    HI_U32 u32SfStrength;
+    HI_U32 u32TfStrength;
+    HI_U32 u32CfStrength;
+    HI_U32 u32DeMotionBlurring;  
 } VPSS_CHN_PARAM_S;
 
 /*Define vpss prescale info*/
-typedef struct
+typedef struct hiVPSS_PRESCALE_INFO_S
 {
-    HI_BOOL bPreScale;            /*prescale enable*/
-    VPSS_CAPSEL_E     enCapSel;   /*feild select*/
-    SIZE_S          stDestSize;   /*destination size*/     
+    HI_BOOL bPreScale;       /*prescale enable*/
+    SIZE_S  stDestSize;      /*destination size*/
 }VPSS_PRESCALE_INFO_S;
 
 /*Define vpss filter info*/
-typedef struct
+typedef struct hiVPSS_SIZER_INFO_S
 {
     HI_BOOL bSizer;
     SIZE_S  stSize;
 }VPSS_SIZER_INFO_S;
 
-/*Define vpss frame control info*/
-typedef struct 
-{
-    HI_S32  s32SrcFrmRate;          /* Input frame rate of a  group*/
-    HI_S32  s32DstFrmRate;        /* Output frame rate of a channel group */
-} VPSS_FRAME_RATE_S;
-
-/*********************************************************************************************/
 
 /*Define attributes of vpss extend channel*/
-typedef struct HI_VPSS_EXT_CHN_ATTR_S
+typedef struct hiVPSS_EXT_CHN_ATTR_S
 {
     VPSS_CHN        s32BindChn;             /*channel bind to*/
     HI_U32          u32Width;               /*Width of target image*/
@@ -273,6 +208,25 @@ typedef struct HI_VPSS_EXT_CHN_ATTR_S
     HI_S32          s32DstFrameRate;        /*Frame rate of extend chn input&output*/
     PIXEL_FORMAT_E  enPixelFormat;          /*Pixel format of target image*/
 }VPSS_EXT_CHN_ATTR_S;
+
+typedef struct hiVPSS_REGION_INFO_S
+{
+    RECT_S *pstRegion;    /*region attribute*/
+    HI_U32 u32RegionNum;       /*count of the region*/
+}VPSS_REGION_INFO_S;
+
+typedef enum hiVPSS_PRESCALE_MODE_E
+{
+    VPSS_PRESCALE_MODE_DEFAULT = 0,  /*use vpss to prescale*/
+    VPSS_PRESCALE_MODE_OTHER,        /*use vgs to prescale*/
+    VPSS_PRESCALE_MODE_BUTT
+}VPSS_PRESCALE_MODE_E;
+
+typedef struct hiVPSS_MOD_PARAM_S
+{
+    HI_U32  u32VpssVbSource;
+} VPSS_MOD_PARAM_S;
+
 
 #ifdef __cplusplus
 #if __cplusplus

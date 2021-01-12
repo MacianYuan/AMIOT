@@ -6,7 +6,7 @@
 #include <QDebug>
 
 #include "stackedwidget.h"
-#include "public/device_public.h"
+#include "device_public.h"
 
 namespace Ui {
 class menuwidget;

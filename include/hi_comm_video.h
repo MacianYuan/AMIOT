@@ -33,15 +33,19 @@ extern "C"{
 #endif
 #endif /* __cplusplus */
 
+#define FISHEYE_MAX_REGION_NUM 	4
+#define FISHEYE_MAX_OFFSET 		127
 
 typedef enum hiPIC_SIZE_E
 {
     PIC_QCIF = 0,
-    PIC_CIF,    
+    PIC_CIF,     
     PIC_2CIF,    
-    PIC_HD1, 
-    PIC_D1,
+    PIC_HD1, 	 
+    PIC_D1,		 
     PIC_960H,
+    PIC_1280H,
+    PIC_1440H,
     
     PIC_QVGA,    /* 320 * 240 */
     PIC_VGA,     /* 640 * 480 */    
@@ -57,6 +61,9 @@ typedef enum hiPIC_SIZE_E
     
     PIC_HD720,   /* 1280 * 720 */
     PIC_HD1080,  /* 1920 * 1080 */
+    PIC_qHD,     /*960 * 540*/
+
+    PIC_UHD4K,   /* 3840*2160 */
     
     PIC_BUTT
 }PIC_SIZE_E;
@@ -76,31 +83,38 @@ typedef enum hiVIDEO_CONTROL_MODE_E
     VIDEO_CONTROL_MODE_BUTT
 }VIDEO_CONTROL_MODE_E;
 
-
 /* we ONLY define picture format used, all unused will be deleted!*/
 typedef enum hiPIXEL_FORMAT_E
 {   
     PIXEL_FORMAT_RGB_1BPP = 0,
     PIXEL_FORMAT_RGB_2BPP,
     PIXEL_FORMAT_RGB_4BPP,
-    PIXEL_FORMAT_RGB_8BPP,
+    PIXEL_FORMAT_RGB_8BPP,    
     PIXEL_FORMAT_RGB_444,
+    
     PIXEL_FORMAT_RGB_4444,
     PIXEL_FORMAT_RGB_555,
     PIXEL_FORMAT_RGB_565,
     PIXEL_FORMAT_RGB_1555,
 
     /*  9 reserved */
-    PIXEL_FORMAT_RGB_888,
+    PIXEL_FORMAT_RGB_888,    
     PIXEL_FORMAT_RGB_8888,
+    
     PIXEL_FORMAT_RGB_PLANAR_888,
-    PIXEL_FORMAT_RGB_BAYER,
+    PIXEL_FORMAT_RGB_BAYER_8BPP,
+    PIXEL_FORMAT_RGB_BAYER_10BPP,
+    PIXEL_FORMAT_RGB_BAYER_12BPP,
+    PIXEL_FORMAT_RGB_BAYER_14BPP,
+    
+    PIXEL_FORMAT_RGB_BAYER,         /* 16 bpp */
 
     PIXEL_FORMAT_YUV_A422,
     PIXEL_FORMAT_YUV_A444,
 
     PIXEL_FORMAT_YUV_PLANAR_422,
     PIXEL_FORMAT_YUV_PLANAR_420,
+    
     PIXEL_FORMAT_YUV_PLANAR_444,
 
     PIXEL_FORMAT_YUV_SEMIPLANAR_422,
@@ -112,9 +126,8 @@ typedef enum hiPIXEL_FORMAT_E
     PIXEL_FORMAT_VYUY_PACKAGE_422,
     PIXEL_FORMAT_YCbCr_PLANAR,
 
-    PIXEL_FORMAT_RGB_422,
-    PIXEL_FORMAT_RGB_420,
-    
+	PIXEL_FORMAT_YUV_400,
+	
     PIXEL_FORMAT_BUTT   
 } PIXEL_FORMAT_E;
 
@@ -126,13 +139,56 @@ typedef struct hiVIDEO_VBI_INFO_S
 
 typedef enum hiVIDEO_FIELD_E
 {
-    VIDEO_FIELD_TOP         = 0x01,    /* even field */
-    VIDEO_FIELD_BOTTOM      = 0x02,    /* odd field */
-    VIDEO_FIELD_INTERLACED  = 0x03,    /* two interlaced fields */
-    VIDEO_FIELD_FRAME       = 0x04,    /* frame */
+    VIDEO_FIELD_TOP         = 0x1,    /* even field */
+    VIDEO_FIELD_BOTTOM      = 0x2,    /* odd field */
+    VIDEO_FIELD_INTERLACED  = 0x3,    /* two interlaced fields */
+    VIDEO_FIELD_FRAME       = 0x4,    /* frame */
 
     VIDEO_FIELD_BUTT
 } VIDEO_FIELD_E;
+
+typedef enum hiVIDEO_FORMAT_E
+{
+    VIDEO_FORMAT_LINEAR		= 0x0,		/* nature video line */
+    VIDEO_FORMAT_TILE		= 0x1,		/* tile cell: 256pixel x 16line, default tile mode */
+    VIDEO_FORMAT_TILE64		= 0x2,		/* tile cell: 64pixel x 16line */
+
+    VIDEO_FORMAT_BUTT
+} VIDEO_FORMAT_E;
+
+typedef enum hiCOMPRESS_MODE_E
+{
+	COMPRESS_MODE_NONE		= 0x0,		/* no compress */
+	COMPRESS_MODE_SEG		= 0x1,		/* compress unit is 256 bytes as a segment, default seg mode */
+	COMPRESS_MODE_SEG128	= 0x2,		/* compress unit is 128 bytes as a segment */
+	COMPRESS_MODE_LINE		= 0x3,		/* compress unit is the whole line */
+	COMPRESS_MODE_FRAME		= 0x4,		/* compress unit is the whole frame */
+
+	COMPRESS_MODE_BUTT
+} COMPRESS_MODE_E;
+
+typedef enum hiVIDEO_DISPLAY_MODE_E
+{
+	VIDEO_DISPLAY_MODE_PREVIEW		= 0x0,
+	VIDEO_DISPLAY_MODE_PLAYBACK		= 0x1,
+
+	VIDEO_DISPLAY_MODE_BUTT    
+} VIDEO_DISPLAY_MODE_E;
+
+typedef enum hiFRAME_FLASH_TYPE_E
+{
+	FRAME_FLASH_OFF  = 0,
+	FRAME_FLASH_ON   = 1,
+	FRAME_FLASH_BUTT,
+}FRAME_FLASH_TYPE_E;
+
+typedef struct hiVIDEO_SUPPLEMENT_S
+{
+    HI_U32   u32JpegDcfPhyAddr;
+    HI_VOID *pJpegDcfVirAddr;
+
+    FRAME_FLASH_TYPE_E enFlashType;
+}VIDEO_SUPPLEMENT_S;
 
 typedef struct hiVIDEO_FRAME_S
 {    
@@ -141,20 +197,27 @@ typedef struct hiVIDEO_FRAME_S
     VIDEO_FIELD_E   u32Field;
     PIXEL_FORMAT_E  enPixelFormat;
 
+    VIDEO_FORMAT_E  enVideoFormat;
+    COMPRESS_MODE_E	enCompressMode;
+
     HI_U32          u32PhyAddr[3];
     HI_VOID         *pVirAddr[3];
     HI_U32          u32Stride[3];
 
-    HI_U16          u16OffsetTop;       /* top offset of show area */
-    HI_U16          u16OffsetBottom;   /* bottom offset of show area */
-    HI_U16          u16OffsetLeft;       /* left offset of show area */
-    HI_U16          u16OffsetRight;    /* right offset of show area */
+    HI_U32          u32HeaderPhyAddr[3];
+    HI_VOID         *pHeaderVirAddr[3];
+    HI_U32          u32HeaderStride[3];
+
+    HI_S16          s16OffsetTop;		/* top offset of show area */
+    HI_S16          s16OffsetBottom;	/* bottom offset of show area */
+    HI_S16          s16OffsetLeft;		/* left offset of show area */
+    HI_S16          s16OffsetRight;		/* right offset of show area */
 
     HI_U64          u64pts;
     HI_U32          u32TimeRef;
 
     HI_U32          u32PrivateData;
-    //VIDEO_VBI_INFO_S astVbiInfo[VIU_MAX_VBI_NUM];
+    VIDEO_SUPPLEMENT_S stSupplement;
 }VIDEO_FRAME_S;
 
 typedef struct hiVIDEO_FRAME_INFO_S
@@ -162,128 +225,6 @@ typedef struct hiVIDEO_FRAME_INFO_S
     VIDEO_FRAME_S stVFrame;
     HI_U32 u32PoolId;
 } VIDEO_FRAME_INFO_S;
-
-typedef struct hiBITMAP_S
-{
-    PIXEL_FORMAT_E enPixelFormat;  /* Bitmap's pixel format */
-
-    HI_U32 u32Width;               /* Bitmap's width */
-    HI_U32 u32Height;              /* Bitmap's height */
-    HI_VOID *pData;                /* Address of Bitmap's data */
-} BITMAP_S;
-
-typedef struct HI_VPP_CFG_S
-{
-    HI_BOOL bVppEn;
-    
-    HI_BOOL bIeEn;
-    HI_BOOL bDnEn;
-    HI_BOOL bSpEn;
-    HI_BOOL bIencEn;
-    
-    HI_S32 s32IeSth;       /* IE Strength [0,10] */
-    HI_S32 s32SpSth;       /* SP Strength [-4,5] */
-    HI_S32 s32DnSfCosSth;  /* coarse DN sf Strength [0,3] */
-    HI_S32 s32DnSfIncSth;  /* Inching of DN sf Strength [0,255] */
-    HI_S32 s32DnTfSth;     /* DN tf Strength [0,4] */
-    
-} VPP_CFG_S;
-
-typedef struct hiSCALE_CFG_S
-{
-    HI_BOOL bScaleEn;
-
-    HI_S32  s32DstWidth;    /* the dest width after scale */
-    HI_S32  s32DstHeight;   /* the dest height after scale */
-} SCALE_CFG_S;
-
-/* Ie */
-typedef struct HI_VPP_IE_EX_S
-{
-    HI_U32  u32RefRange;//
-    HI_U32  u32IeStrength;//  
-    HI_U32  u32Black;
-    HI_U32  u32White;
-} VPP_IE_EX_S;
-
-/*dn*/
-typedef struct
-{
-  HI_U16  saMask[2];
-  HI_U16  weight[2];
-
-} tVppCalcWnd;
-
-typedef struct
-{
-    HI_U8   wWndX, hWndX; 
-    HI_U8   wWndY, hWndY; 
-    HI_U8   wWndC, hWndC; 
-    HI_U8   wWndD, hWndD; //
-
-    HI_U16  sfyMask[2];
-    HI_U8   sfyRange[2]; //
-    HI_U8   sfyStrength; //
-    HI_U8   sfyLimitedFlag; //
-
-    HI_U8   MADpExDirectSub : 1; 
-    HI_U8   MADpExMask : 4; 
-    HI_U8   _reserved_ : 3; 
-
-    HI_U8   sfcStrength;
-    HI_U8   sfyMADpThresh,   sfyMADpRate;/**/
-    HI_U16  sfyMSEiThresh[8];
-
-    HI_U8   rsfyThresh, rsfyRate, rsfyStrength, tfyStrength;
-    HI_U8   rsfcThresh, rsfcRate, rsfcStrength, tfcStrength;/**/
-
-    HI_U8   tfyMADpThresh,  tfyMADpRate;
-    HI_U8   tfySNRpThresh,  tfySNRpRate;
-
-    HI_U16  tfyMSEiThresh[8];
-    HI_U16  tfyMSEpThresh[8];
-
-    HI_U8   tfyMaxStrength;//
-    HI_U8   tfcMaxStrength;/**/
-
-    HI_U8   tfcMADpThresh,  tfcMADpRate;
-    HI_U16  tfcMSEiThresh[8];
-
-    HI_U16  diyMSEiThresh[8];
-
-    HI_U8   tfyLimit;
-    HI_U8   noiseMADpThresh;
-    HI_U16  noiseMSDpThresh;
-
-    HI_U8   log2hStepMADp, log2hStepMSEi;
-
-    HI_U8   histMinMADp, histMaxMADp;
-    HI_U16  histMinMSEi, histMaxMSEi;
-
-    /*---------------------------------------------*/
-    tVppCalcWnd  yWnd[2];
-    tVppCalcWnd  cWnd[2];
-} tVppDnCfg;
-typedef  tVppDnCfg VPP_DN_EX_S;
-
-/* Sp */
-typedef struct
-{
-    HI_U8  strength;//
-    HI_U8  limit;//
-    HI_U8  black;
-    HI_U8  white;
-} tVppSharpenCfg;
-typedef  tVppSharpenCfg VPP_SP_EX_S;
-
-
-typedef struct hiVPP_CFG_EX_S
-{
-    VPP_IE_EX_S     stIE_Ex;
-    VPP_DN_EX_S     stDN_Ex;
-    VPP_SP_EX_S     stSP_Ex;
-} VPP_CFG_EX_S;
-
 
 /* VI Mix-Capture info. */
 typedef struct hiVI_MIXCAP_STAT_S
@@ -300,22 +241,93 @@ typedef struct hiVI_FRAME_INFO_S
     HI_BOOL bFlashed;               /* Flashed Video frame or not. */
 }VI_FRAME_INFO_S;
 
-typedef enum hiLDC_VIEW_TYPE_E
-{
-    LDC_VIEW_TYPE_ALL = 0,  /* View scale all but x and y independtly, this will keep both x and y axis ,but corner maybe lost*/
-    LDC_VIEW_TYPE_CROP,     /* Not use view scale, this will lost some side and corner */
-        
-    LDC_VIEW_TYPE_BUTT,
-} LDC_VIEW_TYPE_E;
 
-typedef struct hiLDC_ATTR_S 
+typedef struct hiBITMAP_S
 {
-    LDC_VIEW_TYPE_E enViewType;
-    
-    HI_S32 s32CenterXOffset;        /* Horizontal offset of the image distortion center relative to image center. [-28,28]. */
-    HI_S32 s32CenterYOffset;        /* Vertical offset of the image distortion center relative to image center. [-14,14]. */
-    HI_S32 s32Ratio;                /* Distortion ratio. [0, 511]. */
-} LDC_ATTR_S;
+    PIXEL_FORMAT_E enPixelFormat;  /* Bitmap's pixel format */
+    HI_U32 u32Width;               /* Bitmap's width */
+    HI_U32 u32Height;              /* Bitmap's height */
+    HI_VOID *pData;                /* Address of Bitmap's data */
+} BITMAP_S;
+
+
+typedef enum hiFISHEYE_MOUNT_MODE_E
+{		
+	
+	FISHEYE_DESKTOP_MOUNT 	= 0,		/* desktop mount mode */
+	FISHEYE_CEILING_MOUNT	= 1,		/* ceiling mount mode */
+	FISHEYE_WALL_MOUNT   	= 2,		/* wall mount mode */
+	
+    FISHEYE_MOUNT_MODE_BUTT
+}FISHEYE_MOUNT_MODE_E;
+
+
+typedef enum hiFISHEYE_VIEW_MODE_E
+{
+	FISHEYE_VIEW_360_PANORAMA   = 0, 	/* 360 panorama mode of fisheye correction */
+	FISHEYE_VIEW_180_PANORAMA	= 1,	/* 180 panorama mode of fisheye correction */	
+	FISHEYE_VIEW_NORMAL   		= 2, 	/* normal mode of fisheye correction */
+	FISHEYE_NO_TRANSFORMATION 	= 3, 	/* no fisheye correction */
+	
+    FISHEYE_VIEW_MODE_BUTT
+}FISHEYE_VIEW_MODE_E;
+
+typedef enum hiFISHEYE_FILTER_MODE_E
+{
+	FISHEYE_FILTER_BILINEAR 	= 0,	/* bilinear filter */
+	FISHEYE_FILTER_LINEAR		= 1,	/* linear filter */
+	FISHEYE_FILTER_NEAREST		= 2,	/* nearest filter */
+	FISHEYE_FILTER_MODE_BUTT
+}FISHEYE_FILTER_MODE_E;
+
+typedef struct hiFISHEYE_GPU_PRI_S
+{
+	FISHEYE_FILTER_MODE_E	enYFilter;		/* Fiter mode for Luma */
+	FISHEYE_FILTER_MODE_E	enCbCrFilter;	/* Fiter mode for chroma */
+	HI_U32 					u32CCMPhyAddr;	/* Physical address of correction coordinate memory , the size is region's width x height x sizeof(float) x 2. */										   	
+}FISHEYE_GPU_PRI_S;
+
+
+typedef struct hiFISHEYE_REGION_ATTR_S
+{
+	FISHEYE_VIEW_MODE_E 	enViewMode;		/* fisheye view mode */
+	HI_U32 					u32InRadius;    /* inner radius of fisheye correction region [0, u32OutRadius) */
+	HI_U32 					u32OutRadius;   /* out radius of fisheye correction region [1, max(width/2 of input picture, height/2 of input picture)] */
+	HI_U32 					u32Pan;			/* [0, 360] */
+	HI_U32 					u32Tilt;		/* [0, 360] */
+	HI_U32 					u32HorZoom;		/* [1, 4095] */
+	HI_U32 					u32VerZoom;		/* [1, 4095] */
+	RECT_S                  stOutRect; 		/* output image info after fisheye correction range of width [960, 4608], 
+											   rang of height [360, 3456], rang of x [0, 4608), rang of y [0, 3456) */
+   FISHEYE_GPU_PRI_S		stGPUPrivate;	/* GPU related attribute. Only for GPU use */
+}FISHEYE_REGION_ATTR_S;
+
+
+typedef struct hiFISHEYE_ATTR_S
+{
+	HI_BOOL 				bEnable;			/* whether enable fisheye correction or not */
+	HI_BOOL 				bLMF; 				/* whether fisheye len's LMF coefficient is from user config 
+													 	or from default linear config */
+	HI_BOOL                 bBgColor;       	/* whether use background color or not */
+	HI_U32                  u32BgColor;			/* the background color ARGB8888 */
+
+	HI_S32 					s32HorOffset;   	/* the horizontal offset between image center and physical center of len */
+	HI_S32 					s32VerOffset;		/* the vertical offset between image center and physical center of len */
+	
+	HI_U32                  u32TrapezoidCoef;	/* strength coefficient of trapezoid correction */
+	
+	FISHEYE_MOUNT_MODE_E    enMountMode;		/* fisheye mount mode */	
+	
+	HI_U32               	u32RegionNum;       /* fisheye correction region number */
+	FISHEYE_REGION_ATTR_S 	astFisheyeRegionAttr[FISHEYE_MAX_REGION_NUM];/* attribution of fisheye correction region */	 
+}FISHEYE_ATTR_S;
+
+
+typedef struct hiFISHEYE_CONFIG_S
+{
+	HI_U16               	au16LMFCoef[128]; 	/* LMF coefficient of fisheye len */
+}FISHEYE_CONFIG_S;
+
 
 #ifdef __cplusplus
 #if __cplusplus
@@ -323,5 +335,5 @@ typedef struct hiLDC_ATTR_S
 #endif
 #endif /* __cplusplus */
 
-
 #endif /* _HI_COMM_VIDEO_H_ */ 
+

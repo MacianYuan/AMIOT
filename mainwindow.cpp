@@ -39,15 +39,15 @@ MainWindow::MainWindow(QWidget *parent) :
 {
     ui->setupUi(this);    
     //鼠标箭头隐藏
-    QWSServer::setCursorVisible(FALSE);
+//    QWSServer::setCursorVisible(FALSE);
 
     //全屏显示，设定窗口透明显示
     //showFullScreen();
-    QWSServer::setBackground(QColor(0,0,0,0));
+//    QWSServer::setBackground(QColor(0,0,0,0));
     setAttribute(Qt::WA_TranslucentBackground);
     //显示内容页
     stackedwidget_I = new stackedwidget(this);
-    stackedwidget_I->setGeometry(0,50,800,550);
+//    stackedwidget_I->setGeometry(0,50,800,550);
     page_id = 4;
     stackedwidget_I->setCurrentIndex(page_id);
     stackedwidget_I->show();
@@ -149,18 +149,18 @@ void MainWindow::on_buttonClickedLeftNav(int id)
 void MainWindow::slotLayout1Action()
 {
     qDebug()<<"Mal_VO_SetLayout(1)";
-    Mal_VO_SetLayout(1);
+ //   Mal_VO_SetLayout(1);
 }
 
 void MainWindow::slotLayout4Action()
 {
     qDebug()<<"Mal_VO_SetLayout(4)";
-    Mal_VO_SetLayout(4);
+//    Mal_VO_SetLayout(4);
 }
 
 void MainWindow::slotLayout9Action()
 {
-    Mal_VO_SetLayout(9);
+ //   Mal_VO_SetLayout(9);
 }
 
 
