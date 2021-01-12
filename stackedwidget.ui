@@ -77,7 +77,7 @@
       </rect>
      </property>
      <property name="styleSheet">
-      <string notr="true">background-image: url(:/images/xitongjiance_01.bmp);</string>
+      <string notr="true">background-image: url(:/xitongjiance_01.bmp);</string>
      </property>
      <property name="text">
       <string/>
@@ -235,7 +235,7 @@
      </size>
     </property>
     <property name="styleSheet">
-     <string notr="true">background-image: url(:/images/biaoti_01.bmp);</string>
+     <string notr="true">background-image: url(:/biaoti_01.bmp);</string>
     </property>
    </widget>
   </widget>
@@ -250,7 +250,7 @@
      </rect>
     </property>
     <property name="styleSheet">
-     <string notr="true">background-image: url(:/images/biaoti_02.bmp);</string>
+     <string notr="true">background-image: url(:/biaoti_02.bmp);</string>
     </property>
    </widget>
    <widget class="QWidget" name="widget_workingState" native="true">
@@ -275,7 +275,7 @@
       </rect>
      </property>
      <property name="styleSheet">
-      <string notr="true">background-image: url(:/images/gongzuojianshi_01.png);</string>
+      <string notr="true">background-image: url(:/gongzuojianshi_01.png);</string>
      </property>
      <property name="text">
       <string/>
@@ -445,7 +445,7 @@
       </rect>
      </property>
      <property name="styleSheet">
-      <string notr="true">background-image: url(:/images/biaoti_04.bmp);</string>
+      <string notr="true">background-image: url(:/biaoti_04.bmp);</string>
      </property>
      <property name="text">
       <string/>
@@ -476,7 +476,7 @@
      </rect>
     </property>
     <property name="styleSheet">
-     <string notr="true">background-image: url(:/images/biaoti_06.bmp);</string>
+     <string notr="true">background-image: url(:/biaoti_06.bmp);</string>
     </property>
    </widget>
    <widget class="QWidget" name="widget_startDisplay" native="true">
@@ -501,7 +501,7 @@
       </rect>
      </property>
      <property name="styleSheet">
-      <string notr="true">background-image: url(:/images/kaiji_01.bmp);</string>
+      <string notr="true">background-image: url(:/kaiji_01.bmp);</string>
      </property>
      <property name="text">
       <string/>

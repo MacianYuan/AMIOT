@@ -101,7 +101,7 @@ border-color: rgba(255, 255, 255, 0);</string>
      </rect>
     </property>
     <property name="styleSheet">
-     <string notr="true">background-image: url(:/images/shang_01.bmp);</string>
+     <string notr="true">background-image: url(:/shang_01.bmp);</string>
     </property>
     <property name="text">
      <string/>
@@ -117,7 +117,7 @@ border-color: rgba(255, 255, 255, 0);</string>
      </rect>
     </property>
     <property name="styleSheet">
-     <string notr="true">background-image: url(:/images/gps_4.png);</string>
+     <string notr="true">background-image: url(:/gps_4.png);</string>
     </property>
     <property name="text">
      <string/>
@@ -133,7 +133,7 @@ border-color: rgba(255, 255, 255, 0);</string>
      </rect>
     </property>
     <property name="styleSheet">
-     <string notr="true">background-image: url(:/images/gps_4.png);</string>
+     <string notr="true">background-image: url(:/gps_4.png);</string>
     </property>
     <property name="text">
      <string/>
@@ -149,7 +149,7 @@ border-color: rgba(255, 255, 255, 0);</string>
      </rect>
     </property>
     <property name="styleSheet">
-     <string notr="true">background-image: url(:/images/wifi_3.png);</string>
+     <string notr="true">background-image: url(:/wifi_3.png);</string>
     </property>
     <property name="text">
      <string/>

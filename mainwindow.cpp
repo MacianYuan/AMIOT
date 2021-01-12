@@ -87,13 +87,13 @@ void MainWindow::on_gps_signal_update()
 {
     //qDebug()<<"Device_public::gps_information.GPS_num_satellites"<<Device_public::gps_information.GPS_num_satellites;
     if( Device_public::gps_information.GPS_num_satellites < 3 ){
-        ui->label_gps->setStyleSheet("border-image: url(:/images/gps_1.png);");
+        ui->label_gps->setStyleSheet("border-image: url(:/gps_1.png);");
     }else if( ( Device_public::gps_information.GPS_num_satellites >= 3 ) && ( Device_public::gps_information.GPS_num_satellites < 6 )){
-        ui->label_gps->setStyleSheet("border-image: url(:/images/gps_2.png);");
+        ui->label_gps->setStyleSheet("border-image: url(:/gps_2.png);");
     }else if( ( Device_public::gps_information.GPS_num_satellites >= 6 ) && ( Device_public::gps_information.GPS_num_satellites < 9 )){
-        ui->label_gps->setStyleSheet("border-image: url(:/images/gps_3.png);");
+        ui->label_gps->setStyleSheet("border-image: url(:/gps_3.png);");
     }else if( Device_public::gps_information.GPS_num_satellites >= 9 ){
-        ui->label_gps->setStyleSheet("border-image: url(:/images/gps_4.png);");
+        ui->label_gps->setStyleSheet("border-image: url(:/gps_4.png);");
     }
 }
 
@@ -120,7 +120,7 @@ void MainWindow::on_stackedshowSelect(bool page_flag)
         //页面切换
         stackedwidget_I->setCurrentIndex(page_id);
         if(page_id != 2){
-            ui->label_background->setStyleSheet("background-image: url(:/images/shang_01.bmp);");
+            ui->label_background->setStyleSheet("background-image: url(:/shang_01.bmp);");
             ui->label_time->show();
         }
     }

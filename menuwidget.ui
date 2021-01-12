@@ -56,9 +56,9 @@
     <enum>Qt::LeftToRight</enum>
    </property>
    <property name="styleSheet">
-    <string notr="true">QToolButton{border-image: url(:/images/xiala_03.png);}
-QToolButton:hover{border-image: url(:/images/xiala_03_02.png);}
-QToolButton:pressed{border-image: url(:/images/xiala_03_02.png);}</string>
+    <string notr="true">QToolButton{border-image: url(:/xiala_03.png);}
+QToolButton:hover{border-image: url(:/xiala_03_02.png);}
+QToolButton:pressed{border-image: url(:/xiala_03_02.png);}</string>
    </property>
    <property name="text">
     <string/>
@@ -95,9 +95,9 @@ QToolButton:pressed{border-image: url(:/images/xiala_03_02.png);}</string>
     <enum>Qt::LeftToRight</enum>
    </property>
    <property name="styleSheet">
-    <string notr="true">QToolButton{border-image: url(:/images/xiala_02.png);}
-QToolButton:hover{border-image: url(:/images/xiala_02_02.png);}
-QToolButton:pressed{border-image: url(:/images/xiala_02_02.png);}</string>
+    <string notr="true">QToolButton{border-image: url(:/xiala_02.png);}
+QToolButton:hover{border-image: url(:/xiala_02_02.png);}
+QToolButton:pressed{border-image: url(:/xiala_02_02.png);}</string>
    </property>
    <property name="text">
     <string/>
@@ -119,11 +119,11 @@ QToolButton:pressed{border-image: url(:/images/xiala_02_02.png);}</string>
     </rect>
    </property>
    <property name="styleSheet">
-    <string notr="true">QToolButton{border-image: url(:/images/caidan_01.bmp);}
+    <string notr="true">QToolButton{border-image: url(:/caidan_01.bmp);}
 
-QToolButton:hover{border-image: url(:/images/caidan_02.bmp);}
+QToolButton:hover{border-image: url(:/caidan_02.bmp);}
 
-QToolButton:pressed{border-image: url(:/images/caidan_02.bmp);}</string>
+QToolButton:pressed{border-image: url(:/caidan_02.bmp);}</string>
    </property>
    <property name="text">
     <string/>
@@ -151,9 +151,9 @@ QToolButton:pressed{border-image: url(:/images/caidan_02.bmp);}</string>
     </size>
    </property>
    <property name="styleSheet">
-    <string notr="true">QToolButton{border-image: url(:/images/xiala_06.png);}
-QToolButton:hover{border-image: url(:/images/xiala_06_02.png);}
-QToolButton:pressed{border-image: url(:/images/xiala_06_02.png);}</string>
+    <string notr="true">QToolButton{border-image: url(:/xiala_06.png);}
+QToolButton:hover{border-image: url(:/xiala_06_02.png);}
+QToolButton:pressed{border-image: url(:/xiala_06_02.png);}</string>
    </property>
    <property name="text">
     <string/>
@@ -190,9 +190,9 @@ QToolButton:pressed{border-image: url(:/images/xiala_06_02.png);}</string>
     <enum>Qt::LeftToRight</enum>
    </property>
    <property name="styleSheet">
-    <string notr="true">QToolButton{border-image: url(:/images/xiala_01.png);}
-QToolButton:hover{border-image: url(:/images/xiala_01_02.png);}
-QToolButton:pressed{border-image: url(:/images/xiala_01_02.png);}
+    <string notr="true">QToolButton{border-image: url(:/xiala_01.png);}
+QToolButton:hover{border-image: url(:/xiala_01_02.png);}
+QToolButton:pressed{border-image: url(:/xiala_01_02.png);}
 </string>
    </property>
    <property name="text">
@@ -230,9 +230,9 @@ QToolButton:pressed{border-image: url(:/images/xiala_01_02.png);}
     <enum>Qt::LeftToRight</enum>
    </property>
    <property name="styleSheet">
-    <string notr="true">QToolButton{border-image: url(:/images/xiala_04.png);}
-QToolButton:hover{border-image: url(:/images/xiala_04_02.png);}
-QToolButton:pressed{border-image: url(:/images/xiala_04_02.png);}
+    <string notr="true">QToolButton{border-image: url(:/xiala_04.png);}
+QToolButton:hover{border-image: url(:/xiala_04_02.png);}
+QToolButton:pressed{border-image: url(:/xiala_04_02.png);}
 </string>
    </property>
    <property name="text">

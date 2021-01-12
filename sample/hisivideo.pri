@@ -16,3 +16,4 @@ SOURCES += \
     $$PWD/hisivio.c \
     $$PWD/hisiservice.cpp
 
+

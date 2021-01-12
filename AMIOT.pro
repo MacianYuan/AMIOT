@@ -35,22 +35,14 @@ FORMS    += mainwindow.ui \
 
 INCLUDEPATH += $$PWD/sample/common
 INCLUDEPATH += $$PWD/extdrv/nvp6124
-
-
 INCLUDEPATH += $$PWD/include
-LIBS += -L$$PWD/lib
 
+LIBS += -L$$PWD/lib
 LIBS += -ldnvqe -live -lmd  -lmpi -lupvqe -lm -lhdmi -ltde -ljpeg -lVoiceEngine -lQt5Mqtt
 
-//LIBS +=  -lQtGui -lQtNetwork -lQtCore -lpthread
-//LIBS += -L/opt/Qt4.8.6-hi3520/hilib -lmpi -lm  -lmem -lvqev2  -lhdmi -ltde -laec -ljpeg  -lanr -lresampler -lVoiceEngine -lboost_system
 
 RESOURCES += \
-    FrameLessWidget/images.qrc
-
-DISTFILES += \
-    LinkSDK/portfiles/SensorProtocol \
-    LinkSDK/portfiles/HttpProtocol
+    images/images.qrc
 
 OTHER_FILES += \
     LinkSDK/portfiles/README.md

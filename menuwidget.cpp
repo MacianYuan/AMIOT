@@ -46,7 +46,7 @@ void menuwidget::cameraSlotTimeout()
     ui->toolButton_mapNavigation->hide();
     //ui->toolButton_systemSetup->hide();
     ui->toolButton_startDisplay->hide();
-    ui->toolButton_menu->setStyleSheet("border-image: url(:/images/caidan_01.bmp);");
+    ui->toolButton_menu->setStyleSheet("border-image: url(:/caidan_01.bmp);");
     menu_button_show = 0;
     pushbutton_toggle = true;
     emit camera_hide();
@@ -55,34 +55,34 @@ void menuwidget::cameraSlotTimeout()
 //菜单button 选中状态显示
 void menuwidget::on_menubuttonshow(int page)
 {
-    ui->toolButton_systemState->setStyleSheet("border-image: url(:/images/xiala_01.png);");
-    ui->toolButton_workingState->setStyleSheet("border-image: url(:/images/xiala_02.png);");
-    ui->toolButton_cameraDisplay->setStyleSheet("border-image: url(:/images/xiala_03.png);");
-    ui->toolButton_mapNavigation->setStyleSheet("border-image: url(:/images/xiala_04.png);");
-    ui->toolButton_startDisplay->setStyleSheet("border-image: url(:/images/xiala_06.png);");
+    ui->toolButton_systemState->setStyleSheet("border-image: url(:/xiala_01.png);");
+    ui->toolButton_workingState->setStyleSheet("border-image: url(:/xiala_02.png);");
+    ui->toolButton_cameraDisplay->setStyleSheet("border-image: url(:/xiala_03.png);");
+    ui->toolButton_mapNavigation->setStyleSheet("border-image: url(:/xiala_04.png);");
+    ui->toolButton_startDisplay->setStyleSheet("border-image: url(:/xiala_06.png);");
     //根据当前stackwidget page index 判断出相应的button背景图片的更换
     switch (page){
         case 0:{
             camera_timer->stop();
-            ui->toolButton_systemState->setStyleSheet("border-image: url(:/images/xiala_01_02.png);");
+            ui->toolButton_systemState->setStyleSheet("border-image: url(:/xiala_01_02.png);");
         }break;
         case 1:{
             camera_timer->stop();
-            ui->toolButton_workingState->setStyleSheet("border-image: url(:/images/xiala_02_02.png);");
+            ui->toolButton_workingState->setStyleSheet("border-image: url(:/xiala_02_02.png);");
         }break;
         case 2:{
             //qDebug()<<"cameraSlotTimeout";
             //计时开始 按键菜单隐藏  标题框隐藏
             camera_timer->start(1000);
-            ui->toolButton_cameraDisplay->setStyleSheet("border-image: url(:/images/xiala_03_02.png);");
+            ui->toolButton_cameraDisplay->setStyleSheet("border-image: url(:/xiala_03_02.png);");
         }break;
         case 3:{
             camera_timer->stop();
-            ui->toolButton_mapNavigation->setStyleSheet("border-image: url(:/images/xiala_04_02.png);");
+            ui->toolButton_mapNavigation->setStyleSheet("border-image: url(:/xiala_04_02.png);");
         }break;
         case 4:{
             camera_timer->stop();
-            ui->toolButton_startDisplay->setStyleSheet("border-image: url(:/images/xiala_06_02.png);");
+            ui->toolButton_startDisplay->setStyleSheet("border-image: url(:/xiala_06_02.png);");
         }break;
         default:{
             camera_timer->stop();
@@ -107,7 +107,7 @@ void menuwidget::on_menushowSelect()
             ui->toolButton_startDisplay->show();
             pushbutton_toggle = false;
             menu_button_show = 1;
-            ui->toolButton_menu->setStyleSheet("border-image: url(:/images/caidan_02.bmp);");
+            ui->toolButton_menu->setStyleSheet("border-image: url(:/caidan_02.bmp);");
         }break;
 
         //显示 置false  判断为false 即为可隐藏
@@ -121,7 +121,7 @@ void menuwidget::on_menushowSelect()
             ui->toolButton_startDisplay->hide();
             pushbutton_toggle = true;
             menu_button_show = 0;
-            ui->toolButton_menu->setStyleSheet("border-image: url(:/images/caidan_01.bmp);");
+            ui->toolButton_menu->setStyleSheet("border-image: url(:/caidan_01.bmp);");
         }break;
         default:{
 

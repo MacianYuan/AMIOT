@@ -1,0 +1,40 @@
+<RCC>
+    <qresource prefix="/">
+        <file>1.bmp</file>
+        <file>biaoti_01.bmp</file>
+        <file>biaoti_02.bmp</file>
+        <file>biaoti_03.bmp</file>
+        <file>biaoti_04.bmp</file>
+        <file>biaoti_05.bmp</file>
+        <file>biaoti_06.bmp</file>
+        <file>caidan_01.bmp</file>
+        <file>caidan_02.bmp</file>
+        <file>gongzuojianshi_01.png</file>
+        <file>gps_1.png</file>
+        <file>gps_2.png</file>
+        <file>gps_3.png</file>
+        <file>gps_4.png</file>
+        <file>kaiji_01.bmp</file>
+        <file>Point.png</file>
+        <file>shang_01.bmp</file>
+        <file>wifi_1.png</file>
+        <file>wifi_2.png</file>
+        <file>wifi_3.png</file>
+        <file>xia_01.bmp</file>
+        <file>xiala_01.png</file>
+        <file>xiala_01_02.png</file>
+        <file>xiala_02.png</file>
+        <file>xiala_02_02.png</file>
+        <file>xiala_03.png</file>
+        <file>xiala_03_02.png</file>
+        <file>xiala_04.png</file>
+        <file>xiala_04_02.png</file>
+        <file>xiala_05.png</file>
+        <file>xiala_05_02.png</file>
+        <file>xiala_06.png</file>
+        <file>xiala_06_02.png</file>
+        <file>xitongjiance_01.bmp</file>
+        <file>xitongshezhi_01.bmp</file>
+        <file>zhong_01.bmp</file>
+    </qresource>
+</RCC>
