@@ -3,8 +3,8 @@
 # Project created by QtCreator 2013-12-12T10:26:26
 #   -std=c++11
 #-------------------------------------------------
-
-QT       += core gui network
+#webkit webkitwidgets
+QT       += core  gui network
 greaterThan(QT_MAJOR_VERSION, 4): QT += widgets network
 
 TARGET = AMIOT
@@ -38,8 +38,7 @@ INCLUDEPATH += $$PWD/extdrv/nvp6124
 INCLUDEPATH += $$PWD/include
 
 LIBS += -L$$PWD/lib
-LIBS += -ldnvqe -live -lmd  -lmpi -lupvqe -lm -lhdmi -ltde -ljpeg -lVoiceEngine -lQt5Mqtt
-
+LIBS += -ldnvqe -live -lmd  -lmpi -lupvqe -lm -lhdmi -ltde -ljpeg -lVoiceEngine
 
 RESOURCES += \
     images/images.qrc

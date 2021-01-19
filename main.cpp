@@ -60,8 +60,6 @@ int main(int argc, char *argv[])
     QObject::connect(mainservice,SIGNAL(gps_signal_update()),mainwindow,SLOT(on_gps_signal_update()));
     QObject::connect(mainservice,SIGNAL(label_time_refresh(QString)),mainwindow,SLOT(on_label_time_refresh(QString)));
 
-
-
     a.exec();
 }
 

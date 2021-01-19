@@ -47,7 +47,7 @@ MainWindow::MainWindow(QWidget *parent) :
     setAttribute(Qt::WA_TranslucentBackground);
     //显示内容页
     stackedwidget_I = new stackedwidget(this);
-//    stackedwidget_I->setGeometry(0,50,800,550);
+    stackedwidget_I->setGeometry(0,50,800,550);
     page_id = 4;
     stackedwidget_I->setCurrentIndex(page_id);
     stackedwidget_I->show();

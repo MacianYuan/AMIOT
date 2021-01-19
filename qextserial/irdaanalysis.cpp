@@ -5,6 +5,13 @@
 #define DOWN_KEY    0xe718ff00
 #define LEFT_KEY    0xe916ff00
 #define RIGHT_KEY   0xf20dff00
+#define VOL1_KEY    0xa55aff00
+#define VOL2_KEY    0xf708ff00
+#define SET_KEY     0xbb44ff00
+#define EXIT_KEY    0xbc43ff00
+#define POEWR_KEY   0xb847ff00
+#define MUTE_KEY    0xba45ff00
+
 
 static hiir_dev_param static_dev_param[] =
 {

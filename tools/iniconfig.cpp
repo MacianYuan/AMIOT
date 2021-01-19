@@ -457,9 +457,11 @@ bool CIniConfig::save2File() {
 	QTextStream out(&m_file);
 	out.setCodec("UTF-8");
     QString str;
+    QString str1 = "\r";
+    QString str2 = "\n";
     for (int i = 0; i < m_vecString.size(); ++i) {
         str = m_vecString[i];
-        if ((str.right(1) != '\r') && (str.right(1) != '\n')) {
+        if ((str.right(1) != str1) && (str.right(1) != str2)) {
             str += "\r\n";
         }
 		out << str;
